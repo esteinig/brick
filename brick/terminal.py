@@ -15,16 +15,16 @@ def brick(
     reference: Path = typer.Option(
         ..., help="Reference genome against which the rings of other genomes are BLASTED (.fasta)"
     ),
-    genomes: List[Path] = typer.Option(
-        ..., help="Other genomes to include as BLAST identity rings for BRIG-like visualisation"
+    genomes: str = typer.Option(
+        ..., help="Other genomes to include as BLAST identity rings for BRIG-like visualisation (comma-separated string)"
     ),
     output: Path = typer.Option(
         "brick.html", help="Output HTML file path"
     ),
-    colors: List[str] = typer.Option(
-        LAPUTA_MEDIUM, help="Colors for BLAST rings"
+    colors: str = typer.Option(
+        ",".join(LAPUTA_MEDIUM), help="Colors for BLAST rings"
     ),
-    labels: List[str] = typer.Option(
+    labels: str = typer.Option(
         None, help="Labels for BLAST rings"
     ),
     radius: int = typer.Option(
@@ -51,14 +51,14 @@ def brick(
     tmpdir: Path = typer.Option(
         Path("/tmp"), help="Temporary working directory for intermediary outputs from tools run as part of BRICK"
     ),
-    annotation_ring_gbk: List[Path] = typer.Option(
+    annotation_ring_gbk: str = typer.Option(
         None, help="Genbank (.gbk) annotation file(s) e.g. output from Prokka or Bacta genome annotation pipelines"
     ),
-    annotation_ring_colors: List[str] = typer.Option(
-        YESTERDAY_MEDIUM, help="Annotation ring colors"
+    annotation_ring_colors: str = typer.Option(
+        ",".join(YESTERDAY_MEDIUM), help="Annotation ring colors"
     ),
-    annotation_ring_names: List[str] = typer.Option(
-        ["Annotation"], help="Annotation ring name"
+    annotation_ring_names: str = typer.Option(
+        "Annotation", help="Annotation ring name"
     ),
     annotation_ring_height: str = typer.Option(
         20, help="Ring data JSON output file"
@@ -66,7 +66,7 @@ def brick(
     annotation_ring_feature: str = typer.Option(
         "Annotation", help="Annotation ring feature to "
     ),
-    annotation_ring_qualifiers: List[str] = typer.Option(
+    annotation_ring_qualifiers: str = typer.Option(
         None, help="Annotation ring feature qualifiers and their title in the viz tooltip in format e.g. note:Note"
     ),
     cds_ring_gbk: Path = typer.Option(
@@ -81,8 +81,13 @@ def brick(
     cds_ring_height: str = typer.Option(
         20, help="CDS ring color"
     )
-):
+):  
     
+    
+    genomes = [Path(s.strip()) for s in genomes.split(",")]
+    colors = [s.strip() for s in colors.split(",")]
+    labels = [s.strip() for s in labels.split(",")] if labels else []
+
     if cds_ring_gbk:
         ring_gen = AnnotationRing()
         ring_gen.set_options(
@@ -97,11 +102,12 @@ def brick(
         )
         ring_gen.read_genbank(file=cds_ring_gbk)
 
-    if not len(annotation_ring_gbk) == len(annotation_ring_names):
-        annotation_ring_names = ["Annotation" for _ in enumerate(annotation_ring_gbk)]
-
     annotation_rings = []
     if annotation_ring_gbk:
+        annotation_ring_gbk = [Path(s.strip()) for s in annotation_ring_gbk.split(",")]
+        annotation_ring_colors = [s.strip() for s in annotation_ring_colors.split(",")]
+        annotation_ring_names = [s.strip() for s in annotation_ring_names.split(",")]
+        
         for i, gbk_file in enumerate(annotation_ring_gbk):
 
             ring_misc = AnnotationRing()
