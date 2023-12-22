@@ -536,10 +536,11 @@ class Blaster:
 
         self._get_db()
 
-        refname = self.reference.split('.')[0]
+        refname = self.reference.name
 
         for genome in self.genomes:
-            genname = genome.split('.')[0]
+            print(genome)
+            genname = genome.name
             print('Blasting', genome, 'against Reference DB ...')
             filename = genname + 'vs' + refname
             call([
