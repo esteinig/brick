@@ -230,18 +230,19 @@ class RingGenerator:
         radius = self.radius
         for ring in self.rings:
             for seg in ring.data:
-                height = seg.pop('height')
+                height = int(seg.pop('height'))
+                radius = int(radius)
                 seg['inner'] = float(radius)
                 seg['outer'] = float(radius + height)
                 d3.append(seg)
 
-            radius = radius + ring.height + self.gap
+            radius = int(radius) + int(ring.height) + int(self.gap)
 
         self.data = d3
 
         return self.data
 
-    def set_options(self, circle, radius=300, gap=5, project='data', title='brigD3', title_size='100%', title_font='times', ring_opacity=0.8, width=1700, height=1000):
+    def set_options(self, circle, radius=300, gap=5, project='data', title='brigD3', title_size='100%', title_font='times', ring_opacity=0.8, width: int = 2400, height: int = 1600):
 
         """Set options for circle generator and visualization with D3."""
 
@@ -259,8 +260,8 @@ class RingGenerator:
 
     def get_genome_size(self, file: Path) -> int:
         """ Get the total length of the input genome (sum of contigs in FASTA) to set as circle size for whole genome visualiztions"""
-
-        return sum([len(rec.sequence)for rec in SeqIO.parse(file, "fasta")])
+        
+        return sum([len(rec.seq) for rec in SeqIO.parse(file, "fasta")])
     
     def brick(self, html_output: Path = Path.cwd() / "brick.html", json_output: Path = None):
 
@@ -442,7 +443,7 @@ class AnnotationRing(Ring):
             qualifier_texts.insert(0, ('Location: ', str(feature.location.start) + '-' + str(feature.location.end)))
             qualifier_texts.insert(0, ('Genome: ', self.name))
 
-            popup = self.tooltip.getPopup(qualifier_texts)
+            popup = self.tooltip.get_popup(qualifier_texts)
 
             self._popups.append(popup)
 
@@ -574,11 +575,11 @@ class Visualization:
                       div.tooltip {
                         position: absolute;
                         text-align: left;
-                        max-width: 300px;
-                        padding: 11px;
-                        font: 11px sans-serif;
+                        max-width: 100%;
+                        padding: 0.5%;
+                        font: 64pt sans-serif;
                         background: black;
-                        border-radius: 11px;
+                        border-radius: 0.1%;
                         pointer-events: none;
                       }
 
@@ -594,17 +595,7 @@ class Visualization:
                     <script>
 
                     function saveSvg(svgEl, name) {
-                        svgEl.setAttribute("xmlns", "http://www.w3.org/2000/svg");
-                        var svgData = svgEl.outerHTML;
-                        var preface = '<?xml version="1.0" standalone="no"?>\r\n';
-                        var svgBlob = new Blob([preface, svgData], {type:"image/svg+xml;charset=utf-8"});
-                        var svgUrl = URL.createObjectURL(svgBlob);
-                        var downloadLink = document.createElement("a");
-                        downloadLink.href = svgUrl;
-                        downloadLink.download = name;
-                        document.body.appendChild(downloadLink);
-                        downloadLink.click();
-                        document.body.removeChild(downloadLink);
+                        
                     }
 
                     pi = Math.PI;
@@ -627,12 +618,13 @@ class Visualization:
                     var width = chart_width
                     var height = chart_height
 
-                    var chart = d3.select("body").append("svg:svg")
+                    var chart = d3.select("body")
+                        .append("svg:svg")
                         .attr("width", width)
                         .attr("height", height)
                         .call(d3.behavior.zoom().on("zoom", function () {
-                                chart.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")")
-                                }))
+                            chart.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")")
+                        }))
                         .append("svg:g")
                     ;
 
@@ -679,8 +671,6 @@ class Visualization:
                       .attr("class", "inside")
                       .text(function(d) { return 'main_title'; })
                       .transition().duration(5000).style("opacity", 1)
-                      .on('click', saveSvg(d3.select("body").select("svg:svg"), "brick.svg") ) 
-                      .attr('pointer-events', 'visible');
                     ;
 
                 </script>
