@@ -11,7 +11,7 @@ app = typer.Typer(add_completion=False)
 
 
 @app.command()
-def brick(
+def brig_viz(
     reference: Path = typer.Option(
         ..., help="Reference genome against which the rings of other genomes are BLASTED (.fasta)"
     ),
@@ -29,6 +29,12 @@ def brick(
     ),
     radius: int = typer.Option(
         200, help="Total radius of the ring visualization (px)"
+    ),
+    svg_width: int = typer.Option(
+        1600, help="Total radius of the ring visualization (px)"
+    ),
+    svg_height: int = typer.Option(
+        1200, help="Total radius of the ring visualization (px)"
     ),
     title: str = typer.Option(
         "BRICK", help="Title inside ring visualiztion"
@@ -73,7 +79,7 @@ def brick(
         None, help="Add a ring internal to the annotation rings showing CDS feature annotations for each GBK file"
     ),
     cds_ring_color: str = typer.Option(
-        "#565051", help="CDS ring color"
+        "#b4b87f", help="CDS ring color"
     ),
     cds_ring_name: str = typer.Option(
         "ORFs", help="CDS ring name"
@@ -101,6 +107,9 @@ def brick(
             }
         )
         ring_gen.read_genbank(file=cds_ring_gbk)
+        ring_gen = [ring_gen]
+    else:
+        ring_gen = []
 
     annotation_rings = []
     if annotation_ring_gbk:
@@ -145,18 +154,69 @@ def brick(
         blast_rings.append(ring_blast)
 
     # Combine rings in preferred order
-    rings = [ring_gen] + blast_rings + annotation_rings
+    rings = ring_gen + blast_rings + annotation_rings
 
     # Initialize ring generator and set options, write as JSON and HTML
-    generator = RingGenerator(blast_rings)
+    generator = RingGenerator(rings)
     generator.set_options(
-        circle=generator.get_genome_size(), 
+        circle=generator.get_genome_size(file=reference), 
         project='brick', 
         title=title, 
         title_size=title_size, 
-        radius=radius
+        radius=radius,
+        width=svg_width, 
+        height=svg_height
     )
     generator.brick(
         html_output=output, 
         json_output=json
     )
+
+@app.command()
+def concat(
+    fasta: Path = typer.Argument(
+        ..., help="Fasta contigs input"
+    ),
+    output: Path = typer.Argument(
+        ..., help="Fasta contigs concat output"
+    ),
+    header: str = typer.Option(
+        None, help="Custom header as {id} {descr}"
+    ),
+    join_chars: str = typer.Option(
+        "", help="Join contigs with chcaracter string e.g. NNNNNN"
+    ),
+):
+    
+    seq = f"{join_chars}".join(
+        [str(rec.seq) for rec in SeqIO.parse(fasta, "fasta")]
+    )
+
+    with output.open("w") as out:
+        out.write(
+            f">{header if header else fasta.stem+'brick concat'}\n{seq}"
+        )
+
+@app.command()
+def slice(
+    fasta: Path = typer.Argument(
+        ..., help="Fasta contigs input"
+    ),
+    outdir: Path = typer.Argument(
+        ..., help="Fasta contigs concat output"
+    ),
+    size: int =  typer.Option(
+        10000, help="Size of non overlapping slices of concatenated output"
+    ),
+):
+    if not outdir.exists():
+        outdir.mkdir(parents=True)
+
+    seq_slices = slice_fasta_sequences(fasta_file=fasta, slice_size=size)
+   
+    for rec_id, slices in seq_slices.items():
+        for record in slices:
+            with (outdir / f"{record.id}.fasta").open("w") as out:
+                out.write(
+                    f">{record.id} {record.description}\n{record.seq}\n"
+                )
