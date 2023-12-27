@@ -1,12 +1,15 @@
 <script lang="ts">
+	
 	import Brick from "$lib/brick/Brick.svelte";
-	import { createSessionId } from "$lib/brick/helpers";
+	import { createSessionId } from "$lib/session/helpers";
+
+	import { DEFAULT_RINGS } from "$lib/data";
 	
 	
 </script>
 
 <div class="container h-full mx-auto mb-10 flex justify-center items-center">
-	<Brick width={900} height={800}></Brick>
+	<Brick rings={DEFAULT_RINGS} width={900} height={800}></Brick>
 	<div class="space-y-10 text-center flex flex-col items-center">
 
 		<div class="gap-y-0">
@@ -34,41 +37,7 @@
 		</div>
 		<div class="gap-y-0 text-center flex flex-col items-center">
 			<div class="text-sm opacity-70 mb-2">Please consider citing our publication if you explore data or create figures for publication.</div>	
-			<a><code class="text-xs opacity-100">Steinig et al. (2024) - BRICK: bacterial genome annotation and identity visualisation - Microbial Genomics</code></a>
+			<a href="https://github.com/esteinig/brick" target="_blank" rel="noreferrer"><code class="text-xs opacity-100">Steinig et al. (2024) - BRICK: bacterial genome annotation and identity visualisation - Microbial Genomics</code></a>
 		</div>
 	</div>
 </div>
-
-<style lang="postcss">
-	figure {
-		@apply flex relative flex-col;
-	}
-	figure svg,
-	.img-bg {
-		@apply w-64 h-64 md:w-80 md:h-80;
-	}
-	.img-bg {
-		@apply absolute z-[-1] rounded-full blur-[50px] transition-all;
-		animation: pulse 5s cubic-bezier(0, 0, 0, 0.5) infinite,
-			glow 5s linear infinite;
-	}
-	@keyframes glow {
-		0% {
-			@apply bg-primary-400/50;
-		}
-		33% {
-			@apply bg-secondary-400/50;
-		}
-		66% {
-			@apply bg-tertiary-400/50;
-		}
-		100% {
-			@apply bg-primary-400/50;
-		}
-	}
-	@keyframes pulse {
-		50% {
-			transform: scale(1.5);
-		}
-	}
-</style>
