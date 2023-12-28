@@ -1,4 +1,7 @@
-import dataclasses
+
+
+import requests
+from typing import List, Dict
 
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
@@ -60,7 +63,7 @@ RATTNER = [
 LAPUTA_MEDIUM.reverse()
 YESTERDAY_MEDIUM.reverse()
 
-def slice_fasta_sequences(fasta_file, slice_size=10000):
+def slice_fasta_sequences(fasta_file, slice_size=10000) -> Dict[str, List[SeqRecord]]:
     """
     Takes a FASTA file and returns slices of each sequence with slice coordinates in the header.
     
@@ -82,3 +85,59 @@ def slice_fasta_sequences(fasta_file, slice_size=10000):
 
     return sliced_sequences
 
+
+# Example usage
+# annotations_list = ["recombinase domain containing protein", "dna polymerase", ...]
+# api_key = "your-api-key"
+# summary = summarize_protein_annotations_gpt35(annotations_list, api_key)
+# print(summary)
+def summarize_protein_annotations_gpt35(annotations: List[str], api_key: str) -> str:
+    """
+    This function takes a list of protein annotations and sends a request to the GPT-3.5 API to generate
+    a summary of their likely functions and origins.
+
+    Args:
+    - annotations (List[str]): A list of protein annotations to be summarized.
+    - api_key (str): The API key for authenticating with the OpenAI API.
+
+    Returns:
+    - str: A summary text of the proteins' functions and origins.
+
+    Raises:
+    - Exception: If the API request fails or returns an error.
+
+    Note:
+    - The function uses the OpenAI GPT-3.5 API endpoint and settings.
+    - You should replace 'API_ENDPOINT' with the actual GPT-3.5 API endpoint provided by OpenAI.
+    """
+
+    # Define the GPT-3.5 API endpoint
+    api_endpoint = "https://api.openai.com/v1/engines/davinci-codex/completions"
+
+    # Prepare the payload
+    payload = {
+        "prompt": f"Summarize the functions and origins of these proteins: {', '.join(annotations)}",
+        "max_tokens": 250,
+        "temperature": 0.7,
+        "top_p": 1.0,
+        "frequency_penalty": 0.0,
+        "presence_penalty": 0.0
+    }
+
+    # Set headers including the API key
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
+    }
+
+    # Make the request to the API
+    response = requests.post(api_endpoint, json=payload, headers=headers)
+
+    # Check if the request was successful
+    if response.status_code == 200:
+        # Extract the response data
+        response_data = response.json()
+        # The GPT-3.5 API returns a list of choices with text; get the first one.
+        return response_data["choices"][0]["text"].strip()
+    else:
+        raise Exception(f"API request failed with status code {response.status_code}: {response.text}")

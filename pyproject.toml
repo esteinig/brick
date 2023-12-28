@@ -8,15 +8,11 @@ version = "0.1.0"
 authors = [{name="Eike Steinig", email="eike.steinig@unimelb.edu.au"}]
 description = "BLAST Ring Image Generator (BRIG, Alikhan et al. 2011) as self contained D3 visualization (HTML + D3.JS) and Python API + CLI"
 readme = "README.md"
-dependencies = ["typer", "biopython", "pandas", "pre-commit"]
+dependencies = ["typer", "biopython", "pandas", "requests", "pre-commit", "fastapi", "celery[redis]", "uvicorn", "pydantic-settings", "python-multipart"]
 requires-python = ">=3.11"
 
 [project.scripts]
 brick = "brick.terminal:app"
-
-[project.urls]
-"Homepage" = "https://github.com/esteinig/brick"
-"Bug Tracker" = "https://github.com/esteinig/brick/issues"
 
 [tool.black]
 line-length = 79
@@ -34,3 +30,4 @@ exclude = '''
   | dist
 )/
 '''
+
