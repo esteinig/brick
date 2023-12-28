@@ -194,7 +194,7 @@ def concat(
 
     with output.open("w") as out:
         out.write(
-            f">{header if header else fasta.stem+'brick concat'}\n{seq}"
+            f">{header if header else fasta.stem}\n{seq}"
         )
 
 @app.command()
@@ -202,21 +202,36 @@ def slice(
     fasta: Path = typer.Argument(
         ..., help="Fasta contigs input"
     ),
-    outdir: Path = typer.Argument(
-        ..., help="Fasta contigs concat output"
+    output: Path = typer.Option(
+        "slices.fasta", help="Fasta file output",
+    ),
+    outdir: Path = typer.Option(
+        None, help="Fasta slice per file output directory"
     ),
     size: int =  typer.Option(
         10000, help="Size of non overlapping slices of concatenated output"
-    ),
-):
-    if not outdir.exists():
+    )
+):  
+    
+
+    if outdir is not None and not outdir.exists():
         outdir.mkdir(parents=True)
 
     seq_slices = slice_fasta_sequences(fasta_file=fasta, slice_size=size)
-   
-    for rec_id, slices in seq_slices.items():
-        for record in slices:
-            with (outdir / f"{record.id}.fasta").open("w") as out:
-                out.write(
-                    f">{record.id} {record.description}\n{record.seq}\n"
-                )
+
+    
+
+    if outdir:
+        for rec_id, slices in seq_slices.items():
+            for record in slices:
+                with (outdir / f"{record.id}.fasta").open("w") as out:
+                    out.write(
+                        f">{record.id} {record.description}\n{record.seq}\n"
+                    )
+    else:
+        with output.open("w") as out:
+            for rec_id, slices in seq_slices.items():
+                for record in slices:
+                    out.write(
+                        f">{record.id} {record.description}\n{record.seq}\n"
+                    )

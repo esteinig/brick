@@ -1,0 +1,79 @@
+import os
+import logging 
+
+from pydantic import AnyHttpUrl, validator
+from pydantic_settings import BaseSettings
+from typing import List, Optional
+from pathlib import Path
+
+class Settings(BaseSettings):
+
+    # Basic application configuration
+    APP_NAME: str = "BRICK"
+    APP_VERSION: str = "0.1.0"
+    API_PREFIX: str = "/api"
+    DEBUG_MODE: bool = False
+
+    # Secret key for instance
+    SECRET_KEY: str = ""
+
+    # Upload directory for files and executing tasks
+    WORK_DIRECTORY: Path = Path(f"/tmp/brick-work")
+
+    # Celery Configuration
+    CELERY_BROKER_URL: str = "redis://redis:6379/0"
+    CELERY_RESULT_BACKEND: str = "redis://redis:6379/1"
+
+    # CORS origins
+    CORS_ORIGINS: List[AnyHttpUrl] = ['http://localhost:5173/']
+
+    class Config:
+        case_sensitive = True
+        env_file = ".env"
+        env_file_encoding = 'utf-8'
+        env_prefix = "BRICK_"
+
+    @validator('CORS_ORIGINS', pre=True)
+    def assemble_cors_origins(cls, v: Optional[str]) -> List[AnyHttpUrl]:
+        if isinstance(v, str) and not v.startswith("["):
+            return [i.strip() for i in v.split(",")]
+        elif isinstance(v, (list, str)):
+            return v
+        return []
+
+class DevelopmentSettings(Settings):
+    class Config:
+        env_prefix = "DEV_"
+
+class ProductionSettings(Settings):
+    class Config:
+        env_prefix = "PROD_"
+
+def get_settings():
+    environment = os.getenv("BRICK_ENV", "").lower()
+    
+    if environment == "production":
+        return ProductionSettings()
+    elif environment == "development":
+        return DevelopmentSettings()    
+    else:
+        return Settings()
+    
+
+
+settings = get_settings()
+
+try:
+    settings.WORK_DIRECTORY = settings.WORK_DIRECTORY.resolve()
+except:
+    logging.error(f"Working directory path could not be resolved: {settings.WORK_DIRECTORY}")
+    exit(1)
+
+if not settings.WORK_DIRECTORY.exists():
+    logging.info(f"Working directory does not exist: {settings.WORK_DIRECTORY}")
+    logging.info(f"Attempting to create working directory path for server operations...")
+    try:
+        settings.WORK_DIRECTORY.mkdir(parents=True)
+    except:
+        logging.error(f"Working directory could not be created: {settings.WORK_DIRECTORY}")
+        exit(1)

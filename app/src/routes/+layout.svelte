@@ -4,7 +4,7 @@
 	// Highlight JS
 	import hljs from 'highlight.js/lib/core';
 	import 'highlight.js/styles/github-dark.css';
-	import { Modal, storeHighlightJs } from '@skeletonlabs/skeleton';
+	import { Modal, Toast, storeHighlightJs } from '@skeletonlabs/skeleton';
 	import xml from 'highlight.js/lib/languages/xml'; // for HTML
 	import css from 'highlight.js/lib/languages/css';
 	import javascript from 'highlight.js/lib/languages/javascript';
@@ -28,4 +28,5 @@
 
 
 <Modal />
+<Toast position="br"/>
 <slot />

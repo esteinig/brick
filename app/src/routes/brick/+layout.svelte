@@ -37,13 +37,11 @@
 
 </script>
 
-<!-- App Shell -->
 <AppShell>
 	<svelte:fragment slot="header">
-		<!-- App Bar -->
 		<AppBar>
 			<svelte:fragment slot="lead">
-				<a href="/brick"><code class="text-xl">BRICK {PUBLIC_BRICK_VERSION}</code></a>
+				<a href="/"><code class="text-xl">BRICK {PUBLIC_BRICK_VERSION}</code></a>
 			</svelte:fragment>
 			<svelte:fragment slot="trail">
 
@@ -71,10 +69,10 @@
 				</a>
 			</svelte:fragment>
 		</AppBar>
-
 		{#if $navigating}
 			<ProgressBar height="h-1"/>
 		{/if}
 	</svelte:fragment>
-	<slot />
+
+    <slot />
 </AppShell>
