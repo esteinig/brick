@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  web:
+    build: 
+      context: ..
+      dockerfile: env/Dockerfile
+      args:
+        BRICK_ENV: ${BRICK_ENV:-}
+    command: uvicorn brick.api.main:app --host 0.0.0.0 --port 8080
+    volumes:
+      - /tmp:/tmp
+    ports:
+      - "8080:8080"
+    depends_on:
+      - redis
+      - mongodb
+
+  worker:
+    build: 
+      context: ..
+      dockerfile: env/Dockerfile
+    command: python celery/worker.py
+    volumes:
+      - /tmp:/tmp
+    depends_on:
+      - redis
+      - mongodb
+
+  redis:
+    image: "redis:alpine"
+    ports:
+      - "6379:6379"
+
+  mongodb:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - session_data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+
+
+
+
+  # DELETES UPLOADED FILES PERIODICALLY
+  # ======================================
+
+  # Defaults to `/tmp` directory if the environment 
+  # variable `PROD_BRICK_WORK_DIRECTORY` is not set
+
+  # Careful use of this one, make sure things 
+  # are working and BRICK_WORK_DIRECTORY is 
+  # properly configured. 
+
+  # Operates only with the `production` profile
+  # to run for the web service
+
+  data-cleaner:
+    restart: always
+    profiles:
+      - production
+    build:
+      context: .
+      dockerfile: env/Dockerfile.cleaner
+    environment:
+      - BRICK_WORK_DIRECTORY=${PROD_BRICK_WORK_DIRECTORY:-/tmp} 
+    volumes:
+      - ${PROD_BRICK_WORK_DIRECTORY:-/tmp}:/data:rw
+
+  
+volumes:
+  session_data:

@@ -1,0 +1,7 @@
+name: brick
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - blast
