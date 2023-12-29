@@ -1,0 +1,11 @@
+typer
+biopython
+pandas
+requests
+pre-commit
+fastapi
+celery[redis]
+uvicorn
+pydantic-settings
+python-multipart
+motor

@@ -6,9 +6,9 @@ build-backend = "setuptools.build_meta"
 name = "brick"
 version = "0.1.0"
 authors = [{name="Eike Steinig", email="eike.steinig@unimelb.edu.au"}]
-description = "BLAST Ring Image Generator (BRIG, Alikhan et al. 2011) as self contained D3 visualization (HTML + D3.JS) and Python API + CLI"
+description = "BLAST Ring Image Magick (BRICK) implements BRIG-like figures as API, CLI and REST API stack with Svelte UI"
 readme = "README.md"
-dependencies = ["typer", "biopython", "pandas", "requests", "pre-commit", "fastapi", "celery[redis]", "uvicorn", "pydantic-settings", "python-multipart"]
+dependencies = ["typer", "biopython", "pandas", "requests", "pre-commit", "fastapi", "celery[redis]", "uvicorn", "pydantic-settings", "python-multipart", "motor"]
 requires-python = ">=3.11"
 
 [project.scripts]
