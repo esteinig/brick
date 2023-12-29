@@ -1,0 +1,18 @@
+FROM alpine:latest
+
+# Create a non-root user and switch to it
+ARG UID=9234
+ARG GID=9234
+ARG USERNAME=brick-app
+
+RUN groupadd -g ${GID} ${USERNAME} && useradd --no-log-init -u ${UID} -r -g ${USERNAME} ${USERNAME}
+USER ${USERNAME}
+
+# Copy the cleaner script
+COPY --chown=${USERNAME}:${USERNAME} ./cleanup.sh /cleanup.sh
+
+# Make the script executable
+RUN chmod +x /cleanup.sh
+
+# Command to run the script
+CMD ["/bin/sh", "/cleanup.sh"]
