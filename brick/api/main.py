@@ -1,9 +1,12 @@
 from fastapi import FastAPI
 from .endpoints import upload
+from .endpoints import session
+from .core.config import settings
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 app.include_router(upload.router)
+app.include_router(session.router)
 
 # CORS
 app.add_middleware(
