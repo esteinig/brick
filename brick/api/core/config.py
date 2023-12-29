@@ -20,12 +20,22 @@ class Settings(BaseSettings):
     # Upload directory for files and executing tasks
     WORK_DIRECTORY: Path = Path(f"/tmp/brick-work")
 
+    # Session directory checks
+    SESSION_MAX_SIZE_MB: int = 200
+    SESSION_MAX_FILES: int = 10000
+
     # Celery Configuration
     CELERY_BROKER_URL: str = "redis://redis:6379/0"
     CELERY_RESULT_BACKEND: str = "redis://redis:6379/1"
 
-    # CORS origins
-    CORS_ORIGINS: List[AnyHttpUrl] = ['http://localhost:5173/']
+    # CORS configuration
+    CORS_ORIGINS: List[str] = ['http://localhost:5173']
+
+    # Database
+
+    MONGODB_URL: str = "mongodb://root:example@mongodb:27017"
+    MONGODB_DATABASE: str = "brick"
+    MONGODB_SESSION_COLLECTION: str = "sessions"
 
     class Config:
         case_sensitive = True
@@ -43,11 +53,11 @@ class Settings(BaseSettings):
 
 class DevelopmentSettings(Settings):
     class Config:
-        env_prefix = "DEV_"
+        env_prefix = "DEV_BRICK_"
 
 class ProductionSettings(Settings):
     class Config:
-        env_prefix = "PROD_"
+        env_prefix = "PROD_BRICK_"
 
 def get_settings():
     environment = os.getenv("BRICK_ENV", "").lower()
@@ -63,17 +73,21 @@ def get_settings():
 
 settings = get_settings()
 
+# TODO: add disk size checks with a minimum required
+
+# Absolute working directory path
 try:
     settings.WORK_DIRECTORY = settings.WORK_DIRECTORY.resolve()
-except:
+except Exception as _:
     logging.error(f"Working directory path could not be resolved: {settings.WORK_DIRECTORY}")
     exit(1)
 
+# Create working directory
 if not settings.WORK_DIRECTORY.exists():
     logging.info(f"Working directory does not exist: {settings.WORK_DIRECTORY}")
     logging.info(f"Attempting to create working directory path for server operations...")
     try:
         settings.WORK_DIRECTORY.mkdir(parents=True)
-    except:
+    except Exception as _:
         logging.error(f"Working directory could not be created: {settings.WORK_DIRECTORY}")
         exit(1)

@@ -1,6 +1,8 @@
 
 
 import requests
+
+from pathlib import Path
 from typing import List, Dict
 
 from Bio import SeqIO
@@ -86,11 +88,6 @@ def slice_fasta_sequences(fasta_file, slice_size=10000) -> Dict[str, List[SeqRec
     return sliced_sequences
 
 
-# Example usage
-# annotations_list = ["recombinase domain containing protein", "dna polymerase", ...]
-# api_key = "your-api-key"
-# summary = summarize_protein_annotations_gpt35(annotations_list, api_key)
-# print(summary)
 def summarize_protein_annotations_gpt35(annotations: List[str], api_key: str) -> str:
     """
     This function takes a list of protein annotations and sends a request to the GPT-3.5 API to generate
@@ -141,3 +138,4 @@ def summarize_protein_annotations_gpt35(annotations: List[str], api_key: str) ->
         return response_data["choices"][0]["text"].strip()
     else:
         raise Exception(f"API request failed with status code {response.status_code}: {response.text}")
+
