@@ -1,39 +1,15 @@
-import type { BlastRing, AnnotationRing, ReferenceRing, BrickRingTitle, TextAnnotation } from "$lib/types";
-import { DEFAULT_REFERENCE_DATA } from "$lib/brick/data";
+import { type BlastRing, type AnnotationRing, type ReferenceRing, type BrickRingTitle, RingType, LabelRing } from "$lib/types";
 import type { AnnotationConfig, PlotConfig, ReferenceConfig, RingConfig, TitleConfig } from "./brick/types";
 
 
 let innerRingData: Array<ReferenceRing | AnnotationRing> = [
-
-    // {
-    //     index: 0,
-    //     visible: false,
-    //     color: "#9c913f",
-    //     height: 20,
-    //     type: 'Reference',
-    //     title: {
-    //         italic: true,
-    //         code: false,
-    //         text: DEFAULT_REFERENCE_DATA.name,
-    //     } satisfies BrickRingTitle,
-
-    //     size: DEFAULT_REFERENCE_DATA.size,
-    //     data: [
-    //         {
-    //             "color": "#9c913f",
-    //             "start": 0,
-    //             "end": DEFAULT_REFERENCE_DATA.size/2,
-    //             "text": ""
-    //         }
-    //     ]
-    // } satisfies ReferenceRing,
 
     {
         index: 0,
         visible: true,
         color: '#b4b87f',
         height: 20,
-        type: 'Annotation',
+        type: RingType.ANNOTATION,
         title: {
             italic: false,
             code: true,
@@ -56,12 +32,12 @@ let blastRingData: Array<BlastRing> = [
         visible: true,
         color: '#6ea8ab',
         height: 20,
-        type: 'BLAST',
+        type: RingType.BLAST,
         title: {
             italic: true,
             code: false,
             text: "Mycobacterium sp. SMC-2",
-        } satisfies BrickRingTitle,
+        },
         data: [
             {
                 "color": "#6ea8ab",
@@ -70,13 +46,13 @@ let blastRingData: Array<BlastRing> = [
                 "text": ""
             }
         ]
-    } satisfies BlastRing,
+    },
     {
         index: 2,
         visible: true,
         color: '#8f5715',
         height: 20,
-        type: 'BLAST',
+        type: RingType.BLAST,
         title: {
             italic: true,
             code: false,
@@ -94,13 +70,13 @@ let blastRingData: Array<BlastRing> = [
     } satisfies BlastRing,
 ];
 
-let outerRingData: Array<AnnotationRing | TextAnnotation> = [
+let outerRingData: Array<AnnotationRing | LabelRing> = [
     {
         index: 3,
         visible: true,
         color: '#d3d3d3',
         height: 20,
-        type: 'TextAnnotation',
+        type: RingType.LABEL,
         title: {
             italic: false,
             code: false,

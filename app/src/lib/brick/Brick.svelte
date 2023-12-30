@@ -3,10 +3,11 @@
   import * as d3 from 'd3';
 
   import type { PlotConfig } from './types';
-  import { downloadJSON, downloadPNG, downloadSVG } from './helpers';
-	import type { Ring, RingSegment } from '$lib/types';
+  import { downloadJSON, downloadPNG, downloadSVG, getDefaultScaleFactor } from './helpers';
+	import { RingType, type Ring, type RingSegment } from '$lib/types';
 	import { DEFAULT_CONFIG, DEFAULT_RINGS } from '$lib/data';
 	import { fade } from 'svelte/transition';
+	import { browser } from '$app/environment';
   
   export let rings: Ring[] = DEFAULT_RINGS;
   export let config: PlotConfig = DEFAULT_CONFIG;
@@ -18,7 +19,7 @@
   export let border: boolean = false;
   export let borderClass: string = "border border-gray-300 rounded-lg border-opacity-10";
 
-  export let scaleFactor: number = 1.0;
+  export let scaleFactor: number = browser ? getDefaultScaleFactor() : 1.0;
 
   export let enableZoom: boolean = true;
   export let zoomRange: [number, number] = [0.5, 5];
@@ -40,8 +41,6 @@
   let container: HTMLElement;
   let svg: any;
   let g: any;
-
-  let loading: boolean = false;
   
   onMount(() => {
     
@@ -67,9 +66,15 @@
     }
   });
 
+  // Center and scale figure
+  let scaledTransform: string;
 
-  let degreeScale = d3.scaleLinear([0, config.reference.size], [0,360]);
+  // Circular data scaling
+  let degreeScale = d3.scaleLinear(
+    [0, config.reference.size], [0,360]
+  );
   
+  // Reactive for controls to change `scaleFactor`
   $: scaledTransform = `translate(${width / 2},${height / 2}) scale(${scaleFactor})`;
 
 
@@ -162,7 +167,7 @@
           <text class="title" style="fill: {config.title.color}; opacity: {config.title.opacity}; font-style: {config.title.fontStyle}; text-anchor: middle">{config.title.text}</text>
         
           {#each rings as ring}
-            {#if ring.type === "TextAnnotation"}
+            {#if ring.type === RingType.LABEL}
               {#each ring.data as ringAnnotation}
               <line 
                 x1={calculateOuterArcPointX1(ringAnnotation)} 
@@ -220,25 +225,3 @@
       {/if}
     {/if}
 </div>
-
-<style>
-  /* Keyframes for opacity change */
-  @keyframes blink {
-    0%, 100% { opacity: 0; }
-    50% { opacity: 1; }
-  }
-
-  /* Class for animated dots */
-  .dot {
-    animation: blink 1.5s infinite;
-  }
-
-  /* Delay for the second and third dots */
-  .dot:nth-child(2) {
-    animation-delay: 0.5s;
-  }
-
-  .dot:nth-child(3) {
-    animation-delay: 1s;
-  }
-</style>

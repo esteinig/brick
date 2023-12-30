@@ -6,6 +6,8 @@
 	import { SlideToggle } from "@skeletonlabs/skeleton";
 	import FileTable from "./FileTable.svelte";
 
+    export let sessionFiles: SessionFile[] = [];
+    
     export const config: UploadConfig[] = [
         {
             title: 'Reference genome',
@@ -45,7 +47,6 @@
         } satisfies UploadConfig,
     ]
 
-    let sessionFiles: SessionFile[] = [];
     
     let showFileTable: boolean = false;
 
