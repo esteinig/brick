@@ -146,10 +146,10 @@ export const DEFAULT_CONFIG: PlotConfig = {
       gap: 5
     } satisfies RingConfig,
     annotation: {
-      lineLength: 50,
-      lineStyle: "stroke: #d3d3d3; stroke-width: 0.1rem",
-      textGap: 3,
-      textStyle: "fill: #d3d3d3; opacity: 0.8"
+      lineLength: 42,
+      lineStyle: "stroke: #d3d3d3; stroke-width: 0.07rem",
+      textGap: 5,
+      textStyle: "fill: #d3d3d3; opacity: 0.8; font-size: 90%"
 
     } satisfies AnnotationConfig
   }

@@ -1,4 +1,3 @@
-# Use an official Python runtime as a parent image for the builder stage
 FROM python:3.11-slim as builder
 
 # Set the working directory in the builder stage
@@ -37,5 +36,5 @@ COPY --chown=${USERNAME}:${USERNAME} brick/ ./brick/
 # Install the brick package with the user dependencies from the builder stage
 RUN pip install --no-cache-dir --user .
 
-# Copy your application code (other than the package)
+# Copy application code (other than the package)
 COPY --chown=${USERNAME}:${USERNAME} celery/ ./celery/
