@@ -80,11 +80,11 @@ export function downloadJSON(ringData: Ring[]) {
 }
 
 export function getDefaultScaleFactor() {
+        
+    const windowWidth = window.innerWidth;
 
-      const windowWidth = window.innerWidth;
-
-      // Tailwind breakpoints for window sizes
-      const breakpoints = {
+    // Tailwind breakpoints for window sizes
+    const breakpoints = {
         xs: 480,    // Extra small devices (portrait phones)
         sm: 640,    // Small devices (landscape phones)
         md: 768,    // Medium devices (tablets)
@@ -94,29 +94,29 @@ export function getDefaultScaleFactor() {
         xxxl: 1920, // Full HD and larger screens
         uhd: 2560,  // 2K, QHD, and some larger screens
         uhd4k: 3840 // 4K UHD screens
-      };
+    };
 
-      // Determine scaleFactor based on breakpoints
-      // used by Tailwind for standard devices
-      if (windowWidth < breakpoints.sm) {
-          return 0.6;
-      } else if (windowWidth < breakpoints.md) {
-          return 0.8;
-      } else if (windowWidth < breakpoints.lg) {
-          return 0.8;
-      } else if (windowWidth < breakpoints.lg) {
-          return 0.8;
-      } else if (windowWidth < breakpoints.xl) {
-          return 0.8;
-      } else if (windowWidth < breakpoints.xxl) {
-          return 0.8;
-      } else if (windowWidth < breakpoints.xxxl) {
-          return 0.8;
-      } else if (windowWidth < breakpoints.uhd) {
-          return 0.8;
-      } else if (windowWidth < breakpoints.uhd4k) {
-          return 0.8;
-      } else {
-          return 0.9;
-      }
+    // Determine scaleFactor based on breakpoints
+    // used by Tailwind for standard devices
+    if (windowWidth < breakpoints.sm) {
+        return 0.6;
+    } else if (windowWidth < breakpoints.md) {
+        return 0.7;
+    } else if (windowWidth < breakpoints.lg) {
+        return 0.8;
+    } else if (windowWidth < breakpoints.lg) {
+        return 0.9;
+    } else if (windowWidth < breakpoints.xl) {
+        return 1.0;
+    } else if (windowWidth < breakpoints.xxl) {
+        return 1.1;
+    } else if (windowWidth < breakpoints.xxxl) {
+        return 1.2;
+    } else if (windowWidth < breakpoints.uhd) {
+        return 1.3;
+    } else if (windowWidth < breakpoints.uhd4k) {
+        return 1.4;
+    } else {
+        return 1.5;
+    }
 }

@@ -1,18 +1,56 @@
 <script lang="ts">
-    import type { Ring } from "$lib/types";
+    import { RingType, type Ring } from "$lib/types";
     import ColorPicker from 'svelte-awesome-color-picker';
 	import { ListBox, ListBoxItem } from "@skeletonlabs/skeleton";
 	import type { PlotConfig } from "$lib/brick/types";
+	import { FileType, type SessionFile } from "./types";
+    
+	import NewReferenceRing from "./NewReferenceRing.svelte";
+	import NewBlastRing from "./NewBlastRing.svelte";
 
     export let rings: Ring[];
     export let config: PlotConfig;
+    export let sessionFiles: SessionFile[];
 
     let selectedRingIndex: string = "";
+    let newRing: RingType;
+
+    let selectedReference: SessionFile;
 
 </script>
 
 <div id="brickRingControlPanel" class="p-2 text-base">
+    <div class="mb-8">
+        <p class="opacity-60 mb-2">Reference</p>
 
+        {#if sessionFiles.length}
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 my-3">
+                <div>
+                    <label class="label text-xs">
+                        <p class="opacity-40">Select a reference genome</p>
+                        <select class="select text-xs" bind:value={selectedReference}>
+                            {#each sessionFiles as file}
+                                {#if file.type === FileType.REFERENCE}
+                                    <option value={file}>{file.name_original}</option>
+                                {/if}
+                            {/each}
+                        </select>
+                    </label>
+                </div>
+                {#if selectedReference}
+                    <div>
+                        <label class="label text-xs">
+                            <p class="opacity-40">Genome size (bp)</p>
+                            <input class="input text-xs" disabled value={selectedReference.length ?? 0}/>
+                        </label>
+                    </div>            
+                {/if}
+            </div>
+        {:else}
+            <p class="opacity-80  pl-4 text-sm">No reference genomes have been uploaded</p>
+        {/if}
+    </div>
+    <p class="opacity-60 mb-2">Rings</p>
     <ListBox class="my-5" active="variant-soft">
         {#each rings as ring}
             <ListBoxItem bind:group={selectedRingIndex} name="medium" value={ring.index}>
@@ -40,33 +78,46 @@
                     </button>
                     <span class="text-black -ml-1 mr-2"><ColorPicker --input-size="0.75rem" label="" bind:hex={ring.color}></ColorPicker></span>
                     
-                    <span class="ml-2 {ring.title.italic ? 'italic':''} {ring.title.code ? 'code': ''}">{ring.title.text}</span>
+                    <span class="ml-2 {ring.title.italic ? 'italic':''} {ring.title.code ? 'code': ''} max-w-70 truncate">{ring.title.text}</span>
                     
                 </div>
             </ListBoxItem>
         {/each}
     </ListBox>
-    <div class="flex">
-        <button class="btn variant-outline-surface ml-2">
+    
+    <div class="mt-8">
+        <p class="opacity-60 mb-2">Create</p>
+        <div class="p-2">
+            <div class="">
+                <button class="btn variant-outline-surface mr-2" disabled={selectedReference ? false : true} on:click={() => newRing = RingType.REFERENCE}>
+                    <div class="flex items-center align-center">
+                        <span>Reference</span>
+                    </div>
+                </button>
+                <button class="btn variant-outline-surface mr-2" disabled={selectedReference ? false : true}  on:click={() => newRing = RingType.BLAST}>
+                    <div class="flex items-center align-center">
+                        <span>BLAST</span>
+                    </div>
+                </button>
+                <button class="btn variant-outline-surface mr-2" disabled={selectedReference ? false : true}  on:click={() => newRing = RingType.ANNOTATION}>
+                    <div class="flex items-center align-center">
+                        <span>Annotation</span>
+                    </div>
+                </button>
+                <button class="btn variant-outline-surface mr-2" disabled={selectedReference ? false : true}  on:click={() => newRing = RingType.LABEL}>
+                    <div class="flex items-center align-center">
+                        <span>Label</span>
+                    </div>
+                </button>
+            </div>                
+        </div>
+    </div>
 
-            <div class="flex items-center align-center">
-                <div class="w-5 h-5 mr-2 ">
-                    <svg data-slot="icon" aria-hidden="true" fill="none" stroke-width="1.5" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 0 0-3.7-3.7 48.678 48.678 0 0 0-7.324 0 4.006 4.006 0 0 0-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 0 0 3.7 3.7 48.656 48.656 0 0 0 7.324 0 4.006 4.006 0 0 0 3.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3-3 3" stroke-linecap="round" stroke-linejoin="round"></path>
-                    </svg>
-                </div>
-                <span>Reference</span>
-             </div>
-        </button>
-        <button class="btn variant-outline-surface ml-2">
-            <div class="flex items-center align-center">
-                <div class="w-5 h-5 mr-1.5">
-                    <svg data-slot="icon" aria-hidden="true" fill="none" stroke-width="1.5" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 4.5v15m7.5-7.5h-15" stroke-linecap="round" stroke-linejoin="round"></path>
-                    </svg>
-                </div>
-                <span>Annotation</span>
-            </div>
-        </button>
+    <div class="mt-4">
+        {#if newRing == RingType.REFERENCE}
+            <NewReferenceRing  bind:rings={rings} selectedReference={selectedReference}></NewReferenceRing>
+        {:else if newRing == RingType.BLAST}
+            <NewBlastRing bind:rings={rings} sessionFiles={sessionFiles} selectedReference={selectedReference}></NewBlastRing>
+        {/if}
     </div>
 </div>
