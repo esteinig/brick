@@ -78,3 +78,45 @@ export function downloadJSON(ringData: Ring[]) {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 }
+
+export function getDefaultScaleFactor() {
+
+      const windowWidth = window.innerWidth;
+
+      // Tailwind breakpoints for window sizes
+      const breakpoints = {
+        xs: 480,    // Extra small devices (portrait phones)
+        sm: 640,    // Small devices (landscape phones)
+        md: 768,    // Medium devices (tablets)
+        lg: 1024,   // Large devices (laptops/desktops)
+        xl: 1280,   // Extra large devices (large laptops and desktops)
+        xxl: 1536,  // Bigger desktops
+        xxxl: 1920, // Full HD and larger screens
+        uhd: 2560,  // 2K, QHD, and some larger screens
+        uhd4k: 3840 // 4K UHD screens
+      };
+
+      // Determine scaleFactor based on breakpoints
+      // used by Tailwind for standard devices
+      if (windowWidth < breakpoints.sm) {
+          return 0.6;
+      } else if (windowWidth < breakpoints.md) {
+          return 0.8;
+      } else if (windowWidth < breakpoints.lg) {
+          return 0.8;
+      } else if (windowWidth < breakpoints.lg) {
+          return 0.8;
+      } else if (windowWidth < breakpoints.xl) {
+          return 0.8;
+      } else if (windowWidth < breakpoints.xxl) {
+          return 0.8;
+      } else if (windowWidth < breakpoints.xxxl) {
+          return 0.8;
+      } else if (windowWidth < breakpoints.uhd) {
+          return 0.8;
+      } else if (windowWidth < breakpoints.uhd4k) {
+          return 0.8;
+      } else {
+          return 0.9;
+      }
+}
