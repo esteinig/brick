@@ -5,7 +5,7 @@
 	import { getModalStore } from '@skeletonlabs/skeleton';
 	import { ProgressBar } from '@skeletonlabs/skeleton';
 	import { PUBLIC_BRICK_VERSION } from '$env/static/public';
-	import { createSessionId } from '$lib/session/helpers';
+	import { createSessionId } from '$lib/helpers';
  
 	const modalStore = getModalStore();
 

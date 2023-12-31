@@ -1,7 +1,8 @@
 
+import { env } from '$env/dynamic/public';
 import { RingType, type Ring } from '$lib/types';
-import { v4 as uuidv4 } from 'uuid';
 import { TaskStatus, type TaskStatusResponse } from './types';
+import { v4 as uuidv4 } from 'uuid';
 
 export const createUuid = (short: boolean = false) => {
     return short ? uuidv4().substring(0, 8) : uuidv4()
@@ -32,17 +33,13 @@ export function addNewRing(rings: Ring[], newRing: Ring, newIndex: number = ring
     return newArray;
 }
 
-
+// Celery results checking
 
 export async function checkCeleryResults(
-    url: string,
-    toastStore: any, 
-    successMessage: string = "Task completed successfully"
+    url: string, timeout: number = 30000, pollingInterval: number = 2000
 ): Promise<TaskStatusResponse> {
 
     const startTime = new Date().getTime();
-    const timeout = 30000; 
-    const pollingInterval = 2000; 
 
     const timeoutPromise = new Promise<TaskStatusResponse>((_, reject) => 
       setTimeout(() => reject(new Error('Operation timed out')), timeout)
@@ -52,24 +49,17 @@ export async function checkCeleryResults(
       while (true) {
         const currentTime = new Date().getTime();
         if (currentTime - startTime > timeout) {
-          throw new Error('Processing checks timed out');
+          throw new Error('File processings timed out');
         }
 
         const response = await fetch(url);
-
+        const data: TaskStatusResponse = await response.json();
+        
         if (!response.ok) {
-          const data = await response.json();
           throw new Error(`${data.detail ? data.detail : `${response.status}`}`);
         }
 
-        const data: TaskStatusResponse = await response.json();
-        
         if (data.status === TaskStatus.SUCCESS) {
-          toastStore.trigger({
-            message: successMessage,
-            background: 'variant-filled-success',
-            timeout: 3000
-          });
           return data;
         }
         await new Promise(resolve => setTimeout(resolve, pollingInterval));
@@ -79,3 +69,65 @@ export async function checkCeleryResults(
     return await Promise.race([statusCheck(), timeoutPromise]);
 }
 
+// Error handling from unknown type error response in try/catch statements
+
+type ErrorWithMessage = {
+  message: string
+}
+
+function isErrorWithMessage(error: unknown): error is ErrorWithMessage {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'message' in error &&
+    typeof (error as Record<string, unknown>).message === 'string'
+  )
+}
+
+function toErrorWithMessage(maybeError: unknown): ErrorWithMessage {
+  if (isErrorWithMessage(maybeError)) return maybeError
+
+  try {
+    return new Error(JSON.stringify(maybeError))
+  } catch {
+    // Fallback in case there's an error stringifying the maybeError
+    // like with circular references for example.
+    return new Error(String(maybeError))
+  }
+}
+
+export function getErrorMessage(error: unknown) {
+  return toErrorWithMessage(error).message
+}
+
+
+// Notification toast helper
+
+export enum ToastType {
+  ERROR = "error",
+  SUCCESS = "success",
+  DEFAULT = "default"
+}
+
+export function triggerToast(message: string, toastType: ToastType, toastStore: any, backgroundDefault: string = 'variant-filled-primary', timeoutDefault: number = 5000) {
+
+  if (toastType === ToastType.ERROR) {
+    toastStore.trigger({
+      message: message,
+      background: 'variant-filled-error',
+      timeout: 5000,
+    })
+  } else if (toastType === ToastType.SUCCESS) {
+    toastStore.trigger({
+      message: message,
+      background: 'variant-filled-success',
+      timeout: 3000,
+    })
+  } else {
+    toastStore.trigger({
+      message: message,
+      background: backgroundDefault,
+      timeout: timeoutDefault,
+    })
+  }
+}

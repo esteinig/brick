@@ -1,6 +1,13 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Annotated
 from enum import StrEnum
+
+
+SessionID = Annotated[str, "Session identifier"]
+SessionFileID = Annotated[str, "SessionFile identifier"]
+CeleryTaskID =  Annotated[str, "Celery task identifier"]
+
+# File uploads
 
 class FileFormat(StrEnum):
     FASTA = 'fasta'
@@ -13,6 +20,30 @@ class FileType(StrEnum):
     ANNOTATION_GENBANK = 'annotation_genbank'
     ANNOTATION_CUSTOM = 'annotation_custom'
 
+class FileConfig(BaseModel):
+    session_id: SessionFileID
+    file_format: FileFormat
+    file_type: FileType
+
+
+class SessionFile(BaseModel):
+    session_id: SessionFileID
+    id: SessionFileID             # uuid
+    type: FileType
+    format: FileFormat
+    records: int 
+    length: int 
+    name: str                     # with ext
+    name_original: str  
+
+
+class UploadFileResponse(BaseModel):
+    task_id: CeleryTaskID
+
+
+# Celery tasks
+    
+
 class TaskStatus(StrEnum):
     PENDING = 'PENDING' 
     STARTED = 'STARTED'
@@ -21,31 +52,25 @@ class TaskStatus(StrEnum):
     PROCESSING = 'PROCESSING'
 
 
-class FileConfig(BaseModel):
-    session_id: str
-    file_format: FileFormat
-    file_type: FileType
-
-
-class SessionFile(BaseModel):
-    session_id: str
-    id: str             # without ext
-    name: str           # with ext
-    name_original: str  
-    type: str
-    format: str
-    records: int 
-    length: int 
-
-
-class UploadFileResponse(BaseModel):
-    task_id: str
-
-
 class TaskStatusResponse(BaseModel):
-    task_id: str
+    task_id: CeleryTaskID
     status: TaskStatus
 
 
 class TaskResultResponse(TaskStatusResponse):
     result: Optional[SessionFile]
+
+
+# Ring schemas
+
+class BlastMethod(StrEnum):
+    BLASTN = 'blastn'
+
+class BlastRingConfig(BaseModel):
+    session_id: SessionID
+    reference_id: SessionFileID
+    genome_id: SessionFileID
+    blast_method: BlastMethod
+    blast_min_alignment: int
+    blast_min_identity: float
+

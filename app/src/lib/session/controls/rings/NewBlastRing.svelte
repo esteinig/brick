@@ -1,19 +1,39 @@
 <script lang="ts">
 	import { BlastRing, Ring } from "$lib/types";
-	import { addNewRing } from "./helpers";
-	import { FileType, type SessionFile } from "./types";
+	import { addNewRing } from "$lib/helpers";
+	import { FileType, type SessionFile } from "$lib/types";
+
+	import { type ToastSettings } from '@skeletonlabs/skeleton';    
+	import { page } from '$app/stores';
+    import { getToastStore } from '@skeletonlabs/skeleton';
+	import { env } from "$env/dynamic/public";
+    
+    const toastStore = getToastStore();
+
 
     export let rings: Ring[];
     export let sessionFiles: SessionFile[];
     export let selectedReference: SessionFile;
     
-    let selectedGenome: SessionFile
+    let selectedGenome: SessionFile;
+    let isLoading: boolean = false;
+
 
     async function getBlastRing() {
 
+        isLoading = true;
+
+        
 
 
-        rings = addNewRing(rings, new BlastRing(-1));
+
+        isLoading = false;
+
+        let blastRing = new BlastRing(-1)
+
+        blastRing.data = []
+
+        rings = addNewRing(rings, blastRing);
     }
 
 </script>

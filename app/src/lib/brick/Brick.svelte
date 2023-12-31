@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import * as d3 from 'd3';
 
-  import type { PlotConfig } from './types';
+  import type { PlotConfig } from '$lib/types';
   import { downloadJSON, downloadPNG, downloadSVG, getDefaultScaleFactor } from './helpers';
 	import { RingType, type Ring, type RingSegment } from '$lib/types';
 	import { DEFAULT_CONFIG, DEFAULT_RINGS } from '$lib/data';

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { ReferenceRing, Ring } from "$lib/types";
-	import { addNewRing } from "./helpers";
-	import { type SessionFile } from "./types";
+	import { addNewRing } from "$lib/helpers";
+	import { type SessionFile } from "$lib/types";
 
     export let rings: Ring[];
     export let selectedReference: SessionFile;

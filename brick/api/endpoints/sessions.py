@@ -1,16 +1,6 @@
-import shutil
-import os
-import uuid
-
-from pathlib import Path
-from pydantic import ValidationError
-from celery.result import AsyncResult
-from fastapi.responses import JSONResponse
-from fastapi import APIRouter,  HTTPException
+from fastapi import APIRouter, HTTPException
 
 from ..models import Session
-from ..core.config import settings
-from ..core.celery import celery_app
 from ..core.db import get_session_collection_motor
 
 router = APIRouter(

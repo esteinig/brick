@@ -1,5 +1,5 @@
-import { type BlastRing, type AnnotationRing, type ReferenceRing, type BrickRingTitle, RingType, LabelRing } from "$lib/types";
-import type { AnnotationConfig, PlotConfig, ReferenceConfig, RingConfig, TitleConfig } from "./brick/types";
+import { type BlastRing, type AnnotationRing, type ReferenceRing, RingType, LabelRing } from "$lib/types";
+import type { AnnotationConfig, PlotConfig, ReferenceConfig, RingConfig, TitleConfig } from "./types";
 
 
 let innerRingData: Array<ReferenceRing | AnnotationRing> = [
@@ -10,11 +10,7 @@ let innerRingData: Array<ReferenceRing | AnnotationRing> = [
         color: '#b4b87f',
         height: 20,
         type: RingType.ANNOTATION,
-        title: {
-            italic: false,
-            code: true,
-            text: 'Bakta v1.9.3',
-        } satisfies BrickRingTitle,
+        title: "Open reading frames from Bakta v1.9.3",
         data: [
             {
                 "color": "#b4b87f",
@@ -33,11 +29,7 @@ let blastRingData: Array<BlastRing> = [
         color: '#6ea8ab',
         height: 20,
         type: RingType.BLAST,
-        title: {
-            italic: true,
-            code: false,
-            text: "Mycobacterium sp. SMC-2",
-        },
+        title: "Mycobacterium sp. SMC-2",
         data: [
             {
                 "color": "#6ea8ab",
@@ -53,11 +45,7 @@ let blastRingData: Array<BlastRing> = [
         color: '#8f5715',
         height: 20,
         type: RingType.BLAST,
-        title: {
-            italic: true,
-            code: false,
-            text: "Mycobacterium nebraskense",
-        } satisfies BrickRingTitle,
+        title: "Mycobacterium nebraskense",
         data: [
             {
                 "color": "#8f5715",
@@ -67,7 +55,7 @@ let blastRingData: Array<BlastRing> = [
             }
 
         ]
-    } satisfies BlastRing,
+    },
 ];
 
 let outerRingData: Array<AnnotationRing | LabelRing> = [
@@ -77,11 +65,7 @@ let outerRingData: Array<AnnotationRing | LabelRing> = [
         color: '#d3d3d3',
         height: 20,
         type: RingType.LABEL,
-        title: {
-            italic: false,
-            code: false,
-            text: "Custom feature annotations",
-        } satisfies BrickRingTitle,
+        title: "Custom feature labels",
         data: [
             {
                 "color": "#8f5715",
@@ -102,7 +86,7 @@ let outerRingData: Array<AnnotationRing | LabelRing> = [
                 "text": "Mobile element integration"
             },
         ]
-    } satisfies AnnotationRing,
+    },
 ];
 
 export const DEFAULT_CONFIG: PlotConfig = {
