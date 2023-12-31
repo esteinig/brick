@@ -1,4 +1,5 @@
 import pandas
+import subprocess
 
 from Bio import SeqIO
 from typing import Tuple
@@ -9,7 +10,7 @@ from uuid import uuid4
 from .core.celery import celery_app
 from .core.db import get_session_collection_pymongo
 from .schemas import FileFormat, FileType, SessionFile
-from .models import Session, Figure
+from .models import Session
 
 
 # Uploaded file validation and session file storage
@@ -54,6 +55,56 @@ def process_file(file_path: str, config_data: dict, filename_original: str):
 
         # Capture any exceptions and return them
         return {"success": False, "error": str(e)}
+    
+
+
+# Nucleotide BLAST subprocess execution and parsing
+@celery_app.task
+def creat_blast_ring(reference_file: str, genome_file: str, config_data: dict):
+
+    try:
+        
+        output_name = run_nucleotide_blast(query_fasta=Path(genome_file), reference_fasta=Path(reference_file), output_file=Path())
+
+        update_or_create_session(session_file=session_file)
+
+        return {
+            "success": True, 
+            "result": session_file.model_dump()
+        }
+
+    except Exception as e:
+        # Delete the file if processing fails
+        Path(file_path).unlink()
+
+        # Capture any exceptions and return them
+        return {"success": False, "error": str(e)}
+
+
+
+# Subprocess helpers
+    
+
+def run_nucleotide_blast(query_fasta: Path, reference_fasta: Path, output_file: Path):
+    """
+    Runs a nucleotide BLAST comparing a query genome in FASTA format with a reference genome.
+
+    :param query_fasta: Path to the query genome FASTA file.
+    :param reference_fasta: Path to the reference genome FASTA file.
+    :param output_file: Path to save the BLAST results.
+    """
+
+    # Check if files exist
+    if not query_fasta.exists():
+        raise FileNotFoundError(f"Query file not found: {query_fasta}")
+    if not reference_fasta.exists():
+        raise FileNotFoundError(f"Reference file not found: {reference_fasta}")
+
+    # Create BLAST database from reference genome
+    subprocess.run(["makeblastdb", "-in", reference_fasta, "-dbtype", "nucl", "-out", db_name], check=True)
+
+    # Run BLASTn
+    subprocess.run(["blastn", "-query", query_fasta, "-db", db_name, "-out", output_file, "-outfmt 6"], check=True)
 
 
 # Validation helpers
@@ -110,11 +161,8 @@ def update_or_create_session(session_file: SessionFile) -> str:
     else:
         new_session = Session(
             id=session_file.session_id, 
-            created=datetime.now().isoformat(), 
-            files=[session_file], 
-            figure=Figure(
-                id=str(uuid4())
-            )
+            date=datetime.now().isoformat(), 
+            files=[session_file]
         )
         sessions_collection.insert_one(
             new_session.model_dump()

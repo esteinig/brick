@@ -37,4 +37,4 @@ COPY --chown=${USERNAME}:${USERNAME} brick/ ./brick/
 RUN pip install --no-cache-dir --user .
 
 # Use other application code if necessary
-# COPY --chown=${USERNAME}:${USERNAME} ...
+COPY --chown=${USERNAME}:${USERNAME} tests ./tests/
