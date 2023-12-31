@@ -9,3 +9,7 @@ uvicorn
 pydantic-settings
 python-multipart
 motor
+pytest
+pytest-asyncio
+httpx
+pytest-celery

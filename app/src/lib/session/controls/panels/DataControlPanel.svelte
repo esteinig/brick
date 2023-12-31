@@ -1,53 +1,49 @@
 <script lang="ts">
-    import FileUpload from "../upload/FileUpload.svelte";
-    import { env } from "$env/dynamic/public";
-	import { type SessionFile, type UploadConfig } from "$lib/types";
-    import { FileFormat, FileType } from "$lib/types";
-	import { SlideToggle } from "@skeletonlabs/skeleton";
+    import FileUpload from "$lib/session/controls/upload/FileUpload.svelte";
 	import FileTable from "$lib/session/controls/upload/FileTable.svelte";
+
+    import { SlideToggle } from "@skeletonlabs/skeleton";
+
+    import { FileFormat, FileType } from "$lib/types";
+	import { type SessionFile, type UploadConfig } from "$lib/types";
 
     export let sessionFiles: SessionFile[] = [];
     
     export const config: UploadConfig[] = [
         {
             title: 'Reference genome',
-            url: `${env.PUBLIC_API_URL}/files/upload`,
             message: 'Upload one or multiple chromosome-level assemblies as reference genomes',
             meta: '.fasta',
             single: false,
             format: FileFormat.FASTA,
             type: FileType.REFERENCE
-        } satisfies UploadConfig,
+        },
         {
             title: 'Comparison genomes',
-            url: `${env.PUBLIC_API_URL}/files/upload`,
             message: 'Upload one or multiple genome sequences for comparison with BLAST',
             meta: '.fasta',
             single: false,
             format: FileFormat.FASTA,
             type: FileType.GENOME
-        } satisfies UploadConfig,
+        },
         {
             title: 'Reference annotation',
-            url: `${env.PUBLIC_API_URL}/files/upload`,
             message: 'Upload annotations in Genbank format',
             meta: '.gbk',
             single: false,
             format: FileFormat.GENBANK,
             type: FileType.ANNOTATION_GENBANK
-        } satisfies UploadConfig,
+        },
         {
             title: 'Custom annotations',
-            url: `${env.PUBLIC_API_URL}/files/upload`,
             message: 'Upload custom annotations as table ',
             meta: '.tsv',
             single: false,
             format: FileFormat.TSV,
             type: FileType.ANNOTATION_CUSTOM
-        } satisfies UploadConfig,
+        },
     ]
 
-    
     let showFileTable: boolean = false;
 
 </script>

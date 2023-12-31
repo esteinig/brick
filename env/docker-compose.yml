@@ -81,6 +81,20 @@ services:
     volumes:
       - ${PROD_BRICK_WORK_DIRECTORY:-/tmp}:/data:rw
 
-  
+
+  # TESTING SETUPS
+  # ==============
+
+  tests:
+    profiles:
+      - test
+    build: 
+      context: ..
+      dockerfile: env/Dockerfile
+    command: pytest
+    depends_on:
+      - redis
+      - mongodb
+
 volumes:
   session_data:

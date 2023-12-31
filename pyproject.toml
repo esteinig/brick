@@ -21,16 +21,27 @@ dependencies = [
   "pydantic-settings", 
   "python-multipart", 
   "pymongo", 
-  "motor"
+  "motor",
+  "pytest",
+  "pytest-asyncio",
+  "httpx",
+  "pytest-celery",
+  "asgi-lifespan"
 ]
 
-[tool.setuptools]
-packages = [
-    "brick"
-]
+[tool.setuptools.packages.find]
+where = ["."]  
+include = ["brick*"] 
+namespaces = false
 
 [project.scripts]
 brick = "brick.terminal:app"
+
+[tool.pytest.ini_options]
+testpaths = [
+    "tests/api_tests",
+]
+addopts = "-v"
 
 [tool.black]
 line-length = 79
