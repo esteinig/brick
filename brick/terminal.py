@@ -1,14 +1,11 @@
 
 import typer
-
 from pathlib import Path
-from typing import List
 
 from .brick import *
 from .utils import *
 
 app = typer.Typer(add_completion=False)
-
 
 @app.command()
 def brig_viz(

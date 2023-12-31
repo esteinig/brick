@@ -1,12 +1,17 @@
 from fastapi import FastAPI
-from .endpoints import upload
-from .endpoints import session
-from .core.config import settings
+
+from .endpoints import files
+from .endpoints import sessions
+from .endpoints import tasks
+from .endpoints import rings
+
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
-app.include_router(upload.router)
-app.include_router(session.router)
+app.include_router(files.router)
+app.include_router(sessions.router)
+app.include_router(tasks.router)
+app.include_router(rings.router)
 
 # CORS
 app.add_middleware(

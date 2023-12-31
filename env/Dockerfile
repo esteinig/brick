@@ -36,5 +36,5 @@ COPY --chown=${USERNAME}:${USERNAME} brick/ ./brick/
 # Install the brick package with the user dependencies from the builder stage
 RUN pip install --no-cache-dir --user .
 
-# Copy application code (other than the package)
-COPY --chown=${USERNAME}:${USERNAME} celery/ ./celery/
+# Use other application code if necessary
+# COPY --chown=${USERNAME}:${USERNAME} ...

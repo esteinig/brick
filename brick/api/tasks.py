@@ -18,12 +18,10 @@ def process_file(file_path: str, config_data: dict, filename_original: str):
 
     try:
         session_id: str = config_data["session_id"]
-
         file_type: FileType = config_data["file_type"]
         file_format: FileFormat = config_data["file_format"]
 
-        records = 0
-        length = 0
+        records = 0; length = 0
 
         if file_format == FileFormat.FASTA:
             length, records = validate_fasta(path=file_path, file_type=file_type)
@@ -47,7 +45,7 @@ def process_file(file_path: str, config_data: dict, filename_original: str):
 
         return {
             "success": True, 
-            "result": session_file.dict()
+            "result": session_file.model_dump()
         }
 
     except Exception as e:
@@ -107,7 +105,7 @@ def update_or_create_session(session_file: SessionFile) -> str:
     if session:
         sessions_collection.update_one(
             {"id": session_file.session_id}, 
-            {"$push": {"files": session_file.dict()}}
+            {"$push": {"files": session_file.model_dump()}}
         )
     else:
         new_session = Session(
@@ -119,7 +117,7 @@ def update_or_create_session(session_file: SessionFile) -> str:
             )
         )
         sessions_collection.insert_one(
-            new_session.dict()
+            new_session.model_dump()
         )
 
     return session_file.session_id

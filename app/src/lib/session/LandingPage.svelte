@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { createSessionId } from "$lib/session/helpers";
+	import { createSessionId } from "$lib/helpers";
 </script>
 
 <div class="container">

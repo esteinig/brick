@@ -1,10 +1,10 @@
 <script lang="ts">
-    import FileUpload from "./upload/FileUpload.svelte";
+    import FileUpload from "../upload/FileUpload.svelte";
     import { env } from "$env/dynamic/public";
-	import { type SessionFile, type UploadConfig } from "./types";
-    import { FileFormat, FileType } from "./types";
+	import { type SessionFile, type UploadConfig } from "$lib/types";
+    import { FileFormat, FileType } from "$lib/types";
 	import { SlideToggle } from "@skeletonlabs/skeleton";
-	import FileTable from "./FileTable.svelte";
+	import FileTable from "$lib/session/controls/upload/FileTable.svelte";
 
     export let sessionFiles: SessionFile[] = [];
     
@@ -61,7 +61,7 @@
             {#each config as uploadConfig}
                 <div class="my-2">
                     <p class="opacity-60 mb-2">{uploadConfig.title}</p>
-                    <FileUpload url={uploadConfig.url} message={uploadConfig.message} meta={uploadConfig.meta} single={uploadConfig.single} format={uploadConfig.format} type={uploadConfig.type} bind:sessionFiles={sessionFiles}>
+                    <FileUpload message={uploadConfig.message} meta={uploadConfig.meta} format={uploadConfig.format} type={uploadConfig.type} bind:sessionFiles={sessionFiles}>
                         <svelte:fragment slot="icon">
                         <div class="sm:w-6 md:w-12">
                             <svg data-slot="icon" aria-hidden="true" fill="none" stroke-width="1.5" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">

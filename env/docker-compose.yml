@@ -16,11 +16,22 @@ services:
       - redis
       - mongodb
 
-  worker:
+  worker1:
     build: 
       context: ..
       dockerfile: env/Dockerfile
-    command: python celery/worker.py
+    command: celery -A brick.api.core.celery.celery_app worker --loglevel=INFO
+    volumes:
+      - /tmp:/tmp
+    depends_on:
+      - redis
+      - mongodb
+  
+  worker2:
+    build: 
+      context: ..
+      dockerfile: env/Dockerfile
+    command: celery -A brick.api.core.celery.celery_app worker --loglevel=INFO
     volumes:
       - /tmp:/tmp
     depends_on:

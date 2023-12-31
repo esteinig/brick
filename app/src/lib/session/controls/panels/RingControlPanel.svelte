@@ -2,11 +2,11 @@
     import { RingType, type Ring } from "$lib/types";
     import ColorPicker from 'svelte-awesome-color-picker';
 	import { ListBox, ListBoxItem } from "@skeletonlabs/skeleton";
-	import type { PlotConfig } from "$lib/brick/types";
-	import { FileType, type SessionFile } from "./types";
+	import type { PlotConfig } from "$lib/types";
+	import { FileType, type SessionFile } from "$lib/types";
     
-	import NewReferenceRing from "./NewReferenceRing.svelte";
-	import NewBlastRing from "./NewBlastRing.svelte";
+	import NewReferenceRing from "$lib/session/controls/rings/NewReferenceRing.svelte";
+	import NewBlastRing from "$lib/session/controls/rings/NewBlastRing.svelte";
 
     export let rings: Ring[];
     export let config: PlotConfig;
@@ -78,7 +78,7 @@
                     </button>
                     <span class="text-black -ml-1 mr-2"><ColorPicker --input-size="0.75rem" label="" bind:hex={ring.color}></ColorPicker></span>
                     
-                    <span class="ml-2 {ring.title.italic ? 'italic':''} {ring.title.code ? 'code': ''} max-w-70 truncate">{ring.title.text}</span>
+                    <span class="ml-2 max-w-70 truncate">{ring.title}</span>
                     
                 </div>
             </ListBoxItem>

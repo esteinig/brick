@@ -5,7 +5,7 @@
 	import { DEFAULT_CONFIG, DEFAULT_RINGS } from "$lib/data";
 
 	import type { Ring } from "$lib/types";
-	import type { PlotConfig } from "$lib/brick/types";
+	import type { PlotConfig } from "$lib/types";
 
     export let rings: Ring[] = DEFAULT_RINGS;
     export let config: PlotConfig = DEFAULT_CONFIG;

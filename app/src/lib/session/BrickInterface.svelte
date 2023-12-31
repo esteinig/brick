@@ -1,16 +1,16 @@
  
 <script lang="ts">
-
     import { TabGroup, Tab } from '@skeletonlabs/skeleton';
 
 	import type { Ring } from "$lib/types";
-	import type { PlotConfig } from "$lib/brick/types";
+	import type { PlotConfig } from "$lib/types";
+	import type { SessionFile } from '$lib/types';
+
     import { DEFAULT_CONFIG, DEFAULT_RINGS } from "$lib/data";
 
-	import DataControlPanel from "./DataControlPanel.svelte";
-	import RingControlPanel from "./RingControlPanel.svelte";
+	import DataControlPanel from "$lib/session/controls/panels/DataControlPanel.svelte";
+	import RingControlPanel from "$lib/session/controls/panels/RingControlPanel.svelte";
 
-	import type { SessionFile } from './types';
 
     export let rings: Ring[] = DEFAULT_RINGS;
     export let config: PlotConfig = DEFAULT_CONFIG;

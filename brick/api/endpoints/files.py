@@ -6,21 +6,21 @@ from pathlib import Path
 from typing import List
 
 from pydantic import ValidationError
-from celery.result import AsyncResult
 from fastapi.responses import JSONResponse
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException
 
-from ..schemas import FileConfig, TaskStatus, TaskStatusResponse, TaskResultResponse, UploadFileResponse
+from ..schemas import FileConfig, UploadFileResponse
 from ..models import Session, SessionFile
+
 from ..core.config import settings
-from ..core.celery import celery_app
+
 from ..core.db import get_session_collection_motor
-from ..tasks import process_file
 from ..utils import sanitize_input
+from ..tasks import process_file
 
 router = APIRouter(
     prefix="/files",
-    tags=["files"],
+    tags=["file", "upload"],
 )
 
 
@@ -47,7 +47,7 @@ async def upload_file(file: UploadFile = File(...), config: str = Form(...)):
 
     # File configuration provided as form data
     try:
-        config_data = FileConfig.parse_raw(config)
+        config_data = FileConfig.model_validate_json(config)
     except ValidationError as e:
         raise HTTPException(status_code=400, detail=f"Invalid config data: {e}")
 
@@ -97,50 +97,8 @@ async def upload_file(file: UploadFile = File(...), config: str = Form(...)):
         status_code=202, 
         content=UploadFileResponse(
             task_id=task.id
-        ).dict()
+        ).model_dump()
     )
-
-@router.get("/status/{task_id}", response_model=TaskStatusResponse)
-def get_task_status(task_id: str):
-    """ 
-    Query file upload processing status
-    """
-    task_result = AsyncResult(task_id, app=celery_app)
-
-    return {"task_id": task_id, "status": task_result.status}
-
-
-@router.get("/result/{task_id}")
-def get_task_result(task_id: str):
-    """ 
-    Query file upload processing result
-    """
-    task_result = AsyncResult(task_id, app=celery_app)
-
-    if not task_result.ready():
-        return JSONResponse(
-            status_code=202, 
-            content=TaskResultResponse(
-                task_id=task_id, 
-                status=TaskStatus.PROCESSING, 
-                result=None
-            ).dict()
-        )
-    
-    result = task_result.get()
-
-    if result["success"]:
-        return JSONResponse(
-            status_code=200, 
-            content=TaskResultResponse(
-                task_id=task_id, 
-                status=TaskStatus.SUCCESS, 
-                result=result["result"]
-            ).dict()
-        )
-    else:
-        raise HTTPException(status_code=500, detail=result["error"])
-
 
 # Helpers
 
