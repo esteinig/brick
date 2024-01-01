@@ -1,16 +1,16 @@
 <script lang="ts">
-    import { RingType, type Ring } from "$lib/types";
+    import { RingType } from "$lib/types";
     import ColorPicker from 'svelte-awesome-color-picker';
 	import { ListBox, ListBoxItem } from "@skeletonlabs/skeleton";
 	import type { PlotConfig } from "$lib/types";
 	import { FileType, type SessionFile } from "$lib/types";
-    
+    import { sessionFiles } from "$lib/stores/SessionFileStore";
+    import { rings } from "$lib/stores/RingStore";
+
 	import NewReferenceRing from "$lib/session/controls/rings/NewReferenceRing.svelte";
 	import NewBlastRing from "$lib/session/controls/rings/NewBlastRing.svelte";
 
-    export let rings: Ring[];
     export let config: PlotConfig;
-    export let sessionFiles: SessionFile[];
 
     let selectedRingIndex: string = "";
     let newRing: RingType;
@@ -23,13 +23,13 @@
     <div class="mb-8">
         <p class="opacity-60 mb-2">Reference</p>
 
-        {#if sessionFiles.length}
+        {#if $sessionFiles.length}
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 my-3">
                 <div>
                     <label class="label text-xs">
                         <p class="opacity-40">Select a reference genome</p>
                         <select class="select text-xs" bind:value={selectedReference}>
-                            {#each sessionFiles as file}
+                            {#each $sessionFiles as file}
                                 {#if file.type === FileType.REFERENCE}
                                     <option value={file}>{file.name_original}</option>
                                 {/if}
@@ -52,7 +52,7 @@
     </div>
     <p class="opacity-60 mb-2">Rings</p>
     <ListBox class="my-5" active="variant-soft">
-        {#each rings as ring}
+        {#each $rings as ring}
             <ListBoxItem bind:group={selectedRingIndex} name="medium" value={ring.index}>
                 <div class="flex items-center align-center gap-x-2">
                     {#if ring.visible}
@@ -115,9 +115,9 @@
 
     <div class="mt-4">
         {#if newRing == RingType.REFERENCE}
-            <NewReferenceRing  bind:rings={rings} selectedReference={selectedReference}></NewReferenceRing>
+            <NewReferenceRing selectedReference={selectedReference}></NewReferenceRing>
         {:else if newRing == RingType.BLAST}
-            <NewBlastRing bind:rings={rings} sessionFiles={sessionFiles} selectedReference={selectedReference}></NewBlastRing>
+            <NewBlastRing selectedReference={selectedReference}></NewBlastRing>
         {/if}
     </div>
 </div>

@@ -1,15 +1,9 @@
-import shutil
-import os
-import uuid
-
-from pathlib import Path
-from pydantic import ValidationError
-from celery.result import AsyncResult
 from fastapi.responses import JSONResponse
 from fastapi import APIRouter,  HTTPException
 
+from ..schemas import BlastRingSchema, BlastRingResponse
+from ..tasks import process_blast_ring
 
-from ..schemas import BlastRingConfig
 
 router = APIRouter(
     prefix="/rings",
@@ -18,7 +12,22 @@ router = APIRouter(
 
 
 @router.post("/blast")
-def create_blast_ring(config: BlastRingConfig):
-    # Process the configuration here
-    # Example: just return the received config
-    return {"received_config": config}
+def create_blast_ring(ring_config: BlastRingSchema):
+    
+    _, reference_file, genome_file = ring_config.get_file_paths()
+
+    try:
+        task = process_blast_ring.delay(
+            str(reference_file), 
+            str(genome_file), 
+            ring_config.model_dump()
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error initiating task: {str(e)}")
+
+    return JSONResponse(
+        status_code=202, 
+        content=BlastRingResponse(
+            task_id=task.id
+        ).model_dump()
+    )

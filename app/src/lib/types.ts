@@ -120,13 +120,12 @@ export class LabelRing extends Ring {
 
 export type SessionFile = {
     session_id: string
-    id: string            
-    name: string     
-    name_original: string
+    id: string       
     type: string
     format: string
     records: number
     length: number
+    name_original: string
 }
 
 export type FileConfig = {
@@ -166,6 +165,24 @@ export enum TaskStatus {
     PROCESSING = "PROCESSING"
 }
 
+/*  ===============
+ *  API RING SCHEMAS
+ *  ================
+*/
+
+export enum BlastMethod {
+    BLASTN = "blastn"
+}
+
+export type BlastRingSchema = {
+    session_id: string
+    reference_id: string
+    genome_id: string
+    blast_method: BlastMethod,
+    min_identity: number
+    min_alignment: number
+}
+
 /*  =============
  *  API RESPONSES
  *  =============
@@ -179,6 +196,9 @@ export type FileUploadResponse = {
     task_id: string
 } & ErrorResponse
 
+export type BlastRingResponse = {
+    task_id: string
+} & ErrorResponse
 
 export type TaskStatusResponse = {
     status: TaskStatus

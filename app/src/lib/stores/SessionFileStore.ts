@@ -1,5 +1,5 @@
-import { writable } from 'svelte/store';
-import type { SessionFile } from '$lib/types';
+import { writable, get} from 'svelte/store';
+import type { FileType, SessionFile } from '$lib/types';
 
 // Define the type for the store
 type SessionFileStore = SessionFile[];
@@ -17,5 +17,14 @@ function removeSessionFile(id: string) {
     sessionFiles.update(currentFiles => currentFiles.filter(file => file.id !== id));
 }
 
+function sessionFileTypeAvailable(fileType: FileType): boolean {
+    const currentFiles = get(sessionFiles);
+    return currentFiles.some(file => file.type === fileType);
+}
+
+function clearSessionFiles() {
+    sessionFiles.update(_ => [])
+}
+
 // Export the store and functions
-export { sessionFiles, addSessionFile, removeSessionFile };
+export { sessionFiles, addSessionFile, removeSessionFile, sessionFileTypeAvailable, clearSessionFiles };

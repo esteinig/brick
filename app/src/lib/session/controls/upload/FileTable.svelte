@@ -1,10 +1,9 @@
 <script lang="ts">
-	import type { SessionFile } from "./types";
+	import { sessionFiles } from "$lib/stores/SessionFileStore";
 
-    export let sessionFiles: SessionFile[] = []
 </script>
 
-{#if sessionFiles.length}
+{#if $sessionFiles.length}
     <div class="table-container">
         <table class="table table-hover">
             <thead>
@@ -17,7 +16,7 @@
                 </tr>
             </thead>
             <tbody>
-                {#each sessionFiles as sessionFile, i}
+                {#each $sessionFiles as sessionFile}
                     <tr>
                         <td class="truncate">{sessionFile.name_original}</td>
                         <td>{sessionFile.type}</td>

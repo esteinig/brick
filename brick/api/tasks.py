@@ -1,26 +1,29 @@
 import pandas
 import subprocess
+import tempfile
+import contextlib
 
 from Bio import SeqIO
-from typing import Tuple
+from typing import Tuple, Annotated
 from pathlib import Path
 from datetime import datetime
-from uuid import uuid4
 
+from .core.config import settings
 from .core.celery import celery_app
 from .core.db import get_session_collection_pymongo
 from .schemas import FileFormat, FileType, SessionFile
 from .models import Session
-
+from ..rings import BlastRing
 
 # Uploaded file validation and session file storage
 @celery_app.task
-def process_file(file_path: str, config_data: dict, filename_original: str):
+def process_file(file_path: str, file_config: Annotated[dict, "Model dump of FileConfig"], filename_original: str):
 
     try:
-        session_id: str = config_data["session_id"]
-        file_type: FileType = config_data["file_type"]
-        file_format: FileFormat = config_data["file_format"]
+        session_id: str = file_config["session_id"]
+
+        file_type: FileType = file_config["file_type"]
+        file_format: FileFormat = file_config["file_format"]
 
         records = 0; length = 0
 
@@ -33,8 +36,7 @@ def process_file(file_path: str, config_data: dict, filename_original: str):
 
         session_file = SessionFile(
             session_id=session_id,
-            id=Path(file_path).stem,
-            name=Path(file_path).name,
+            id=Path(file_path).name,
             name_original=filename_original,
             type=file_type,
             format=file_format,
@@ -60,23 +62,27 @@ def process_file(file_path: str, config_data: dict, filename_original: str):
 
 # Nucleotide BLAST subprocess execution and parsing
 @celery_app.task
-def creat_blast_ring(reference_file: str, genome_file: str, config_data: dict):
+def process_blast_ring(
+    reference_file_path: Annotated[str, "Path to reference file in the session directory"], 
+    genome_file_path: Annotated[str, "Path to genome file in the session directory"], 
+    blast_ring_schema: Annotated[dict, "Model dump of BlastRingConfig schema"]
+):
 
     try:
-        
-        output_name = run_nucleotide_blast(query_fasta=Path(genome_file), reference_fasta=Path(reference_file), output_file=Path())
-
-        update_or_create_session(session_file=session_file)
-
+        with create_tmp_directory(root_dir=settings.WORK_DIRECTORY) as working_directory:
+            output_file = run_blast(
+                query_fasta=Path(genome_file_path), 
+                reference_fasta=Path(reference_file_path), 
+                working_directory=working_directory
+            )
+            ring = BlastRing.from_blast_output(file=output_file)
+             
         return {
             "success": True, 
-            "result": session_file.model_dump()
+            "result": ring.model_dump()
         }
 
     except Exception as e:
-        # Delete the file if processing fails
-        Path(file_path).unlink()
-
         # Capture any exceptions and return them
         return {"success": False, "error": str(e)}
 
@@ -85,7 +91,7 @@ def creat_blast_ring(reference_file: str, genome_file: str, config_data: dict):
 # Subprocess helpers
     
 
-def run_nucleotide_blast(query_fasta: Path, reference_fasta: Path, output_file: Path):
+def run_blast(query_fasta: Path, reference_fasta: Path, working_directory: Path):
     """
     Runs a nucleotide BLAST comparing a query genome in FASTA format with a reference genome.
 
@@ -100,12 +106,16 @@ def run_nucleotide_blast(query_fasta: Path, reference_fasta: Path, output_file: 
     if not reference_fasta.exists():
         raise FileNotFoundError(f"Reference file not found: {reference_fasta}")
 
+    db_file = working_directory / "refdb"
+    output_file = working_directory / "results.tsv"
+
     # Create BLAST database from reference genome
-    subprocess.run(["makeblastdb", "-in", reference_fasta, "-dbtype", "nucl", "-out", db_name], check=True)
+    subprocess.run(["makeblastdb", "-in", str(reference_fasta), "-dbtype", "nucl", "-out", str(db_file)], check=True)
 
     # Run BLASTn
-    subprocess.run(["blastn", "-query", query_fasta, "-db", db_name, "-out", output_file, "-outfmt 6"], check=True)
+    subprocess.run(["blastn", "-query", str(query_fasta), "-db", str(db_file), "-out", str(output_file), "-outfmt", "6"], check=True)
 
+    return output_file
 
 # Validation helpers
 
@@ -169,3 +179,11 @@ def update_or_create_session(session_file: SessionFile) -> str:
         )
 
     return session_file.session_id
+
+
+# Working directory helpers
+
+@contextlib.contextmanager
+def create_tmp_directory(root_dir: str = None) -> Path:
+    with tempfile.TemporaryDirectory(dir=root_dir) as temp_dir:
+        yield Path(temp_dir)

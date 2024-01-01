@@ -6,17 +6,20 @@
 	import { ProgressBar } from '@skeletonlabs/skeleton';
 	import { PUBLIC_BRICK_VERSION } from '$env/static/public';
 	import { createSessionId } from '$lib/helpers';
+	import { clearSessionFiles } from '$lib/stores/SessionFileStore';
+	import { clearRings } from '$lib/stores/RingStore';
  
 	const modalStore = getModalStore();
 
 	const newSessionPrompt: ModalSettings = {
 		type: 'confirm',
-		// Data
 		title: 'Please Confirm',
-		body: 'Are you sure you wish to create a new session? We do not store user data on our servers; all current data will be lost.',
+		body: 'Are you sure you wish to create a new session? All current data will be lost.',
 		// TRUE if confirm pressed, FALSE if cancel pressed
 		response: (r: boolean) => {
 			if (r) {
+				clearSessionFiles(); 
+				clearRings();
 				goto('/brick/'+createSessionId())
 			}
 		},
@@ -24,10 +27,8 @@
 	
 	const saveSessionPrompt: ModalSettings = {
 		type: 'confirm',
-		// Data
 		title: 'Please Confirm',
-		body: 'Are you sure you wish to create a new session? We do not store user data on our servers; all current data will be lost.',
-		// TRUE if confirm pressed, FALSE if cancel pressed
+		body: 'Are you sure you wish to create a new session? All current data will be lost.',
 		response: (r: boolean) => {
 			if (r) {
 				goto('/brick/'+createSessionId())

@@ -12,10 +12,7 @@
 	import RingControlPanel from "$lib/session/controls/panels/RingControlPanel.svelte";
 
 
-    export let rings: Ring[] = DEFAULT_RINGS;
     export let config: PlotConfig = DEFAULT_CONFIG;
-
-    let sessionFiles: SessionFile[] = []
 
     let tab: number = 0;
 
@@ -43,9 +40,9 @@
         <!-- Tab Panels --->
         <svelte:fragment slot="panel">
             {#if tab === 0}
-                <DataControlPanel bind:sessionFiles={sessionFiles}></DataControlPanel>
+                <DataControlPanel></DataControlPanel>
             {:else if tab === 1}
-                <RingControlPanel bind:rings={rings} bind:config={config} bind:sessionFiles={sessionFiles}></RingControlPanel>
+                <RingControlPanel bind:config={config}></RingControlPanel>
             {:else if tab === 2}
             <span></span>
             {:else if tab === 3}

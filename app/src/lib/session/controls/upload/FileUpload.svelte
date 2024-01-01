@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { type SessionFile } from '$lib/types';
+  import { addSessionFile } from '$lib/stores/SessionFileStore';
   import { FileFormat, FileType } from '$lib/types';
   import { ToastType, createUuid, triggerToast } from '$lib/helpers';
 
@@ -15,20 +15,17 @@
   export let type: FileType;
 
   export let id: string = `brickFileUpload-${createUuid(true)}`;
-  export let message: string = "Please upload a file (.tsv, .fasta, .gbk)"
+  export let message: string = "Please upload a file"
   export let meta: string = ""
 
-  export let sessionFiles: SessionFile[] = [];
-
-  let formElement: HTMLFormElement;
+  let formElement: HTMLFormElement; // neded for drop zone handler
   let files: FileList;
 
   let loading: boolean = false;
 
 </script>
   
-
-<form bind:this={formElement} action="?/uploadFile" method="POST" enctype="multipart/form-data" use:enhance={({ formElement, formData, action, cancel, submitter }) => {
+<form id="form-{id}" bind:this={formElement} action="?/uploadFile" method="POST" enctype="multipart/form-data" use:enhance={({ formElement, formData, action, cancel, submitter }) => {
   
   // TODO: Multiple Files
 
@@ -57,6 +54,7 @@
 
     if (result.type === "success"){
       triggerToast("File uploaded sucessfully", ToastType.SUCCESS, toastStore);
+      addSessionFile($page.form.result)
     } else {
       triggerToast($page.form.detail ?? `Error ${result.status}: an unknown error occurred`, ToastType.ERROR, toastStore);
     }
