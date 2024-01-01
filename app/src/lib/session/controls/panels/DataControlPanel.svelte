@@ -6,8 +6,6 @@
 
     import { FileFormat, FileType } from "$lib/types";
 	import { type SessionFile, type UploadConfig } from "$lib/types";
-
-    export let sessionFiles: SessionFile[] = [];
     
     export const config: UploadConfig[] = [
         {
@@ -51,13 +49,13 @@
 <div id="brickRingControlPanel" class="p-2 text-base">
     
     {#if showFileTable}
-        <FileTable bind:sessionFiles={sessionFiles}></FileTable>
+        <FileTable></FileTable>
     {:else}
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-x-8 gap-y-4">
             {#each config as uploadConfig}
                 <div class="my-2">
                     <p class="opacity-60 mb-2">{uploadConfig.title}</p>
-                    <FileUpload message={uploadConfig.message} meta={uploadConfig.meta} format={uploadConfig.format} type={uploadConfig.type} bind:sessionFiles={sessionFiles}>
+                    <FileUpload message={uploadConfig.message} meta={uploadConfig.meta} format={uploadConfig.format} type={uploadConfig.type}>
                         <svelte:fragment slot="icon">
                         <div class="sm:w-6 md:w-12">
                             <svg data-slot="icon" aria-hidden="true" fill="none" stroke-width="1.5" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">

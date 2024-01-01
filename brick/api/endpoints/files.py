@@ -24,7 +24,6 @@ router = APIRouter(
 )
 
 
-
 @router.get("/{session_id}", response_model=List[SessionFile])
 async def get_files(session_id: str):
 
@@ -79,16 +78,16 @@ async def upload_file(file: UploadFile = File(...), config: str = Form(...)):
     )
 
     # Save file and initate processing
-    file_path = session_directory / safe_filename(sanitized_filename)
+    file_path = session_directory / safe_filename()
 
     try:
-        with open(file_path, "wb") as buffer:
+        with file_path.open("wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error saving file: {str(e)}")
 
     try:
-        task = process_file.delay(str(file_path), config_data.dict(), sanitized_filename)
+        task = process_file.delay(str(file_path), config_data.model_dump(), sanitized_filename)
     except Exception as e:
         file_path.unlink() # delete the file since the task failed to initiate
         raise HTTPException(status_code=500, detail=f"Error initiating task: {str(e)}")
@@ -102,11 +101,11 @@ async def upload_file(file: UploadFile = File(...), config: str = Form(...)):
 
 # Helpers
 
-def safe_filename(filename: str) -> str:
+def safe_filename() -> str:
     """
     Generate a safe filename to prevent directory traversal attacks
     """
-    return str(uuid.uuid4()) + os.path.splitext(filename)[-1]
+    return str(uuid.uuid4())
 
 
 def is_safe_to_add_files(directory_path: Path, max_files_allowed: int, max_dir_size_mb: int) -> bool:

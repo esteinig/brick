@@ -1,40 +1,28 @@
 <script lang="ts">
-	import { BlastRing, Ring } from "$lib/types";
-	import { addNewRing } from "$lib/helpers";
+	import { type BlastRingSchema, BlastMethod } from "$lib/types";
+	import { ToastType, triggerToast } from "$lib/helpers";
 	import { FileType, type SessionFile } from "$lib/types";
-
-	import { type ToastSettings } from '@skeletonlabs/skeleton';    
+    import { sessionFiles, sessionFileTypeAvailable } from "$lib/stores/SessionFileStore";
+    import { addRing } from "$lib/stores/RingStore";
 	import { page } from '$app/stores';
     import { getToastStore } from '@skeletonlabs/skeleton';
-	import { env } from "$env/dynamic/public";
+	import { applyAction, enhance } from "$app/forms";
     
     const toastStore = getToastStore();
 
-
-    export let rings: Ring[];
-    export let sessionFiles: SessionFile[];
     export let selectedReference: SessionFile;
     
-    let selectedGenome: SessionFile;
-    let isLoading: boolean = false;
-
-
-    async function getBlastRing() {
-
-        isLoading = true;
-
-        
-
-
-
-        isLoading = false;
-
-        let blastRing = new BlastRing(-1)
-
-        blastRing.data = []
-
-        rings = addNewRing(rings, blastRing);
+    let ringConfig: BlastRingSchema = {
+        session_id: $page.params.session,
+        reference_id: selectedReference.id,
+        genome_id: "",
+        blast_method: BlastMethod.BLASTN,
+        min_alignment: 0,
+        min_identity: 0
     }
+
+    let loading: boolean = false;
+
 
 </script>
 
@@ -47,35 +35,58 @@
         against the selected reference. Computation of alignments may take a second depending on server load</p>
     
     {#if selectedReference}
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 my-3">
+    <form id="createBlastRingForm" action="?/createBlastRing" method="POST" use:enhance={({ formData }) => {
+                
+        loading = true;
+        formData.append('ring_config', JSON.stringify(ringConfig))
+    
+        return async ({ result }) => {
+            await applyAction(result);
+            loading = false;
+                
+            if (result.type === "success"){
+                addRing($page.form.result)
+                triggerToast("Ring created sucessfully", ToastType.SUCCESS, toastStore);
+            } else {
+                triggerToast($page.form.detail ?? `Error ${result.status}: an unknown error occurred`, ToastType.ERROR, toastStore);
+            }
+        };
+    }}>
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 my-3 items-center">
             <div>
                 <label class="label text-xs">
                     <p class="opacity-40">Reference</p>
-                    <input class="input text-xs" disabled value={selectedReference.name_original}/>
+                    <input id="blastReferenceFileName" class="input text-xs" disabled value={selectedReference.name_original}/>
                 </label>
             </div>
             <div>
-                <label class="label text-xs">
-                    <p class="opacity-40">Select a genome for alignment</p>
-                    <select class="select text-xs" bind:value={selectedGenome}>
-                        {#each sessionFiles as file}
-                            {#if file.type === FileType.GENOME}
-                                <option value={file}>{file.name_original}</option>
-                            {/if}
-                        {/each}
-                    </select>
-                </label>
+                {#if sessionFileTypeAvailable(FileType.GENOME)}
+                    <label class="label text-xs">
+                        <p class="opacity-40">Genome for comparison</p>
+                        <select class="select text-xs" bind:value={ringConfig.genome_id}>
+                            {#each $sessionFiles as file}
+                                {#if file.type === FileType.GENOME}
+                                    <option value={file.id}>{file.name_original}</option>
+                                {/if}
+                            {/each}
+                        </select>
+                    </label>
+                {:else}
+                    <div class="text-xs text-error-500 text-center">Please upload a genome file in the data panel</div>
+                {/if}
             </div>
         </div>
         
-        {#if selectedGenome}
+        {#if ringConfig.genome_id}
+
             <div class="flex justify-right mt-4">
-                <button class="btn variant-outline-surface" on:click={getBlastRing}>
+                <button class="btn variant-outline-surface" type="submit">
                     <div class="flex items-center align-center">
-                        <span>Submit</span>
+                        <span>Compute</span>
                     </div>
                 </button>
             </div>
         {/if}
+    </form>
     {/if}
 </div>

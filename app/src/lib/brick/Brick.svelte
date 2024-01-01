@@ -5,11 +5,10 @@
   import type { PlotConfig } from '$lib/types';
   import { downloadJSON, downloadPNG, downloadSVG, getDefaultScaleFactor } from './helpers';
 	import { RingType, type Ring, type RingSegment } from '$lib/types';
-	import { DEFAULT_CONFIG, DEFAULT_RINGS } from '$lib/data';
+	import { DEFAULT_CONFIG } from '$lib/data';
 	import { fade } from 'svelte/transition';
-	import { browser } from '$app/environment';
+  import { rings } from '$lib/stores/RingStore';
   
-  export let rings: Ring[] = DEFAULT_RINGS;
   export let config: PlotConfig = DEFAULT_CONFIG;
 
   export let id: string = "brickRingPlot";
@@ -19,7 +18,7 @@
   export let border: boolean = false;
   export let borderClass: string = "border border-gray-300 rounded-lg border-opacity-10";
 
-  export let scaleFactor: number = browser ? getDefaultScaleFactor() : 1.0;
+  export let scaleFactor: number = getDefaultScaleFactor();
 
   export let enableZoom: boolean = true;
   export let zoomRange: [number, number] = [0.5, 5];
@@ -58,7 +57,7 @@
       })
       resizeObserver.observe(container);
 
-      visible = true
+      visible = true;
 
       return () => {
         resizeObserver.disconnect();
@@ -107,7 +106,7 @@
   // heights based on radius, ring height and gap size
   function arcGenerator(d: RingSegment, index: number, height: number): string {
     
-    const ringHeight = getRingHeight(rings, 0, index);
+    const ringHeight = getRingHeight($rings, 0, index);
 
     return d3.arc()
       .innerRadius(config.rings.radius+(index*config.rings.gap)+ringHeight)
@@ -132,12 +131,12 @@
 
   // Function to calculate the coordinates of the point on the outer edge of the arc
   function calculateOuterArcPointX1(d: RingSegment): number {
-      return Math.cos(calculateMidpoint(d)) * getOuterRingHeight(rings)
+      return Math.cos(calculateMidpoint(d)) * getOuterRingHeight($rings)
   }
 
   // Function to calculate the coordinates of the point on the outer edge of the arc
   function calculateOuterArcPointY1(d: RingSegment): number {
-      return Math.sin(calculateMidpoint(d)) * getOuterRingHeight(rings);
+      return Math.sin(calculateMidpoint(d)) * getOuterRingHeight($rings);
   }
 
   // Function to calculate the coordinates of the point on the outer edge of the arc
@@ -166,7 +165,7 @@
         <g bind:this={g} transform={scaledTransform}>
           <text class="title" style="fill: {config.title.color}; opacity: {config.title.opacity}; font-style: {config.title.fontStyle}; text-anchor: middle">{config.title.text}</text>
         
-          {#each rings as ring}
+          {#each $rings as ring}
             {#if ring.type === RingType.LABEL}
               {#each ring.data as ringAnnotation}
               <line 
@@ -215,7 +214,7 @@
             </svg>
             PNG
           </button>
-          <button class="btn border border-primary-500 text-xs" on:click={() => downloadJSON(rings)}>
+          <button class="btn border border-primary-500 text-xs" on:click={() => downloadJSON($rings)}>
             <svg class="w-4 h-4 mr-2" data-slot="icon" aria-hidden="true" fill="none" stroke-width="1.5" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" stroke-linecap="round" stroke-linejoin="round"></path>
             </svg>

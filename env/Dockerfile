@@ -1,14 +1,23 @@
-FROM python:3.11-slim as builder
+FROM condaforge/mambaforge:latest as builder
 
 # Set the working directory in the builder stage
 WORKDIR /app
 
-# Install any needed packages specified in requirements.txt
+# Create a new environment with Python 3.11
+RUN mamba create -n brick -c bioconda blast python=3.11 --yes
+
+# Activate the new environment
+SHELL ["conda", "run", "-n", "brick", "/bin/bash", "-c"]
+
+# Copy the requirements file
 COPY requirements.txt ./
-RUN pip install --user -r requirements.txt
+
+# Install dependencies from requirements.txt
+RUN mamba install --file requirements.txt --yes \
+    && mamba clean --all --yes
 
 # Use another stage for the runner
-FROM python:3.11-slim as runner
+FROM condaforge/mambaforge:latest as runner
 
 # Environment variable that determines API settings
 ARG BRICK_ENV=
@@ -23,18 +32,18 @@ USER ${USERNAME}
 
 WORKDIR /app
 
-# Copy the locals directory into the new user home directory
-COPY --chown=${USERNAME}:${USERNAME} --from=builder /root/.local/ /home/${USERNAME}/.local/
+# Copy the conda environment from the builder stage
+COPY --chown=${USERNAME}:${USERNAME} --from=builder /opt/conda /opt/conda
 
-# Add user's local bin directory to PATH
-ENV PATH="/home/${USERNAME}/.local/bin:${PATH}"
+# Set the environment variables to use the conda environment
+ENV PATH=/opt/conda/envs/brick/bin:$PATH
 
 # Copy only the necessary files for Brick
 COPY --chown=${USERNAME}:${USERNAME} pyproject.toml ./
 COPY --chown=${USERNAME}:${USERNAME} brick/ ./brick/
 
 # Install the brick package with the user dependencies from the builder stage
-RUN pip install --no-cache-dir --user .
+RUN pip install .
 
 # Use other application code if necessary
 COPY --chown=${USERNAME}:${USERNAME} tests ./tests/

@@ -1,15 +1,18 @@
 <script lang="ts">
     import Brick from "$lib/brick/Brick.svelte";
     import BrickInterface from "$lib/session/BrickInterface.svelte";
-
-	import { DEFAULT_CONFIG, DEFAULT_RINGS } from "$lib/data";
-
-	import type { Ring } from "$lib/types";
+	import { DEFAULT_CONFIG } from "$lib/data";
 	import type { PlotConfig } from "$lib/types";
+	import { getDefaultScaleFactor } from "$lib/brick/helpers";
+	import { clearRings } from "$lib/stores/RingStore";
 
-    export let rings: Ring[] = DEFAULT_RINGS;
-    export let config: PlotConfig = DEFAULT_CONFIG;
+    let config: PlotConfig = DEFAULT_CONFIG;
 
+	// When the page is loaded for the first time, 
+	// we remove the default rings from the store 
+	// which were added on the landing page
+	clearRings();  
+	
 </script>
 
 
@@ -18,10 +21,10 @@
 
     <div class="grid sm:grid-cols-1 md:grid-cols-8 gap-8 h-full">
 		<div class="col-span-5 h-full w-full">
-            <Brick bind:rings={rings} bind:config={config}></Brick>
+            <Brick bind:config={config} scaleFactor={getDefaultScaleFactor() + 0.2}></Brick>
 		</div>
 		<div class="col-span-3 h-full w-full">
-            <BrickInterface bind:rings={rings} bind:config={config}></BrickInterface>
+            <BrickInterface bind:config={config}></BrickInterface>
 		</div>
 	</div>
 </div>

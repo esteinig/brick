@@ -36,8 +36,12 @@ function toggleRingVisibility(index: number) {
     });
 }
 
+function clearRings() {
+    rings.update(_ => [])
+}
+
 // Export the store and functions
-export { rings, addRing, removeRing, toggleRingVisibility };
+export { rings, addRing, removeRing, clearRings, toggleRingVisibility };
 
 // Add new ring helper function
 function addNewRing(rings: Ring[], newRing: Ring, newIndex: number = rings.length): Ring[] {

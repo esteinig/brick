@@ -1,13 +1,10 @@
 <script lang="ts">
-	import { ReferenceRing, Ring } from "$lib/types";
-	import { addNewRing } from "$lib/helpers";
+	import { ReferenceRing } from "$lib/types";
 	import { type SessionFile } from "$lib/types";
+    import { addRing } from "$lib/stores/RingStore";
 
-    export let rings: Ring[];
     export let selectedReference: SessionFile;
-
-
-
+    
 </script>
 
 <div class="border border-gray-300 rounded-lg border-opacity-10 p-4">
@@ -20,7 +17,7 @@
     
     {#if selectedReference}
         <div class="flex justify-right mt-4">
-            <button class="btn variant-outline-surface" on:click={() => rings = addNewRing(rings, new ReferenceRing(-1, selectedReference.length))}>
+            <button class="btn variant-outline-surface" on:click={() => addRing(new ReferenceRing(-1, selectedReference.length))}>
                 <div class="flex items-center align-center">
                     <span>Submit</span>
                 </div>
