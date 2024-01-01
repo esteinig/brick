@@ -9,7 +9,7 @@ RUN groupadd -g ${GID} ${USERNAME} && useradd --no-log-init -u ${UID} -r -g ${US
 USER ${USERNAME}
 
 # Copy the cleaner script
-COPY --chown=${USERNAME}:${USERNAME} ./cleanup.sh /cleanup.sh
+COPY --chown=${USERNAME}:${USERNAME} ./docker/scripts/cleanup.sh /cleanup.sh
 
 # Make the script executable
 RUN chmod +x /cleanup.sh

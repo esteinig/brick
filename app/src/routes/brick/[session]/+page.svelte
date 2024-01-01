@@ -5,13 +5,16 @@
 	import type { PlotConfig } from "$lib/types";
 	import { getDefaultScaleFactor } from "$lib/brick/helpers";
 	import { clearRings } from "$lib/stores/RingStore";
+	import { clearSessionFiles } from "$lib/stores/SessionFileStore";
 
     let config: PlotConfig = DEFAULT_CONFIG;
 
-	// When the page is loaded for the first time, 
-	// we remove the default rings from the store 
-	// which were added on the landing page
+	// When the page is loaded for the first time, we remove the default rings from the store 
+	// which were added on the landing page - this also correctly removes rings and files when 
+	// a new session is started, and when the user navigates away from the session page
+
 	clearRings();  
+	clearSessionFiles();
 	
 </script>
 
