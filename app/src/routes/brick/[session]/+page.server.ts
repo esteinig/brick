@@ -34,7 +34,7 @@ export const actions: Actions = {
         if (response.ok) {
             try {
                 return await checkCeleryResults(
-                    `http://localhost:8080/tasks/result/${fileUploadResponseData.task_id}` 
+                    `${env.PRIVATE_DOCKER_API_URL}/tasks/result/${fileUploadResponseData.task_id}` 
                 );
             } catch (error) {
                 return fail(500, { 
@@ -63,7 +63,7 @@ export const actions: Actions = {
         if (response.ok) {
             try {
                 return await checkCeleryResults(
-                    `http://localhost:8080/tasks/result/${blastRingResponseData.task_id}` 
+                    `${env.PRIVATE_DOCKER_API_URL}/tasks/result/${blastRingResponseData.task_id}` 
                 );
             } catch (error) {
                 return fail(500, { 
@@ -92,7 +92,7 @@ export const actions: Actions = {
         if (response.ok) {
             try {
                 return await checkCeleryResults(
-                    `http://localhost:8080/tasks/result/${annotationRingResponseData.task_id}` 
+                    `${env.PRIVATE_DOCKER_API_URL}/tasks/result/${annotationRingResponseData.task_id}` 
                 );
             } catch (error) {
                 return fail(500, { 

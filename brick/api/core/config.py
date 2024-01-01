@@ -17,22 +17,21 @@ class Settings(BaseSettings):
     # Secret key for instance
     SECRET_KEY: str = ""
 
-    # Upload directory for files and executing tasks
+    # Working directory for session and tasks
     WORK_DIRECTORY: Path = Path(f"/tmp/brick-work")
 
-    # Session directory checks
+    # Session directory limits
     SESSION_MAX_SIZE_MB: int = 200
     SESSION_MAX_FILES: int = 10000
 
-    # Celery Configuration
+    # Celery configuration
     CELERY_BROKER_URL: str = "redis://redis:6379/0"
     CELERY_RESULT_BACKEND: str = "redis://redis:6379/1"
 
     # CORS configuration
-    CORS_ORIGINS: List[str] = ['http://localhost:5173']
+    CORS_ORIGINS: List[str] = ['http://app:5173']
 
-    # Database
-
+    # Database configuration
     MONGODB_URL: str = "mongodb://root:example@mongodb:27017"
     MONGODB_DATABASE: str = "brick"
     MONGODB_SESSION_COLLECTION: str = "sessions"
