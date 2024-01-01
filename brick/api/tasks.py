@@ -148,33 +148,46 @@ def run_blast(query_fasta: Path, reference_fasta: Path, working_directory: Path)
 
 def validate_fasta(path: Path, file_type: FileType) -> Tuple[int, int, Selections]:
 
-    seqs = [r for r in SeqIO.parse(str(path), 'fasta')]
-    total_length = sum([len(r.seq) for r in seqs])
-    records = len(seqs)
+    records = [r for r in SeqIO.parse(str(path), 'fasta')]
+    num_records = len(records)
 
-    if file_type == FileType.REFERENCE and records > 1:
-        raise ValueError("Reference sequence files must consist of a single contig")
+    for record in records:
+        if not validate_sequence(str(record.seq)):
+            raise ValueError(f"Sequence {record.id} contains invalid nucleotides (IUPAC ambiguous allowed)")
+
+    if num_records < 1:
+        raise ValueError("Sequence files cannot be empty")
+
+    if file_type == FileType.REFERENCE and num_records > 1:
+        raise ValueError("Reference files must consist of a single contig")
     
-    return total_length, records, Selections(
-        sequences=[r.id for r in seqs]
+    total_length = sum([len(r.seq) for r in records])
+
+    return total_length, num_records, Selections(
+        sequences=[r.id for r in records]
     )
 
 
 def validate_genbank(path: Path) -> Tuple[int, Selections]:
 
-    seqs = [r for r in SeqIO.parse(str(path), 'gb')]
+    records = [r for r in SeqIO.parse(str(path), 'gb')]
+    num_records = len(records)
+
+    if num_records < 1:
+        raise ValueError("Genbank annotation files cannot be empty")
+
 
     unique_features = set()
     unique_qualifiers = set()
 
-    for record in seqs:
+    for record in records:
         for feature in record.features:
             unique_features.add(feature.type)
             for key in feature.qualifiers.keys():
                 unique_qualifiers.add(key)
     
-    return len(seqs), Selections(
-        sequences=[r.id for r in seqs],
+    return num_records, Selections(
+        sequences=[r.id for r in records],
         qualifiers=list(unique_qualifiers),
         features=list(unique_features)
     )
@@ -189,9 +202,28 @@ def validate_tsv(path: Path, file_type: FileType) -> int:
     if file_type == FileType.ANNOTATION_GENBANK  and data.columns != ["start", "end", "text", "color"]:
         raise ValueError("Custom annotation files must have four column headers in order (start, end, text, color)")
     
-    records = len(data)
+    num_records = len(data)
 
-    return records
+    if len(num_records) < 1:
+        raise ValueError("Custom annotation files cannot be empty")
+
+
+    return num_records
+
+def validate_sequence(sequence: str) -> bool:
+    """
+    Validates the sequence data using BioPython's IUPAC ambiguous nucleotide codes.
+    
+    Args:
+    sequence (str): Sequence data from the FASTA file.
+    
+    Returns:
+    bool: True if the sequence data contains only valid IUPAC ambiguous nucleotide codes, False otherwise.
+    """
+    valid_nucleotides = set("ACGTURYSWKMBDHVN")
+    return all(nucleotide in valid_nucleotides for nucleotide in sequence.upper())
+
+
 
 # Database helpers (workers are not async)
 
