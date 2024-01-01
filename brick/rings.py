@@ -3,12 +3,17 @@ from pydantic import BaseModel, Field
 from pathlib import Path
 from typing import List
 from enum import StrEnum
+from Bio import SeqIO
 
+import csv
 from pydantic import BaseModel, validator
+
+from .utils import sanitize_input
 
 class RingType(StrEnum):
     GENERIC = 'generic'
     BLAST = 'blast'
+    ANNOTATION = 'annotation'
 
 class RingSegment(BaseModel):
     start: int
@@ -17,34 +22,13 @@ class RingSegment(BaseModel):
     text: str = ""
 
 class Ring(BaseModel):
-    index: int
+    index: int = -1
     visible: bool = True
     color: str = "#d3d3d3"
     height: int = 20
     type: RingType = RingType.GENERIC
     title: str = "Ring"
     data: List[RingSegment] = Field(default_factory=list)
-
-    def __init__(
-        self, 
-        index: int = -1, 
-        visible: bool = True, 
-        type: RingType = RingType.GENERIC, 
-        color: str = "#d3d3d3", 
-        height: int = 20, 
-        title: str = "Ring",
-        data: List[RingSegment] = []
-    ):  
-        """ Creates a default generic ring without segment data """
-        super().__init__(
-            index=index, 
-            visible=visible, 
-            type=type, 
-            color=color, 
-            height=height, 
-            title=title,
-            data=data
-        )
 
 
 # Blast Ring
@@ -62,16 +46,6 @@ class BlastnEntry(BaseModel):
     subject_end: int
     e_value: float
     bit_score: float
-
-    @validator('perc_identity')
-    def check_perc_identity(cls, v):
-        assert 0 <= v <= 100, 'Percentage identity must be between 0 and 100'
-        return v
-
-    @validator('e_value')
-    def check_e_value(cls, v):
-        assert v >= 0, 'E-value must be non-negative'
-        return v
     
     def to_segment(self):
         return RingSegment(start=self.subject_start, end=self.subject_end)
@@ -115,8 +89,91 @@ class BlastRing(Ring):
     type: RingType = RingType.BLAST
     title: str = "BLAST Ring"
     
+    @staticmethod
     def from_blast_output(file: Path) -> BlastRing:
         return BlastRing(
-            data=[entry.to_segment() for entry in parse_blastn_output(file)]
+            data=[entry.to_segment() for entry in parse_blastn_output(file_path=file)]
+        )
+    
+# Annotation Rings
+    
+class GenBankFeatureEntry(BaseModel):
+    start: int
+    end: int
+    annotation: str
+
+    def to_segment(self, sanitize: bool = False) -> RingSegment:
+        return RingSegment(
+            start=self.start,
+            end=self.end,
+            text=sanitize_input(
+                input_string=self.annotation, 
+                is_for_db=True, 
+                is_for_svg=True
+            ) if sanitize else self.annotation
+        )
+
+def parse_genbank_features(file_path: str, feature_types: List[str]) -> List[GenBankFeatureEntry]:
+    entries = []
+
+    # Parse the GenBank file
+    for record in SeqIO.parse(file_path, "genbank"):
+        # Iterate over the features
+        for feature in record.features:
+            if feature.type in feature_types:
+                # Extract the desired information
+                start = int(feature.location.start)
+                end = int(feature.location.end)
+                annotation = feature.type
+
+                # Add extra annotations if available
+                if 'gene' in feature.qualifiers:
+                    annotation += f" ({feature.qualifiers['gene'][0]})"
+                elif 'product' in feature.qualifiers:
+                    annotation += f" ({feature.qualifiers['product'][0]})"
+
+                entries.append(GenBankFeatureEntry(start=start, end=end, annotation=annotation))
+
+    return entries
+
+def parse_tsv_segments(file_path: Path, sanitize: bool = False) -> List[RingSegment]:
+    segments = []
+
+    with file_path.open(mode='r', encoding='utf-8') as file:
+        reader = csv.DictReader(file, delimiter='\t')
+
+        for row in reader:
+            segment = RingSegment(
+                start=int(row['start']),
+                end=int(row['end']),
+                text=sanitize_input(
+                    input_string=row['text'],
+                    is_for_db=True, 
+                    is_for_svg=True
+                ) if sanitize else row['text'],
+                color=sanitize_input(
+                    input_string=row['color'],
+                    is_for_db=True, 
+                    is_for_svg=True
+                ) if sanitize else row['color'],
+            )
+            segments.append(segment)
+
+    return segments
+
+class AnnotationRing(Ring):
+    type: RingType = RingType.ANNOTATION
+    title: str = "Annotation Ring"
+    
+    def from_genbank_file(file: Path, features: List[str]) -> AnnotationRing:
+        return AnnotationRing(
+            data=[entry.to_segment() for entry in parse_genbank_features(
+                file_path=file, feature_types=features
+            )]
+        )
+    
+    def from_tsv_file(file: Path) -> AnnotationRing:
+        return AnnotationRing(
+            data=[segment for segment in parse_tsv_segments(file_path=file)]
         )
     

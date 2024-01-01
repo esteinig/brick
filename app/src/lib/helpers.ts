@@ -106,6 +106,7 @@ export function getErrorMessage(error: unknown) {
 export enum ToastType {
   ERROR = "error",
   SUCCESS = "success",
+  WARNING = "warning",
   DEFAULT = "default"
 }
 
@@ -122,6 +123,12 @@ export function triggerToast(message: string, toastType: ToastType, toastStore: 
       message: message,
       background: 'variant-filled-success',
       timeout: 3000,
+    })
+  } else if (toastType === ToastType.WARNING) {
+    toastStore.trigger({
+      message: message,
+      background: 'variant-filled-warning',
+      timeout: 5000,
     })
   } else {
     toastStore.trigger({

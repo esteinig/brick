@@ -118,6 +118,14 @@ export class LabelRing extends Ring {
  *  =============
 */
 
+
+
+export type Selections = {
+    sequences: string[]
+    features: string[]
+    qualifiers: string[]
+}
+
 export type SessionFile = {
     session_id: string
     id: string       
@@ -125,7 +133,8 @@ export type SessionFile = {
     format: string
     records: number
     length: number
-    name_original: string
+    name_original: string,
+    selections: Selections
 }
 
 export type FileConfig = {
@@ -165,7 +174,7 @@ export enum TaskStatus {
     PROCESSING = "PROCESSING"
 }
 
-/*  ===============
+/*  ================
  *  API RING SCHEMAS
  *  ================
 */
@@ -183,6 +192,14 @@ export type BlastRingSchema = {
     min_alignment: number
 }
 
+export type AnnotationRingSchema = {
+    session_id: string
+    genbank_id: string | null
+    tsv_id: string | null
+    genbank_features: string[]
+    genbank_qualifiers: string[]
+}
+
 /*  =============
  *  API RESPONSES
  *  =============
@@ -197,6 +214,10 @@ export type FileUploadResponse = {
 } & ErrorResponse
 
 export type BlastRingResponse = {
+    task_id: string
+} & ErrorResponse
+
+export type AnnotationRingResponse = {
     task_id: string
 } & ErrorResponse
 
