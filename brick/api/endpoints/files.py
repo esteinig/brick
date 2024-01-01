@@ -15,7 +15,7 @@ from ..models import Session, SessionFile
 from ..core.config import settings
 
 from ..core.db import get_session_collection_motor
-from ..utils import sanitize_input
+from ...utils import sanitize_input
 from ..tasks import process_file
 
 router = APIRouter(

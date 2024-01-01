@@ -43,7 +43,7 @@ COPY --chown=${USERNAME}:${USERNAME} pyproject.toml ./
 COPY --chown=${USERNAME}:${USERNAME} brick/ ./brick/
 
 # Install the brick package with the user dependencies from the builder stage
-RUN pip install .
+RUN pip install --no-dependencies --no-cache .
 
 # Use other application code if necessary
 COPY --chown=${USERNAME}:${USERNAME} tests ./tests/

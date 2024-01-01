@@ -26,5 +26,10 @@ function clearSessionFiles() {
     sessionFiles.update(_ => [])
 }
 
+function getSessionFileById(id: string): SessionFile | undefined {
+    const currentFiles = get(sessionFiles);
+    return currentFiles.find(file => file.id === id);
+}
+
 // Export the store and functions
-export { sessionFiles, addSessionFile, removeSessionFile, sessionFileTypeAvailable, clearSessionFiles };
+export { sessionFiles, addSessionFile, removeSessionFile, sessionFileTypeAvailable, clearSessionFiles, getSessionFileById};

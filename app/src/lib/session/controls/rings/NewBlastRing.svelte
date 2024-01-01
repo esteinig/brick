@@ -72,7 +72,7 @@
                         </select>
                     </label>
                 {:else}
-                    <div class="text-xs text-error-500 text-center">Please upload a genome file in the data panel</div>
+                    <div class="text-xs text-error-500 text-center">Please upload a genome file</div>
                 {/if}
             </div>
         </div>

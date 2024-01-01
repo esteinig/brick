@@ -4,6 +4,7 @@ pandas
 requests
 pre-commit
 fastapi
+redis-py
 celery[redis]
 uvicorn
 pydantic-settings
@@ -13,3 +14,4 @@ pytest
 pytest-asyncio
 httpx
 pytest-celery
+asgi-lifespan 

@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "brick"
 version = "0.1.0"
 authors = [{name="Eike Steinig", email="eike.steinig@unimelb.edu.au"}]
-description = "BLAST Ring Image Magick (BRICK) implements BRIG-like figures as API, CLI and REST API stack with Svelte UI"
+description = "BRICK implements BRIG-like interactive figures in D3 for bacterial genome visualization, annotation, comparison and exploration using a Python scripting API, CLI, REST API or UI."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
@@ -16,6 +16,7 @@ dependencies = [
   "requests", 
   "pre-commit", 
   "fastapi", 
+  "redis-py",
   "celery[redis]", 
   "uvicorn", 
   "pydantic-settings", 

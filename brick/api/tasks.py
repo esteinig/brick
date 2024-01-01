@@ -4,16 +4,16 @@ import tempfile
 import contextlib
 
 from Bio import SeqIO
-from typing import Tuple, Annotated
+from typing import Tuple, Annotated, Optional
 from pathlib import Path
 from datetime import datetime
 
 from .core.config import settings
 from .core.celery import celery_app
 from .core.db import get_session_collection_pymongo
-from .schemas import FileFormat, FileType, SessionFile
+from .schemas import FileFormat, FileType, SessionFile, Selections
 from .models import Session
-from ..rings import BlastRing
+from ..rings import BlastRing, AnnotationRing
 
 # Uploaded file validation and session file storage
 @celery_app.task
@@ -25,12 +25,12 @@ def process_file(file_path: str, file_config: Annotated[dict, "Model dump of Fil
         file_type: FileType = file_config["file_type"]
         file_format: FileFormat = file_config["file_format"]
 
-        records = 0; length = 0
+        records = 0; total_length = 0; selections = Selections()
 
         if file_format == FileFormat.FASTA:
-            length, records = validate_fasta(path=file_path, file_type=file_type)
+            total_length, records, selections = validate_fasta(path=file_path, file_type=file_type)
         elif file_format == FileFormat.GENBANK:
-            records = validate_genbank(path=file_path)
+            records, selections = validate_genbank(path=file_path)
         elif file_format == FileFormat.TSV:
             records = validate_tsv(path=file_path, file_type=file_type)
 
@@ -41,7 +41,8 @@ def process_file(file_path: str, file_config: Annotated[dict, "Model dump of Fil
             type=file_type,
             format=file_format,
             records=records,
-            length=length
+            length=total_length,
+            selections=selections
         )
 
         update_or_create_session(session_file=session_file)
@@ -52,20 +53,18 @@ def process_file(file_path: str, file_config: Annotated[dict, "Model dump of Fil
         }
 
     except Exception as e:
-        # Delete the file if processing fails
-        Path(file_path).unlink()
-
-        # Capture any exceptions and return them
+        Path(file_path).unlink() # delete for disk space
         return {"success": False, "error": str(e)}
     
 
 
 # Nucleotide BLAST subprocess execution and parsing
+    
 @celery_app.task
 def process_blast_ring(
     reference_file_path: Annotated[str, "Path to reference file in the session directory"], 
     genome_file_path: Annotated[str, "Path to genome file in the session directory"], 
-    blast_ring_schema: Annotated[dict, "Model dump of BlastRingConfig schema"]
+    blast_ring_schema: Annotated[dict, "Model dump of BlastRingSchema"]
 ):
 
     try:
@@ -76,6 +75,7 @@ def process_blast_ring(
                 working_directory=working_directory
             )
             ring = BlastRing.from_blast_output(file=output_file)
+
              
         return {
             "success": True, 
@@ -83,9 +83,36 @@ def process_blast_ring(
         }
 
     except Exception as e:
-        # Capture any exceptions and return them
         return {"success": False, "error": str(e)}
 
+# Genbank/TSV annotation extraction
+    
+@celery_app.task
+def process_annotation_ring(
+    genbank_file_path: Optional[Annotated[str, "Path to reference file in the session directory"]], 
+    tsv_file_path: Optional[Annotated[str, "Path to genome file in the session directory"]], 
+    annotation_ring_schema: Annotated[dict, "Model dump of AnnotationRingSchema"]
+):
+
+    try:
+        
+        if genbank_file_path:
+            ring = AnnotationRing.from_genbank_file(
+                file=genbank_file_path, 
+                features=annotation_ring_schema.get("genbank_features")
+            )
+        elif tsv_file_path:
+            ring = AnnotationRing.from_tsv_file(file=tsv_file_path)
+        else:
+            raise ValueError("Something went wrong - no files provided")
+
+        return {
+            "success": True, 
+            "result": ring.model_dump()
+        }
+
+    except Exception as e:
+        return {"success": False, "error": str(e)}
 
 
 # Subprocess helpers
@@ -119,23 +146,38 @@ def run_blast(query_fasta: Path, reference_fasta: Path, working_directory: Path)
 
 # Validation helpers
 
-def validate_fasta(path: Path, file_type: FileType) -> Tuple[int, int]:
+def validate_fasta(path: Path, file_type: FileType) -> Tuple[int, int, Selections]:
 
     seqs = [r for r in SeqIO.parse(str(path), 'fasta')]
-    length = sum([len(r.seq) for r in seqs])
+    total_length = sum([len(r.seq) for r in seqs])
     records = len(seqs)
 
     if file_type == FileType.REFERENCE and records > 1:
         raise ValueError("Reference sequence files must consist of a single contig")
     
-    return length, records
+    return total_length, records, Selections(
+        sequences=[r.id for r in seqs]
+    )
 
 
-def validate_genbank(path: Path) -> int:
+def validate_genbank(path: Path) -> Tuple[int, Selections]:
 
-    records = len([r for r in SeqIO.parse(str(path), 'gb')])
+    seqs = [r for r in SeqIO.parse(str(path), 'gb')]
+
+    unique_features = set()
+    unique_qualifiers = set()
+
+    for record in seqs:
+        for feature in record.features:
+            unique_features.add(feature.type)
+            for key in feature.qualifiers.keys():
+                unique_qualifiers.add(key)
     
-    return records
+    return len(seqs), Selections(
+        sequences=[r.id for r in seqs],
+        qualifiers=list(unique_qualifiers),
+        features=list(unique_features)
+    )
 
 
 def validate_tsv(path: Path, file_type: FileType) -> int:

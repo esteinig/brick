@@ -1,6 +1,6 @@
 import { fail, error} from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
-import type { BlastRingResponse, FileUploadResponse } from '$lib/types';
+import type { BlastRingResponse, FileUploadResponse, AnnotationRingResponse } from '$lib/types';
 import { checkCeleryResults, getErrorMessage } from '$lib/helpers';
 import { env } from '$env/dynamic/private';
 
@@ -73,6 +73,35 @@ export const actions: Actions = {
             }
         } else {
             return fail(response.status, blastRingResponseData)
+        }
+    },
+    createAnnotationRing: async ({ request }) => {
+
+        const formData = await request.formData();
+
+        const ringConfig = formData.get("ring_config")
+
+        const response = await fetch(`${env.PRIVATE_DOCKER_API_URL}/rings/annotation`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: ringConfig,
+        });
+
+        const annotationRingResponseData: AnnotationRingResponse = await response.json();
+
+        if (response.ok) {
+            try {
+                return await checkCeleryResults(
+                    `http://localhost:8080/tasks/result/${annotationRingResponseData.task_id}` 
+                );
+            } catch (error) {
+                return fail(500, { 
+                    detail: getErrorMessage(error), 
+                    task_id: annotationRingResponseData.task_id 
+                })
+            }
+        } else {
+            return fail(response.status, annotationRingResponseData)
         }
     },
 };

@@ -9,6 +9,7 @@
 
 	import NewReferenceRing from "$lib/session/controls/rings/NewReferenceRing.svelte";
 	import NewBlastRing from "$lib/session/controls/rings/NewBlastRing.svelte";
+	import NewAnnotationRing from "../rings/NewAnnotationRing.svelte";
 
     export let config: PlotConfig;
 
@@ -118,6 +119,8 @@
             <NewReferenceRing selectedReference={selectedReference}></NewReferenceRing>
         {:else if newRing == RingType.BLAST}
             <NewBlastRing selectedReference={selectedReference}></NewBlastRing>
+        {:else if newRing == RingType.ANNOTATION}
+            <NewAnnotationRing selectedReference={selectedReference}></NewAnnotationRing>
         {/if}
     </div>
 </div>
