@@ -7,6 +7,7 @@
   import { page } from '$app/stores';
   import { getToastStore } from '@skeletonlabs/skeleton';
 	import { applyAction, enhance } from '$app/forms';
+	import { completeUploadState, startUploadState } from '$lib/stores/UploadInProgressStore';
 
   const toastStore = getToastStore();
   
@@ -16,7 +17,9 @@
 
   export let id: string = `brickFileUpload-${createUuid(true)}`;
   export let message: string = "Please upload a file"
-  export let meta: string = ""
+  export let meta: string = "";
+
+  export let disabled: boolean = false;
 
   let formElement: HTMLFormElement; // neded for drop zone handler
   let files: FileList;
@@ -25,7 +28,7 @@
 
 </script>
   
-<form id="form-{id}" bind:this={formElement} action="?/uploadFile" method="POST" enctype="multipart/form-data" use:enhance={({ formElement, formData, action, cancel, submitter }) => {
+<form id="form-{id}" bind:this={formElement} action="?/uploadFile" method="POST" enctype="multipart/form-data" use:enhance={({ formData }) => {
   
   // TODO: Multiple Files
 
@@ -43,14 +46,18 @@
   formData.delete(id); formData.append('file', files[0]);
   formData.append('config', config);
 
+  // Upload state for this component instance
   loading = true;
+
+  // Tracks the common upload state from multiple components 
+  startUploadState();
 
   return async ({ result }) => {
     
     await applyAction(result);
-    loading = false;
 
-    // TODO: Handle session file updates
+    loading = false;
+    completeUploadState();
 
     if (result.type === "success"){
       triggerToast("File uploaded sucessfully", ToastType.SUCCESS, toastStore);
@@ -61,10 +68,16 @@
   };
 }}>
   <div id="{id}">
-      <FileDropzone name="{id}" bind:files={files} on:change={() => formElement.requestSubmit()}>
-          <svelte:fragment slot="lead"><div class="flex justify-center items-center"><slot name="icon"></slot></div></svelte:fragment>
-          <svelte:fragment slot="message"><span class="text-xs">{message}</span></svelte:fragment>
-          <svelte:fragment slot="meta"><span class="text-xs">{meta}</span></svelte:fragment>
+      <FileDropzone name="{id}" bind:files={files} on:change={() => formElement.requestSubmit()} disabled={disabled}>
+          <svelte:fragment slot="lead">
+            <div class="flex justify-center items-center"><slot name="icon"></slot></div>
+          </svelte:fragment>
+          <svelte:fragment slot="message">
+            <span class="text-xs">{message}</span>
+          </svelte:fragment>
+          <svelte:fragment slot="meta">
+            <span class="text-xs">{meta}</span>
+          </svelte:fragment>
       </FileDropzone>
       {#if loading}
         <div class="mt-1"><ProgressBar/></div>

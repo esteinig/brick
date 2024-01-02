@@ -20,23 +20,24 @@ from ..rings import BlastRing, AnnotationRing
 def process_file(file_path: str, file_config: Annotated[dict, "Model dump of FileConfig"], filename_original: str):
 
     try:
+        file = Path(file_path)
+        
         session_id: str = file_config["session_id"]
-
         file_type: FileType = file_config["file_type"]
         file_format: FileFormat = file_config["file_format"]
 
         records = 0; total_length = 0; selections = Selections()
 
         if file_format == FileFormat.FASTA:
-            total_length, records, selections = validate_fasta(path=file_path, file_type=file_type)
+            total_length, records, selections = validate_fasta(path=file, file_type=file_type)
         elif file_format == FileFormat.GENBANK:
-            records, selections = validate_genbank(path=file_path)
+            records, selections = validate_genbank(path=file)
         elif file_format == FileFormat.TSV:
-            records = validate_tsv(path=file_path, file_type=file_type)
+            records = validate_tsv(path=file, file_type=file_type)
 
         session_file = SessionFile(
             session_id=session_id,
-            id=Path(file_path).name,
+            id=file.name,
             name_original=filename_original,
             type=file_type,
             format=file_format,
@@ -170,12 +171,15 @@ def validate_fasta(path: Path, file_type: FileType) -> Tuple[int, int, Selection
 
 def validate_genbank(path: Path) -> Tuple[int, Selections]:
 
+    if not validate_genbank_file(file_path=path):
+        raise ValueError("Invalid Genbank file format")
+    
     records = [r for r in SeqIO.parse(str(path), 'gb')]
     num_records = len(records)
 
     if num_records < 1:
-        raise ValueError("Genbank annotation files cannot be empty")
-
+        raise ValueError("Genbank files cannot be empty")
+    
 
     unique_features = set()
     unique_qualifiers = set()
@@ -202,11 +206,14 @@ def validate_tsv(path: Path, file_type: FileType) -> int:
     if file_type == FileType.ANNOTATION_GENBANK  and data.columns != ["start", "end", "text", "color"]:
         raise ValueError("Custom annotation files must have four column headers in order (start, end, text, color)")
     
+    for i, row in data.iterrows():
+        if row['end'] > row['start']:
+            raise ValueError(f"End values cannot be greater than start values (row {i})")
+        
     num_records = len(data)
 
-    if len(num_records) < 1:
+    if num_records < 1:
         raise ValueError("Custom annotation files cannot be empty")
-
 
     return num_records
 
@@ -223,7 +230,29 @@ def validate_sequence(sequence: str) -> bool:
     valid_nucleotides = set("ACGTURYSWKMBDHVN")
     return all(nucleotide in valid_nucleotides for nucleotide in sequence.upper())
 
-
+def validate_genbank_file(file_path: Path):
+    """
+    Validates if a file is in the GenBank format.
+    
+    Args:
+    file_path (str): Path to the GenBank file.
+    
+    Returns:
+    bool: True if the file is in the GenBank format, False otherwise.
+    """
+    
+    with file_path.open('r') as file:
+        first_line = file.readline().strip()
+        if not first_line.startswith('LOCUS'):
+            return False  # GenBank file should start with 'LOCUS'
+        
+        # Read the file until the end to find the terminating "//"
+        for line in file:
+            if line.strip() == '//':
+                return True  # Found the terminating line
+        
+        return False  # Terminating "//" line not found
+    
 
 # Database helpers (workers are not async)
 

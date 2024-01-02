@@ -40,8 +40,43 @@ function clearRings() {
     rings.update(_ => [])
 }
 
+// Function to move a ring up (decrease its index)
+function moveRingInside(currentIndex: number) {
+    rings.update(currentRings => {
+        if (currentIndex > 0 && currentIndex < currentRings.length) {
+            [currentRings[currentIndex - 1], currentRings[currentIndex]] = 
+            [currentRings[currentIndex], currentRings[currentIndex - 1]];
+
+            // Update indexes
+            return currentRings.map((ring, idx) => ({ ...ring, index: idx }));
+        }
+        return currentRings;
+    });
+}
+
+// Function to move a ring down (increase its index)
+function moveRingOutside(currentIndex: number) {
+    rings.update(currentRings => {
+        if (currentIndex >= 0 && currentIndex < currentRings.length - 1) {
+            [currentRings[currentIndex], currentRings[currentIndex + 1]] = 
+            [currentRings[currentIndex + 1], currentRings[currentIndex]];
+
+            // Update indexes
+            return currentRings.map((ring, idx) => ({ ...ring, index: idx }));
+        }
+        return currentRings;
+    });
+}
+
+function changeRingTitle(index: number, title: string) {
+    rings.update(currentRings => {
+        currentRings[index].title = title
+        return currentRings;
+    })
+}
+
 // Export the store and functions
-export { rings, addRing, removeRing, clearRings, toggleRingVisibility };
+export { rings, addRing, removeRing, clearRings, toggleRingVisibility, moveRingInside, moveRingOutside, changeRingTitle };
 
 // Add new ring helper function
 function addNewRing(rings: Ring[], newRing: Ring, newIndex: number = rings.length): Ring[] {

@@ -16,6 +16,10 @@
 	clearRings();  
 	clearSessionFiles();
 	
+	// Events from the figure to display in control interface
+	function handleClick(event: any)  {
+        console.log(`Clicked: ${ event.detail}`);
+    }
 </script>
 
 
@@ -24,7 +28,7 @@
 
     <div class="grid sm:grid-cols-1 md:grid-cols-8 gap-8 h-full">
 		<div class="col-span-5 h-full w-full">
-            <Brick bind:config={config} scaleFactor={getDefaultScaleFactor() + 0.2}></Brick>
+            <Brick bind:config={config} scaleFactor={getDefaultScaleFactor() + 0.2} on:click={handleClick}></Brick>
 		</div>
 		<div class="col-span-3 h-full w-full">
             <BrickInterface bind:config={config}></BrickInterface>
