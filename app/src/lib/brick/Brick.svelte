@@ -8,6 +8,33 @@
 	import { DEFAULT_CONFIG } from '$lib/data';
 	import { fade } from 'svelte/transition';
   import { rings } from '$lib/stores/RingStore';
+  import { createEventDispatcher } from 'svelte';
+	import { removeTooltip, setTooltip } from '$lib/stores/TooltipStore';
+
+
+  const dispatch = createEventDispatcher();
+  let segmentClicked: boolean = false;
+
+  function handleMouseover(ringSegment: RingSegment) {
+      dispatch('hover', ringSegment);
+      setTooltip(ringSegment)
+  }
+
+  function handleMouseout() {
+      dispatch('hover', undefined);
+      removeTooltip()
+  }
+
+  function handleClick(ringSegment: RingSegment) {
+      if (segmentClicked){
+        dispatch('click', undefined);
+        segmentClicked = false;
+      } else {
+        dispatch('click', ringSegment);
+        segmentClicked = true;
+      }
+  }
+
   
   export let config: PlotConfig = DEFAULT_CONFIG;
 
@@ -36,6 +63,8 @@
 
   // Arc segment annotations otherwise start at 3 pm
   const annotationSegmentRotation: number = 90;  
+
+  // Events
 
   let container: HTMLElement;
   let svg: any;
@@ -193,7 +222,18 @@
             {/each}
           {:else}
             {#each ring.data as ringSegment}
-              <path class="brickRingSegment" d={arcGenerator(ringSegment, ring.index, ring.height)} style="fill: {ring.color}; opacity: 1; cursor: pointer" visibility={ring.visible ? 'visible': 'hidden'}></path>
+              <path 
+                class="brickRingSegment" 
+                d={arcGenerator(ringSegment, ring.index, ring.height)} 
+                style="fill: {ring.color}; opacity: 1; cursor: pointer" 
+                visibility={ring.visible ? 'visible': 'hidden'} 
+                on:mouseover={() => handleMouseover(ringSegment)} 
+                on:focus={() => handleMouseover(ringSegment)} 
+                on:mouseout={handleMouseout} 
+                on:blur={handleMouseout}
+                on:click={() => handleClick(ringSegment)}
+                role="tooltip"
+              ></path>
             {/each}
           {/if}
         {/each}

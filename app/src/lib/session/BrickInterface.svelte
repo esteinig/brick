@@ -2,14 +2,14 @@
 <script lang="ts">
     import { TabGroup, Tab } from '@skeletonlabs/skeleton';
 
-	import type { Ring } from "$lib/types";
 	import type { PlotConfig } from "$lib/types";
-	import type { SessionFile } from '$lib/types';
 
-    import { DEFAULT_CONFIG, DEFAULT_RINGS } from "$lib/data";
+    import { DEFAULT_CONFIG } from "$lib/data";
 
 	import DataControlPanel from "$lib/session/controls/panels/DataControlPanel.svelte";
 	import RingControlPanel from "$lib/session/controls/panels/RingControlPanel.svelte";
+
+	import { uploadInProgress } from '$lib/stores/UploadInProgressStore';
 
 
     export let config: PlotConfig = DEFAULT_CONFIG;
@@ -24,18 +24,18 @@
         <Tab bind:group={tab} name="tab1" value={0}>
             <span>Data<span>
         </Tab>
-        <Tab bind:group={tab} name="tab2" value={1}>
-            <span>Rings</span>
+        <Tab bind:group={tab} name="tab2" value={1} disabled={$uploadInProgress}>
+            <span class={$uploadInProgress ? 'opacity-30 cursor-not-allowed' : ''}>Rings</span>
         </Tab>
-        <Tab bind:group={tab} name="tab3" value={2}>
-            <span>Plot</span>
+        <Tab bind:group={tab} name="tab3" value={2} disabled={$uploadInProgress}>
+            <span class={$uploadInProgress ? 'opacity-30 cursor-not-allowed' : ''}>Plot</span>
         </Tab>
 
-        <Tab bind:group={tab} name="tab4" value={3}>
-            <span>Export</span>
+        <Tab bind:group={tab} name="tab4" value={3} disabled={$uploadInProgress}>
+            <span class={$uploadInProgress ? 'opacity-30 cursor-not-allowed' : ''}>Export</span>
         </Tab>
-        <Tab bind:group={tab} name="tab4" value={4}>
-            <span>About</span>
+        <Tab bind:group={tab} name="tab4" value={4} disabled={$uploadInProgress}>
+            <span class={$uploadInProgress ? 'opacity-30 cursor-not-allowed' : ''}>About</span>
         </Tab>
         <!-- Tab Panels --->
         <svelte:fragment slot="panel">
@@ -44,11 +44,11 @@
             {:else if tab === 1}
                 <RingControlPanel bind:config={config}></RingControlPanel>
             {:else if tab === 2}
-            <span></span>
+                <span></span>
             {:else if tab === 3}
-            <span></span>
+                <span></span>
             {:else if tab === 4}
-            <span></span>
+                <span></span>
             {/if}
         </svelte:fragment>
     </TabGroup>

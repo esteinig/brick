@@ -200,6 +200,12 @@ export type AnnotationRingSchema = {
     genbank_qualifiers: string[]
 }
 
+
+export type LabelRingSchema = {
+    session_id: string
+    tsv_id: string
+}
+
 /*  =============
  *  API RESPONSES
  *  =============
