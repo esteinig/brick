@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { type AnnotationRingSchema } from "$lib/types";
+	import { RingType, type AnnotationRingSchema } from "$lib/types";
 	import { ToastType, triggerToast } from "$lib/helpers";
 	import { FileType, type SessionFile } from "$lib/types";
     import { sessionFiles, sessionFileTypeAvailable } from "$lib/stores/SessionFileStore";
@@ -27,7 +27,7 @@
 
 </script>
 
-<div class="border border-gray-300 rounded-lg border-opacity-10 p-4">
+<div class="border border-gray-300 rounded-2xl border-opacity-10 p-4">
     <p class="opacity-60 mb-2">Annotation Ring</p>
     <p class="opacity-40 mb-2 text-sm w-full">
         
@@ -36,10 +36,11 @@
         selected reference genome. Annotations can be extracted from Genbank or custom table files.</p>
     
     {#if selectedReference}
-        <form id="createAnnotationRingForm" action="?/createAnnotationRing" method="POST" use:enhance={({ formData }) => {
+        <form id="createAnnotationRingForm" action="?/createRing" method="POST" use:enhance={({ formData }) => {
                     
             loading = true;
             formData.append('ring_config', JSON.stringify(ringConfig))
+            formData.append('ring_type', RingType.ANNOTATION)
         
             return async ({ result }) => {
                 await applyAction(result);
@@ -54,7 +55,18 @@
                     }
                     
                 } else {
-                    triggerToast($page.form.detail ?? `Error ${result.status}: an unknown error occurred`, ToastType.ERROR, toastStore);
+                    // Validation errors from pydantic schemes are an array of validation objects:
+                    if ($page.form.detail instanceof Array){
+                        for (const error of $page.form.detail) {
+                            triggerToast(
+                                error.msg ?? `Error ${result.status}: an unknown error occurred`, 
+                                ToastType.ERROR, 
+                                toastStore
+                            );
+                        }
+                    } else {
+                        triggerToast($page.form.detail ?? `Error ${result.status}: an unknown error occurred`, ToastType.ERROR, toastStore);
+                    }
                 }
             };
         }}>
@@ -103,7 +115,7 @@
                 {/if}
 
                 {#if !sessionFileTypeAvailable(FileType.ANNOTATION_GENBANK) && !sessionFileTypeAvailable(FileType.ANNOTATION_CUSTOM)}
-                    <div class="text-xs text-error-500 text-center">Please upload a reference annotation file</div>
+                    <div class="text-xs text-error-500">Please upload a reference annotation file</div>
                 {/if}
             </div>
             

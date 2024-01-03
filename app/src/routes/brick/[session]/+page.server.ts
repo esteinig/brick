@@ -1,6 +1,7 @@
 import { fail, error} from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
-import type { BlastRingResponse, FileUploadResponse, AnnotationRingResponse } from '$lib/types';
+import type { FileUploadResponse, CreateRingResponse } from '$lib/types';
+import { RingType } from '$lib/types';
 import { checkCeleryResults, getErrorMessage } from '$lib/helpers';
 import { env } from '$env/dynamic/private';
 
@@ -29,79 +30,76 @@ export const actions: Actions = {
             body: formData
         });
 
-        const fileUploadResponseData: FileUploadResponse = await response.json();
+        try {
+            const fileUploadResponseData: FileUploadResponse = await response.json();
 
-        if (response.ok) {
-            try {
-                return await checkCeleryResults(
-                    `${env.PRIVATE_DOCKER_API_URL}/tasks/result/${fileUploadResponseData.task_id}` 
-                );
-            } catch (error) {
-                return fail(500, { 
-                    detail: getErrorMessage(error), 
-                    task_id: fileUploadResponseData.task_id 
-                })
+            if (response.ok) {
+                try {
+                    return await checkCeleryResults(
+                        `${env.PRIVATE_DOCKER_API_URL}/tasks/result/${fileUploadResponseData.task_id}` 
+                    );
+                } catch (error) {
+                    return fail(500, { 
+                        detail: getErrorMessage(error), 
+                        task_id: fileUploadResponseData.task_id 
+                    })
+                }
+            } else {
+                return fail(response.status, fileUploadResponseData)
             }
-        } else {
-            return fail(response.status, fileUploadResponseData)
+        } catch(error) {
+            // Catch if something bad happens during validation with pydantic
+            // there is no JSON object returned (error only)
+            return fail(response.status, {
+                detail: getErrorMessage(error)
+            })
         }
+        
     },
-    createBlastRing: async ({ request }) => {
+    createRing: async ({ request }) => {
 
         const formData = await request.formData();
 
-        const ringConfig = formData.get("ring_config")
+        const ringConfig = formData.get("ring_config");
+        const ringType: RingType | null = formData.get("ring_type") as RingType;
 
-        const response = await fetch(`${env.PRIVATE_DOCKER_API_URL}/rings/blast`, {
+        if (ringType === null){
+            return fail(400, {detail: "Request did not contain the required `ring_type` value"})
+        }
+        
+
+        const response = await fetch(`${env.PRIVATE_DOCKER_API_URL}/rings/${ringType}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: ringConfig,
         });
+        
+        
+        try {
+            const createRingResponseData: CreateRingResponse = await response.json();
 
-        const blastRingResponseData: BlastRingResponse = await response.json();
-
-        if (response.ok) {
-            try {
-                return await checkCeleryResults(
-                    `${env.PRIVATE_DOCKER_API_URL}/tasks/result/${blastRingResponseData.task_id}` 
-                );
-            } catch (error) {
-                return fail(500, { 
-                    detail: getErrorMessage(error), 
-                    task_id: blastRingResponseData.task_id 
-                })
+            if (response.ok) {
+                try {
+                    return await checkCeleryResults(
+                        `${env.PRIVATE_DOCKER_API_URL}/tasks/result/${createRingResponseData.task_id}` 
+                    );
+                } catch (error) {
+                    return fail(500, { 
+                        detail: getErrorMessage(error), 
+                        task_id: createRingResponseData.task_id 
+                    })
+                }
+            } else {
+                return fail(response.status, createRingResponseData)
             }
-        } else {
-            return fail(response.status, blastRingResponseData)
+        } catch(error) {
+            // Catch if something bad happens during validation with pydantic
+            // there is no JSON object returned (error only)
+            return fail(response.status, {
+                detail: getErrorMessage(error)
+            })
         }
-    },
-    createAnnotationRing: async ({ request }) => {
-
-        const formData = await request.formData();
-
-        const ringConfig = formData.get("ring_config")
-
-        const response = await fetch(`${env.PRIVATE_DOCKER_API_URL}/rings/annotation`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: ringConfig,
-        });
-
-        const annotationRingResponseData: AnnotationRingResponse = await response.json();
-
-        if (response.ok) {
-            try {
-                return await checkCeleryResults(
-                    `${env.PRIVATE_DOCKER_API_URL}/tasks/result/${annotationRingResponseData.task_id}` 
-                );
-            } catch (error) {
-                return fail(500, { 
-                    detail: getErrorMessage(error), 
-                    task_id: annotationRingResponseData.task_id 
-                })
-            }
-        } else {
-            return fail(response.status, annotationRingResponseData)
-        }
-    },
+        
+        
+    }
 };

@@ -81,6 +81,8 @@
       </FileDropzone>
       {#if loading}
         <div class="mt-1"><ProgressBar/></div>
+      {:else}
+        <div class="mt-3"></div>
       {/if}
   </div>
 </form>

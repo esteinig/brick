@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException
 from ..schemas import TaskStatus, TaskStatusResponse, TaskResultResponse
 from ..core.celery import celery_app
 from ..schemas import SessionFile
-from ...rings import BlastRing, AnnotationRing, RingType
+from ...rings import BlastRing, AnnotationRing, LabelRing, RingType
 
 router = APIRouter(
     prefix="/tasks",
@@ -52,6 +52,8 @@ def get_task_result(task_id: str):
                 result_model = BlastRing(**result_data)
             elif 'type' in result_data and result_data["type"] == RingType.ANNOTATION:
                 result_model = AnnotationRing(**result_data)
+            elif 'type' in result_data and result_data["type"] == RingType.LABEL:
+                result_model = LabelRing(**result_data)
             else: 
                 raise HTTPException(status_code=500, detail="Task result did not have a known type")
 

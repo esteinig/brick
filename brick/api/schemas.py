@@ -1,11 +1,11 @@
 from pydantic import BaseModel, validator
-from typing import Optional, Annotated, Tuple, List, Union
+from typing import Optional, Annotated, Tuple, List
 from pathlib import Path
 from enum import StrEnum
 from uuid import UUID
 
 from .core.config import settings
-from ..rings import BlastRing, AnnotationRing
+from ..rings import BlastRing, AnnotationRing, LabelRing, RingSegment
 
 SessionID = Annotated[str, "Session UUID used as directory name of the session directory"]
 SessionFileID = Annotated[str, "Uploaded file assigned UUID used as filename in session directory"]
@@ -67,7 +67,7 @@ class TaskStatusResponse(BaseModel):
 
 
 class TaskResultResponse(TaskStatusResponse):
-    result: Optional[SessionFile | BlastRing | AnnotationRing]
+    result: Optional[SessionFile | BlastRing | AnnotationRing | LabelRing]
 
 
 # Ring schemas
@@ -87,30 +87,34 @@ class BlastRingSchema(BaseModel):
         try:
             UUID(v, version=4)
         except ValueError:
-            raise ValueError(f"Value '{v}' is not a valid UUID version 4")
+            raise ValueError(f"value '{v}' is not a valid UUID version 4")
         return v
     
     @validator('session_id')
     def check_session_directory(cls, v):
-        assert (settings.WORK_DIRECTORY / v).exists(), f"Session directory '{v}' does not exist"
+        if not (settings.WORK_DIRECTORY / v).exists():
+            raise ValueError(f"session directory '{v}' does not exist")
         return v
 
 
     @validator('reference_id', 'genome_id')
     def check_input_files(cls, v, values):
         session_id = values.get('session_id')
-        assert (settings.WORK_DIRECTORY / session_id / v).exists(), f"Input file '{v}' does not exist"
+        if v is not None:
+            if not (settings.WORK_DIRECTORY / session_id / v).exists():
+                raise ValueError(f"input file '{v}' does not exist")
         return v
-
 
     @validator('min_alignment')
     def check_min_alignment(cls, v):
-        assert 0 <= v <= 100, 'Minimum alignment length must be greater or equal to 0'
+        if not v >= 0:
+            raise ValueError('minimum alignment length must be greater or equal to 0')
         return v
     
     @validator('min_identity')
     def check_min_identity(cls, v):
-        assert 0 <= v <= 100, 'Minimum identity must be between 0 and 100'
+        if not 0 <= v <= 100:
+            raise ValueError('minimum identity must be between 0 and 100')
         return v
     
     def get_file_paths(self) -> Tuple[Path, Path, Path]:
@@ -127,7 +131,6 @@ class BlastRingResponse(BaseModel):
 
 
 # Annotation ring
-    
 
 class AnnotationRingSchema(BaseModel):
     session_id: SessionID
@@ -140,7 +143,7 @@ class AnnotationRingSchema(BaseModel):
     def check_fields(cls, v, values):
         tsv_id = values.get('tsv_id')
         if tsv_id is None and v is None:
-            ValueError("One of 'genbank_id' or 'tsv_id' fields must be provided")
+            ValueError("one of 'genbank_id' or 'tsv_id' fields must be provided")
         return v
     
     @validator('session_id', 'genbank_id', 'tsv_id')
@@ -149,12 +152,13 @@ class AnnotationRingSchema(BaseModel):
             try:
                 UUID(v, version=4)
             except ValueError:
-                raise ValueError(f"Value '{v}' is not a valid UUID version 4")
+                raise ValueError(f"value '{v}' is not a valid UUID version 4")
         return v
     
     @validator('session_id')
     def check_session_directory(cls, v):
-        assert (settings.WORK_DIRECTORY / v).exists(), f"Session directory '{v}' does not exist"
+        if not (settings.WORK_DIRECTORY / v).exists():
+            raise ValueError(f"session directory '{v}' does not exist")
         return v
 
     
@@ -162,8 +166,10 @@ class AnnotationRingSchema(BaseModel):
     def check_input_files(cls, v, values):
         session_id = values.get('session_id')
         if v is not None:
-            assert (settings.WORK_DIRECTORY / session_id / v).exists(), f"Input file '{v}' does not exist"
+            if not (settings.WORK_DIRECTORY / session_id / v).exists():
+                raise ValueError(f"input file '{v}' does not exist")
         return v
+    
     
     
     def get_file_paths(self) -> Tuple[Path, Path | None, Path | None]:
@@ -175,4 +181,55 @@ class AnnotationRingSchema(BaseModel):
         )
 
 class AnnotationRingResponse(BaseModel):
+    task_id: CeleryTaskID
+
+
+
+# Label ring
+
+
+class LabelRingSchema(BaseModel):
+    session_id: SessionID
+    tsv_id: SessionFileID | None
+    manual: List[RingSegment]
+
+    @validator('session_id','tsv_id')
+    def check_uuid_v4(cls, v):
+        if v is not None:
+            try:
+                UUID(v, version=4)
+            except ValueError:
+                raise ValueError(f"value '{v}' is not a valid UUID version 4")
+        return v
+    
+    @validator('session_id')
+    def check_session_directory(cls, v):
+        if not (settings.WORK_DIRECTORY / v).exists():
+            raise ValueError(f"session directory '{v}' does not exist")
+        return v
+
+    
+    @validator('tsv_id')
+    def check_input_files(cls, v, values):
+        session_id = values.get('session_id')
+        if v is not None:
+            if not (settings.WORK_DIRECTORY / session_id / v).exists():
+                raise ValueError(f"input file '{v}' does not exist")
+        return v
+    
+    @validator('manual')
+    def check_input_files(cls, v, values):
+        tsv_id = values.get('tsv_id')
+        if not v and tsv_id is None:
+            raise ValueError(f"either a label file or manual labels must be provided")
+        return v
+    
+    def get_file_paths(self) -> Tuple[Path, Path]:
+
+        return (
+            settings.WORK_DIRECTORY / self.session_id, 
+            settings.WORK_DIRECTORY / self.session_id / self.tsv_id if self.tsv_id else None
+        )
+
+class LabelRingResponse(BaseModel):
     task_id: CeleryTaskID
