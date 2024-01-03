@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { type BlastRingSchema, BlastMethod } from "$lib/types";
+	import { type BlastRingSchema, BlastMethod, RingType } from "$lib/types";
 	import { ToastType, triggerToast } from "$lib/helpers";
 	import { FileType, type SessionFile } from "$lib/types";
     import { sessionFiles, sessionFileTypeAvailable } from "$lib/stores/SessionFileStore";
@@ -23,10 +23,9 @@
 
     let loading: boolean = false;
 
-
 </script>
 
-<div class="border border-gray-300 rounded-lg border-opacity-10 p-4">
+<div class="border border-gray-300 rounded-2xl border-opacity-10 p-4">
     <p class="opacity-60 mb-2">BLAST Ring</p>
     <p class="opacity-40 mb-2 text-sm w-full">
         
@@ -35,10 +34,11 @@
         against the selected reference. Computation of alignments may take a second depending on server load</p>
     
     {#if selectedReference}
-    <form id="createBlastRingForm" action="?/createBlastRing" method="POST" use:enhance={({ formData }) => {
+    <form id="createBlastRingForm" action="?/createRing" method="POST" use:enhance={({ formData }) => {
                 
         loading = true;
         formData.append('ring_config', JSON.stringify(ringConfig))
+        formData.append('ring_type', RingType.BLAST)
     
         return async ({ result }) => {
             await applyAction(result);
@@ -72,7 +72,7 @@
                         </select>
                     </label>
                 {:else}
-                    <div class="text-xs text-error-500 text-center">Please upload a genome file</div>
+                    <div class="text-xs text-error-500 text-center mt-4">Please upload a genome file</div>
                 {/if}
             </div>
         </div>

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { createSessionId } from "$lib/helpers";
+    const published: boolean = false;
 </script>
 
 <div class="container">
@@ -28,8 +29,14 @@
         </button>
         </div>
         <div class="gap-y-1 text-center flex flex-col items-center">
+        {#if published}
             <div class="text-sm opacity-70 mb-2">Please consider citing our publication in research outputs</div>	
             <a href="https://github.com/esteinig/brick" target="_blank" rel="noreferrer"><code class="text-xs opacity-100">Steinig et al. (2024) - BRICK: bacterial genome annotation and identity visualisation - Microbial Genomics</code></a>
+        {:else}
+
+        <div class="text-sm opacity-70 mb-2">Please consider starring our repository, it keeps the light on - merci, camarade!</div>	
+        <a href="https://github.com/esteinig/brick" target="_blank" rel="noreferrer"><code class="text-xs opacity-100">https://github.com/esteinig/brick</code></a>
+        {/if}
         </div>
     </div>
 </div>

@@ -11,9 +11,9 @@ from datetime import datetime
 from .core.config import settings
 from .core.celery import celery_app
 from .core.db import get_session_collection_pymongo
-from .schemas import FileFormat, FileType, SessionFile, Selections
+from .schemas import FileFormat, FileType, SessionFile, Selections, FileConfig, AnnotationRingSchema, LabelRingSchema
 from .models import Session
-from ..rings import BlastRing, AnnotationRing
+from ..rings import BlastRing, AnnotationRing, LabelRing
 
 # Uploaded file validation and session file storage
 @celery_app.task
@@ -21,26 +21,23 @@ def process_file(file_path: str, file_config: Annotated[dict, "Model dump of Fil
 
     try:
         file = Path(file_path)
-        
-        session_id: str = file_config["session_id"]
-        file_type: FileType = file_config["file_type"]
-        file_format: FileFormat = file_config["file_format"]
+        config = FileConfig(**file_config)
 
         records = 0; total_length = 0; selections = Selections()
 
-        if file_format == FileFormat.FASTA:
-            total_length, records, selections = validate_fasta(path=file, file_type=file_type)
-        elif file_format == FileFormat.GENBANK:
+        if config.file_format == FileFormat.FASTA:
+            total_length, records, selections = validate_fasta(path=file, file_type=config.file_type)
+        elif config.file_format == FileFormat.GENBANK:
             records, selections = validate_genbank(path=file)
-        elif file_format == FileFormat.TSV:
-            records = validate_tsv(path=file, file_type=file_type)
+        elif config.file_format == FileFormat.TSV:
+            records = validate_tsv(path=file, file_type=config.file_type)
 
         session_file = SessionFile(
-            session_id=session_id,
+            session_id=config.session_id,
             id=file.name,
             name_original=filename_original,
-            type=file_type,
-            format=file_format,
+            type=config.file_type,
+            format=config.file_format,
             records=records,
             length=total_length,
             selections=selections
@@ -75,7 +72,10 @@ def process_blast_ring(
                 reference_fasta=Path(reference_file_path), 
                 working_directory=working_directory
             )
-            ring = BlastRing.from_blast_output(file=output_file)
+            ring: BlastRing = BlastRing.from_blast_output(
+                file=output_file,
+                sanitize=True
+            )
 
              
         return {
@@ -96,14 +96,19 @@ def process_annotation_ring(
 ):
 
     try:
+        ring_schema = AnnotationRingSchema(**annotation_ring_schema)
         
         if genbank_file_path:
-            ring = AnnotationRing.from_genbank_file(
-                file=genbank_file_path, 
-                features=annotation_ring_schema.get("genbank_features")
+            ring: AnnotationRing  = AnnotationRing.from_genbank_file(
+                file=Path(genbank_file_path), 
+                features=ring_schema.genbank_features,
+                sanitize=True
             )
         elif tsv_file_path:
-            ring = AnnotationRing.from_tsv_file(file=tsv_file_path)
+            ring: AnnotationRing = AnnotationRing.from_tsv_file(
+                file=Path(tsv_file_path),
+                sanitize=True
+            )
         else:
             raise ValueError("Something went wrong - no files provided")
 
@@ -114,6 +119,38 @@ def process_annotation_ring(
 
     except Exception as e:
         return {"success": False, "error": str(e)}
+
+@celery_app.task
+def process_label_ring(
+    tsv_file_path: Optional[Annotated[str, "Path to genome file in the session directory"]], 
+    label_ring_schema: Annotated[dict, "Model dump of LabelRingSchema"]
+):
+
+    try:
+        ring_schema = LabelRingSchema(**label_ring_schema)
+
+        if tsv_file_path:
+            ring: LabelRing = LabelRing.from_tsv_file(
+                file=Path(tsv_file_path),
+                sanitize=True
+            )
+        else:
+            ring: LabelRing = LabelRing()
+
+        if ring_schema.manual:
+            ring.add_manual_labels(
+                labels=ring_schema.manual, 
+                sanitize=True
+            )
+
+        return {
+            "success": True, 
+            "result": ring.model_dump()
+        }
+
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
 
 
 # Subprocess helpers
@@ -207,8 +244,8 @@ def validate_tsv(path: Path, file_type: FileType) -> int:
         raise ValueError("Custom annotation files must have four column headers in order (start, end, text, color)")
     
     for i, row in data.iterrows():
-        if row['end'] > row['start']:
-            raise ValueError(f"End values cannot be greater than start values (row {i})")
+        if row['start'] > row['end']:
+            raise ValueError(f"Start values cannot be greater than end values (row {i})")
         
     num_records = len(data)
 

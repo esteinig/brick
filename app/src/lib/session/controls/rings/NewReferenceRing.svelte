@@ -7,7 +7,7 @@
     
 </script>
 
-<div class="border-gray-300 rounded-lg border-opacity-10">
+<div class="border border-gray-300 rounded-2xl border-opacity-10 p-4">
     <p class="opacity-60 mb-2">Reference Ring</p>
     <p class="opacity-20 mb-2 text-xs w-full"> Reference rings are simple continuous segments representing the 
         reference genome against which other genomes or sequences are compared.

@@ -43,12 +43,12 @@
   export let height: number = 768;
   
   export let border: boolean = false;
-  export let borderClass: string = "border border-gray-300 rounded-lg border-opacity-10";
+  export let borderClass: string = "border border-gray-300 rounded-2xl border-opacity-10";
 
   export let scaleFactor: number = getDefaultScaleFactor();
 
   export let enableZoom: boolean = true;
-  export let zoomRange: [number, number] = [0.5, 5];
+  export let zoomRange: [number, number] = [0.5, 20];
 
   export let enableControls: boolean = false;
 

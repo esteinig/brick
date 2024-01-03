@@ -6,7 +6,7 @@ from enum import StrEnum
 from Bio import SeqIO
 
 import csv
-from pydantic import BaseModel, validator
+from pydantic import BaseModel
 
 from .utils import sanitize_input
 
@@ -14,6 +14,7 @@ class RingType(StrEnum):
     GENERIC = 'generic'
     BLAST = 'blast'
     ANNOTATION = 'annotation'
+    LABEL = 'label'
 
 class RingSegment(BaseModel):
     start: int
@@ -102,7 +103,7 @@ class GenBankFeatureEntry(BaseModel):
     end: int
     annotation: str
 
-    def to_segment(self, sanitize: bool = False) -> RingSegment:
+    def to_segment(self, sanitize: bool = True) -> RingSegment:
         return RingSegment(
             start=self.start,
             end=self.end,
@@ -128,15 +129,16 @@ def parse_genbank_features(file_path: str, feature_types: List[str]) -> List[Gen
 
                 # Add extra annotations if available
                 if 'gene' in feature.qualifiers:
-                    annotation += f" ({feature.qualifiers['gene'][0]})"
-                elif 'product' in feature.qualifiers:
-                    annotation += f" ({feature.qualifiers['product'][0]})"
+                    annotation += f" Gene: {feature.qualifiers['gene'][0]})"
+
+                if 'product' in feature.qualifiers:
+                    annotation += f"  Product: {feature.qualifiers['product'][0]}"
 
                 entries.append(GenBankFeatureEntry(start=start, end=end, annotation=annotation))
 
     return entries
 
-def parse_tsv_segments(file_path: Path, sanitize: bool = False) -> List[RingSegment]:
+def parse_tsv_segments(file_path: Path, sanitize: bool = True) -> List[RingSegment]:
     segments = []
 
     with file_path.open(mode='r', encoding='utf-8') as file:
@@ -165,15 +167,44 @@ class AnnotationRing(Ring):
     type: RingType = RingType.ANNOTATION
     title: str = "Annotation Ring"
     
-    def from_genbank_file(file: Path, features: List[str]) -> AnnotationRing:
+    def from_genbank_file(file: Path, features: List[str], sanitize: bool = True) -> AnnotationRing:
         return AnnotationRing(
-            data=[entry.to_segment() for entry in parse_genbank_features(
-                file_path=file, feature_types=features
+            data=[entry.to_segment(sanitize=sanitize) for entry in parse_genbank_features(
+                file_path=str(file), feature_types=features
             )]
         )
     
-    def from_tsv_file(file: Path) -> AnnotationRing:
+    def from_tsv_file(file: Path, sanitize: bool = True) -> AnnotationRing:
         return AnnotationRing(
-            data=[segment for segment in parse_tsv_segments(file_path=file)]
+            data=[segment for segment in parse_tsv_segments(file_path=file, sanitize=sanitize)]
         )
     
+class LabelRing(Ring):
+    type: RingType = RingType.LABEL
+    title: str = "Label Ring"
+    
+    def from_genbank_file(file: Path, features: List[str], sanitize: bool = True) -> LabelRing:
+        return LabelRing(
+            data=[entry.to_segment(sanitize=sanitize) for entry in parse_genbank_features(
+                file_path=str(file), feature_types=features
+            )]
+        )
+    
+    def from_tsv_file(file: Path, sanitize: bool = True) -> LabelRing:
+        return LabelRing(
+            data=[segment for segment in parse_tsv_segments(file_path=file, sanitize=sanitize)]
+        )
+    
+    def add_manual_labels(self, labels: List[RingSegment], sanitize: bool = True) -> None:
+
+        for segment in labels:
+            if sanitize:
+                segment.text = sanitize_input(
+                    input_string=segment.text,
+                    is_for_db=True, is_for_svg=True
+                )
+                segment.color = sanitize_input(
+                    input_string=segment.color,
+                    is_for_db=True, is_for_svg=True
+                )
+            self.data.append(segment)

@@ -203,7 +203,8 @@ export type AnnotationRingSchema = {
 
 export type LabelRingSchema = {
     session_id: string
-    tsv_id: string
+    tsv_id: string | null
+    manual: RingSegment[]
 }
 
 /*  =============
@@ -219,11 +220,7 @@ export type FileUploadResponse = {
     task_id: string
 } & ErrorResponse
 
-export type BlastRingResponse = {
-    task_id: string
-} & ErrorResponse
-
-export type AnnotationRingResponse = {
+export type CreateRingResponse = {
     task_id: string
 } & ErrorResponse
 
@@ -232,6 +229,15 @@ export type TaskStatusResponse = {
     task_id: string
     result: SessionFile
 } & ErrorResponse
+
+export type PydanticValidationError = {
+    ctx: any,
+    input: any,
+    loc: string[]
+    msg: string
+    type: string
+    url: string
+}
 
 
 /*  ==================

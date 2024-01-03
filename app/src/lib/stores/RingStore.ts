@@ -81,10 +81,17 @@ export { rings, addRing, removeRing, clearRings, toggleRingVisibility, moveRingI
 // Add new ring helper function
 function addNewRing(rings: Ring[], newRing: Ring, newIndex: number = rings.length): Ring[] {
     if (rings.length > 0 && newIndex === rings.length && rings[rings.length - 1].type === RingType.LABEL) {
+       
+        if (newRing.type === RingType.LABEL) { 
+            rings[rings.length - 1].data = [
+                ...rings[rings.length - 1].data, ...newRing.data
+            ] // add labels to outer label ring
+            return rings
+        }
         newIndex = rings.length - 1;
     }
 
-    let newArray = [...rings];
-    newArray.splice(newIndex, 0, newRing);
-    return newArray.map((item, idx) => ({ ...item, index: idx }));
+    let newRings = [...rings];
+    newRings.splice(newIndex, 0, newRing);
+    return newRings.map((ring, idx) => ({ ...ring, index: idx }));
 }

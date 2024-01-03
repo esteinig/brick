@@ -1,9 +1,10 @@
 <script lang="ts">
-    import { createEventDispatcher } from 'svelte';
+    import { createEventDispatcher, tick } from 'svelte';
 
     export let title = '';
     export let titleColor = '';
 
+    let inputElement: HTMLInputElement;
     let editing = false;
 
     const dispatch = createEventDispatcher();
@@ -14,21 +15,24 @@
     }
 
     function updateTitleWithEnter(event: any) {
-        if (event.keyCode === 13){
+        if (event.key === 'Enter'){
             dispatch('update', { newTitle: title });
             editing = false;
         }
     }
 
-    function startEditing() {
-        editing = true; // Start editing when the text is 
+    async function startEditing() {
+        editing = true;
+        await tick();
+        inputElement.focus();
+        inputElement.select()
     }
 </script>
 
-<div class="flex items-center align-center truncate w-full pr-4">
+<div class="flex items-center align-center w-full pr-4 truncate">
     {#if editing}
-        <input class="input p-1 pl-2 w-full" style="color: {titleColor}" type="text" bind:value={title} on:keypress={updateTitleWithEnter} on:blur={updateTitle}  />
+        <input bind:this={inputElement} class="input p-1 pl-2 w-full truncate" style="color: {titleColor}" type="text" bind:value={title} on:keypress={updateTitleWithEnter} on:blur={updateTitle}  />
     {:else}
-        <span role="none" class='cursor-text p-1' style="color: {titleColor}" on:click={startEditing}>{title}</span>
+        <span role="none" class='cursor-text p-1 truncate' style="color: {titleColor}" on:click={startEditing}>{title}</span>
     {/if}
 </div>
