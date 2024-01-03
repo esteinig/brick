@@ -34,10 +34,17 @@
     
     {#if selectedReference}
         <form id="createLabelRingForm" action="?/createRing" method="POST" use:enhance={({ formData }) => {
-                    
+            
             loading = true;
             formData.append('ring_config', JSON.stringify(ringConfig))
             formData.append('ring_type', RingType.LABEL)
+
+            // Clear the data in this component
+            ringConfig =  {
+                session_id: $page.params.session,
+                tsv_id: null,
+                manual: []
+            }
 
             return async ({ result }) => {
                 await applyAction(result);
@@ -88,19 +95,17 @@
             
             
 
-            <div class="mt-8">
-                <button class="btn variant-outline-surface" type="button" on:click={() => ringConfig.manual = [...ringConfig.manual, { start: 0, end: 0, text: "", color: "#d3d3d3"}]}>
+            <div class="mt-12">
+                <button class="btn variant-outline-surface mr-2" type="submit" disabled={loading || !(ringConfig.tsv_id || ringConfig.manual.length)}>
+                    <div class="flex items-center align-center">
+                        <span>Create Ring</span>
+                    </div>
+                </button>
+                <button class="btn variant-outline-surface" type="button" disabled={loading} on:click={() => ringConfig.manual = [...ringConfig.manual, { start: 0, end: 0, text: "", color: "#d3d3d3"}]}>
                     <div class="flex items-center align-center">
                         <span>New Label</span>
                     </div>
                 </button>
-                {#if ringConfig.tsv_id || ringConfig.manual.length}
-                    <button class="btn variant-outline-surface ml-2" type="submit">
-                        <div class="flex items-center align-center">
-                            <span>Create Ring</span>
-                        </div>
-                    </button>
-                {/if}
             </div>
             
         </form>

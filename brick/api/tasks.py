@@ -73,8 +73,7 @@ def process_blast_ring(
                 working_directory=working_directory
             )
             ring: BlastRing = BlastRing.from_blast_output(
-                file=output_file,
-                sanitize=True
+                file=output_file
             )
 
              
@@ -97,7 +96,7 @@ def process_annotation_ring(
 
     try:
         ring_schema = AnnotationRingSchema(**annotation_ring_schema)
-        
+
         if genbank_file_path:
             ring: AnnotationRing  = AnnotationRing.from_genbank_file(
                 file=Path(genbank_file_path), 

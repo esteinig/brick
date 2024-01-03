@@ -49,7 +49,10 @@ class BlastnEntry(BaseModel):
     bit_score: float
     
     def to_segment(self):
-        return RingSegment(start=self.subject_start, end=self.subject_end)
+        return RingSegment(
+            start=self.subject_start, end=self.subject_end,
+            text=f"Identity: {self.perc_identity:.2}%  E-value: {self.e_value}"
+        )
 
 
 def parse_blastn_output(file_path: Path) -> List[BlastnEntry]:
