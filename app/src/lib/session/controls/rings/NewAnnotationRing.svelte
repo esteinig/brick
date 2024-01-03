@@ -41,6 +41,15 @@
             loading = true;
             formData.append('ring_config', JSON.stringify(ringConfig))
             formData.append('ring_type', RingType.ANNOTATION)
+
+            // Clear data in this component
+            ringConfig = {
+                session_id: $page.params.session,
+                genbank_id: null,
+                tsv_id: null,
+                genbank_features: [],
+                genbank_qualifiers: []
+            }
         
             return async ({ result }) => {
                 await applyAction(result);
@@ -71,39 +80,24 @@
             };
         }}>
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 my-3">
-                
-                {#if sessionFileTypeAvailable(FileType.ANNOTATION_GENBANK)}
-                    <div>
-                        <label class="label text-xs">
-                            <p class="opacity-40">Genbank annotations</p>
-                            <select class="select text-xs" bind:value={selectedGenbankFile}>
-                                {#each $sessionFiles as file}
-                                    {#if file.type === FileType.ANNOTATION_GENBANK}
-                                        <option value={file}>{file.name_original}</option>
-                                    {/if}
-                                {/each}
-                            </select>
-                        </label>
-                         {#if sessionFileTypeAvailable(FileType.ANNOTATION_CUSTOM)}
-                            <label class="label text-xs mt-3">
-                                <p class="opacity-40">Custom annotations</p>
-                                <select class="select text-xs" bind:value={ringConfig.tsv_id}>
-                                    {#each $sessionFiles as file}
-                                        {#if file.type === FileType.ANNOTATION_CUSTOM}
-                                            <option value={file.id}>{file.name_original}</option>
-                                        {/if}
-                                    {/each}
-                                </select>
-                            </label>
-                        {/if}
-                    </div>
-                {/if}
+                   
+                <div>
+                    <label class="label text-xs">
+                        <p class="opacity-40">Genbank annotations</p>
+                        <select class="select text-xs" bind:value={selectedGenbankFile} disabled={!sessionFileTypeAvailable(FileType.ANNOTATION_GENBANK)}>
+                            {#each $sessionFiles as file}
+                                {#if file.type === FileType.ANNOTATION_GENBANK}
+                                    <option value={file}>{file.name_original}</option>
+                                {/if}
+                            {/each}
+                        </select>
+                    </label>
+                </div>
 
-                {#if ringConfig.genbank_id}
-                    <div>
+                <div>
                         <label class="label text-xs">
                             <p class="opacity-40">Genbank features</p>
-                            <select class="select text-xs" bind:value={ringConfig.genbank_features} multiple>
+                            <select class="select text-xs" bind:value={ringConfig.genbank_features} disabled={!sessionFileTypeAvailable(FileType.ANNOTATION_GENBANK)}>
                                 {#if selectedGenbankFile}
                                     {#each selectedGenbankFile.selections.features.sort() as feature}
                                         <option value={feature}>{feature}</option>
@@ -111,24 +105,33 @@
                                 {/if}
                             </select>
                         </label>
-                    </div>
-                {/if}
+                </div>
 
+                <div>
+                    <label class="label text-xs mt-3">
+                        <p class="opacity-40">Custom annotations</p>
+                        <select class="select text-xs" bind:value={ringConfig.tsv_id} disabled={!sessionFileTypeAvailable(FileType.ANNOTATION_CUSTOM)}>
+                            {#each $sessionFiles as file}
+                                {#if file.type === FileType.ANNOTATION_CUSTOM}
+                                    <option value={file.id}>{file.name_original}</option>
+                                {/if}
+                            {/each}
+                        </select>
+                    </label>
+
+                </div>
                 {#if !sessionFileTypeAvailable(FileType.ANNOTATION_GENBANK) && !sessionFileTypeAvailable(FileType.ANNOTATION_CUSTOM)}
                     <div class="text-xs text-error-500">Please upload a reference annotation file</div>
                 {/if}
             </div>
             
-            {#if ringConfig.genbank_id || ringConfig.tsv_id}
-
-                <div class="flex justify-right mt-4">
-                    <button class="btn variant-outline-surface" type="submit">
-                        <div class="flex items-center align-center">
-                            <span>Compute</span>
-                        </div>
-                    </button>
-                </div>
-            {/if}
+            <div class="flex justify-right mt-12">
+                <button class="btn variant-outline-surface" type="submit" disabled={loading || !(ringConfig.genbank_id || ringConfig.tsv_id)}>
+                    <div class="flex items-center align-center">
+                        <span>Create Ring</span>
+                    </div>
+                </button>
+            </div>
         </form>
     {/if}
 </div>

@@ -39,6 +39,16 @@
         loading = true;
         formData.append('ring_config', JSON.stringify(ringConfig))
         formData.append('ring_type', RingType.BLAST)
+
+        // Reset data for the component
+        ringConfig = {
+            session_id: $page.params.session,
+            reference_id: selectedReference.id,
+            genome_id: "",
+            blast_method: BlastMethod.BLASTN,
+            min_alignment: 0,
+            min_identity: 0
+        }
     
         return async ({ result }) => {
             await applyAction(result);
@@ -48,7 +58,18 @@
                 addRing($page.form.result)
                 triggerToast("Ring created sucessfully", ToastType.SUCCESS, toastStore);
             } else {
-                triggerToast($page.form.detail ?? `Error ${result.status}: an unknown error occurred`, ToastType.ERROR, toastStore);
+                // Validation errors from pydantic schemes are an array of validation objects:
+                if ($page.form.detail instanceof Array){
+                    for (const error of $page.form.detail) {
+                        triggerToast(
+                            error.msg ?? `Error ${result.status}: an unknown error occurred`, 
+                            ToastType.ERROR, 
+                            toastStore
+                        );
+                    }
+                } else {
+                    triggerToast($page.form.detail ?? `Error ${result.status}: an unknown error occurred`, ToastType.ERROR, toastStore);
+                }
             }
         };
     }}>
@@ -77,16 +98,14 @@
             </div>
         </div>
         
-        {#if ringConfig.genome_id}
 
-            <div class="flex justify-right mt-4">
-                <button class="btn variant-outline-surface" type="submit">
-                    <div class="flex items-center align-center">
-                        <span>Compute</span>
-                    </div>
-                </button>
-            </div>
-        {/if}
+        <div class="flex justify-right mt-12">
+            <button class="btn variant-outline-surface" type="submit" disabled={loading || !ringConfig.genome_id}>
+                <div class="flex items-center align-center">
+                    <span>Create Ring</span>
+                </div>
+            </button>
+        </div>
     </form>
     {/if}
 </div>
