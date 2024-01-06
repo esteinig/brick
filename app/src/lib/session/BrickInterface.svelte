@@ -2,17 +2,12 @@
 <script lang="ts">
     import { TabGroup, Tab } from '@skeletonlabs/skeleton';
 
-	import type { PlotConfig } from "$lib/types";
-
-    import { DEFAULT_CONFIG } from "$lib/data";
-
 	import DataControlPanel from "$lib/session/controls/panels/DataControlPanel.svelte";
 	import RingControlPanel from "$lib/session/controls/panels/RingControlPanel.svelte";
+    import PlotControlPanel from '$lib/session/controls/panels/PlotControlPanel.svelte';
 
 	import { uploadInProgress } from '$lib/stores/UploadInProgressStore';
-
-
-    export let config: PlotConfig = DEFAULT_CONFIG;
+	import PaletteControlPanel from './controls/panels/PaletteControlPanel.svelte';
 
     let tab: number = 0;
 
@@ -32,21 +27,23 @@
         </Tab>
 
         <Tab bind:group={tab} name="tab4" value={3} disabled={$uploadInProgress}>
-            <span class={$uploadInProgress ? 'opacity-30 cursor-not-allowed' : ''}>Export</span>
+            <span class={$uploadInProgress ? 'opacity-30 cursor-not-allowed' : ''}><span class="opacity-80 text-surface-500">Palettes</span></span>
         </Tab>
         <Tab bind:group={tab} name="tab4" value={4} disabled={$uploadInProgress}>
-            <span class={$uploadInProgress ? 'opacity-30 cursor-not-allowed' : ''}>About</span>
+            <span class={$uploadInProgress ? 'opacity-30 cursor-not-allowed' : ''}><span class="opacity-80 text-surface-500">About</span></span>
         </Tab>
+
+
         <!-- Tab Panels --->
         <svelte:fragment slot="panel">
             {#if tab === 0}
                 <DataControlPanel></DataControlPanel>
             {:else if tab === 1}
-                <RingControlPanel bind:config={config}></RingControlPanel>
+                <RingControlPanel></RingControlPanel>
             {:else if tab === 2}
-                <span></span>
+                <PlotControlPanel></PlotControlPanel>
             {:else if tab === 3}
-                <span></span>
+                <PaletteControlPanel></PaletteControlPanel>
             {:else if tab === 4}
                 <span></span>
             {/if}

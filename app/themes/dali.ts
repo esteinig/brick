@@ -92,7 +92,7 @@ export const momaDali: CustomThemeConfig = {
 		"--color-surface-200": "210 214 227", // #d2d6e3
 		"--color-surface-300": "182 189 210", // #b6bdd2
 		"--color-surface-400": "128 140 177", // #808cb1
-		"--color-surface-500": "73 90 143", // #495a8f
+		"--color-surface-500": "73 90 143", // #6ea8ab
 		"--color-surface-600": "66 81 129", // #425181
 		"--color-surface-700": "55 68 107", // #37446b
 		"--color-surface-800": "44 54 86", // #2c3656

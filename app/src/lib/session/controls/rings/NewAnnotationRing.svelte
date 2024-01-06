@@ -97,7 +97,7 @@
                 <div>
                         <label class="label text-xs">
                             <p class="opacity-40">Genbank features</p>
-                            <select class="select text-xs" bind:value={ringConfig.genbank_features} disabled={!sessionFileTypeAvailable(FileType.ANNOTATION_GENBANK)}>
+                            <select class="select text-xs" multiple bind:value={ringConfig.genbank_features} disabled={!sessionFileTypeAvailable(FileType.ANNOTATION_GENBANK)}>
                                 {#if selectedGenbankFile}
                                     {#each selectedGenbankFile.selections.features.sort() as feature}
                                         <option value={feature}>{feature}</option>
@@ -110,7 +110,7 @@
                 <div>
                     <label class="label text-xs mt-3">
                         <p class="opacity-40">Custom annotations</p>
-                        <select class="select text-xs" bind:value={ringConfig.tsv_id} disabled={!sessionFileTypeAvailable(FileType.ANNOTATION_CUSTOM)}>
+                        <select class="select text-xs " bind:value={ringConfig.tsv_id} disabled={!sessionFileTypeAvailable(FileType.ANNOTATION_CUSTOM)}>
                             {#each $sessionFiles as file}
                                 {#if file.type === FileType.ANNOTATION_CUSTOM}
                                     <option value={file.id}>{file.name_original}</option>
@@ -120,17 +120,18 @@
                     </label>
 
                 </div>
-                {#if !sessionFileTypeAvailable(FileType.ANNOTATION_GENBANK) && !sessionFileTypeAvailable(FileType.ANNOTATION_CUSTOM)}
-                    <div class="text-xs text-error-500">Please upload a reference annotation file</div>
-                {/if}
             </div>
             
-            <div class="flex justify-right mt-12">
+            <div class="flex items-center mt-12">
                 <button class="btn variant-outline-surface" type="submit" disabled={loading || !(ringConfig.genbank_id || ringConfig.tsv_id)}>
                     <div class="flex items-center align-center">
-                        <span>Create Ring</span>
+                        <span>Create ring</span>
                     </div>
                 </button>
+                 
+                {#if !sessionFileTypeAvailable(FileType.ANNOTATION_GENBANK) && !sessionFileTypeAvailable(FileType.ANNOTATION_CUSTOM)}
+                    <div class="text-xs text-tertiary-500 ml-3">Please upload a reference annotation file</div>
+                {/if}
             </div>
         </form>
     {/if}

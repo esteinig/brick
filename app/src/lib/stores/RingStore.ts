@@ -36,6 +36,14 @@ function toggleRingVisibility(index: number) {
     });
 }
 
+function isRingTypePresent(type: RingType): boolean {
+    let typePresent = false;
+    rings.subscribe(currentRings => {
+        typePresent = currentRings.some(ring => ring.type === type);
+    })();
+    return typePresent; 
+}
+
 function clearRings() {
     rings.update(_ => [])
 }
@@ -76,7 +84,7 @@ function changeRingTitle(index: number, title: string) {
 }
 
 // Export the store and functions
-export { rings, addRing, removeRing, clearRings, toggleRingVisibility, moveRingInside, moveRingOutside, changeRingTitle };
+export { rings, addRing, removeRing, clearRings, toggleRingVisibility, moveRingInside, moveRingOutside, changeRingTitle, isRingTypePresent};
 
 // Add new ring helper function
 function addNewRing(rings: Ring[], newRing: Ring, newIndex: number = rings.length): Ring[] {

@@ -3,7 +3,7 @@
 	import { ToastType, triggerToast } from "$lib/helpers";
 	import { FileType, type SessionFile } from "$lib/types";
     import { sessionFiles, sessionFileTypeAvailable } from "$lib/stores/SessionFileStore";
-    import { addRing } from "$lib/stores/RingStore";
+    import { addRing, isRingTypePresent } from "$lib/stores/RingStore";
 	import { page } from '$app/stores';
     import { getToastStore } from '@skeletonlabs/skeleton';
 	import { applyAction, enhance } from "$app/forms";
@@ -20,6 +20,8 @@
     }
 
     let loading: boolean = false;
+
+    let labelRingPresent: boolean = isRingTypePresent(RingType.LABEL);
 
 </script>
 
@@ -98,12 +100,17 @@
             <div class="mt-12">
                 <button class="btn variant-outline-surface mr-2" type="submit" disabled={loading || !(ringConfig.tsv_id || ringConfig.manual.length)}>
                     <div class="flex items-center align-center">
-                        <span>Create Ring</span>
+                        {#if labelRingPresent}
+                            <span>Add to ring</span>
+                        {:else}                            
+                            <span>Create ring</span>
+                        {/if}
+                        
                     </div>
                 </button>
                 <button class="btn variant-outline-surface" type="button" disabled={loading} on:click={() => ringConfig.manual = [...ringConfig.manual, { start: 0, end: 0, text: "", color: "#d3d3d3"}]}>
                     <div class="flex items-center align-center">
-                        <span>New Label</span>
+                        <span>New label</span>
                     </div>
                 </button>
             </div>

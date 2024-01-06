@@ -9,7 +9,7 @@
         <div class="gap-y-0 mb-6">
             <h2 class="h2 mb-1"><code>BRICK</code></h2>
             <p><code>BRIG</code><sup>*</sup> - like interactive data visualization for</p>
-            <p>bacterial whole genome comparison and annotation</p>
+            <p>bacterial whole genome annotation and comparisons</p>
 
             <div class="w-full mt-3">
                 <div class="opacity-70" style="font-size: 0.6rem"><sup>*</sup>BLAST Ring Image Generator (<a target="_blank" rel="noreferrer" href="https://github.com/happykhan/BRIG">Alikhan et al. 2011)</a></div>
@@ -33,8 +33,6 @@
             <div class="text-sm opacity-70 mb-2">Please consider citing our publication in research outputs</div>	
             <a href="https://github.com/esteinig/brick" target="_blank" rel="noreferrer"><code class="text-xs opacity-100">Steinig et al. (2024) - BRICK: bacterial genome annotation and identity visualisation - Microbial Genomics</code></a>
         {:else}
-
-        <div class="text-sm opacity-70 mb-2">Please consider starring our repository, it keeps the light on - merci, camarade!</div>	
         <a href="https://github.com/esteinig/brick" target="_blank" rel="noreferrer"><code class="text-xs opacity-100">https://github.com/esteinig/brick</code></a>
         {/if}
         </div>
