@@ -93,7 +93,7 @@
                         </select>
                     </label>
                 {:else}
-                    <div class="text-xs text-error-500 text-center mt-4">Please upload a genome file</div>
+                    <div class="text-xs text-tertiary-500 text-center mt-4">No genome files have been uploaded</div>
                 {/if}
             </div>
         </div>
@@ -102,7 +102,7 @@
         <div class="flex justify-right mt-12">
             <button class="btn variant-outline-surface" type="submit" disabled={loading || !ringConfig.genome_id}>
                 <div class="flex items-center align-center">
-                    <span>Create Ring</span>
+                    <span>Create ring</span>
                 </div>
             </button>
         </div>

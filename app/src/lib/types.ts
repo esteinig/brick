@@ -62,7 +62,7 @@ export class ReferenceRing extends Ring {
         type: RingType = RingType.REFERENCE, 
         color: string = "#d3d3d3", 
         height: number = 20, 
-        title: string = "ReferenceRing"
+        title: string = "Reference Ring"
     ) {
         super(index, visible, type, color, height, title)
         this.size = size;
@@ -80,7 +80,7 @@ export class AnnotationRing extends Ring {
         type: RingType = RingType.ANNOTATION, 
         color: string = "#d3d3d3", 
         height: number = 20, 
-        title: string = "AnnotationRing"
+        title: string = "Annotation Ring"
     ) {
         super(index, visible, type, color, height, title)
     }
@@ -93,7 +93,7 @@ export class BlastRing extends Ring {
         type: RingType = RingType.BLAST, 
         color: string = "#d3d3d3", 
         height: number = 20, 
-        title: string = "BlastRing"
+        title: string = "Blast Ring"
     ) {
         super(index, visible, type, color, height, title)
     }
@@ -106,7 +106,7 @@ export class LabelRing extends Ring {
         type: RingType = RingType.LABEL, 
         color: string = "#d3d3d3", 
         height: number = 20, 
-        title: string = "LabelRing"
+        title: string = "Label Ring"
     ) {
         super(index, visible, type, color, height, title)
     }
@@ -245,22 +245,36 @@ export type PydanticValidationError = {
  *  ==================
 */
 
+export enum TitleStyle {
+    ITALIC = "italic",
+    BOLD = "bold",
+    CODE = "code",
+    NORMAL = "normal"
+}
+
 export type PlotConfig = {
     reference: ReferenceConfig
     title: TitleConfig
     rings: RingConfig
+    svg: SvgConfig
     annotation: AnnotationConfig
 }
 export type ReferenceConfig = {
     size: number
 }
 
+export type SvgConfig = {
+    backgroundOpacity: number
+    backgroundColor: string
+}
+
 export type TitleConfig = {
     text: string
+    subtext: string
     color: string
     opacity: number
-    fontStyle: string,
-    size: string
+    styles: TitleStyle[]
+    size: number
 }
 
 export type AnnotationConfig = {
@@ -275,3 +289,16 @@ export type RingConfig = {
     height: number
     gap: number
 }
+
+
+/*  ==================
+ *  COLOR PALETTES
+ *  ==================
+*/
+
+export interface Color {
+    title: string;
+    subtitle: string;
+    color: string; // HEX color code
+    url: string;
+  }

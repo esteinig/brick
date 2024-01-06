@@ -1,8 +1,9 @@
 <script lang="ts">
 	import Brick from "$lib/brick/Brick.svelte";
 	import LandingPage from "$lib/session/LandingPage.svelte";
-	import { DEFAULT_RINGS, DEFAULT_CONFIG } from "$lib/data";
+	import { DEFAULT_RINGS } from "$lib/data";
 	import { rings } from "$lib/stores/RingStore";
+	import { getDefaultScaleFactor } from "$lib/brick/helpers";
 
 	$rings = DEFAULT_RINGS;
 
@@ -10,11 +11,11 @@
 
 <div class="container mx-auto max-w-[90%] max-h-[90%] h-full">
 
-    <div class="grid sm:grid-cols-1 md:grid-cols-2 gap-4 h-full">
-		<div class="h-full w-full">
-			<Brick config={DEFAULT_CONFIG}></Brick>
+    <div class="grid sm:grid-cols-1 md:grid-cols-8 h-full">
+		<div class="h-full w-ful col-span-5">
+			<Brick id="brickPlotLandingPage" scaleFactor={getDefaultScaleFactor() + 0.2}></Brick>
 		</div>
-		<div class="flex items-center h-full w-full">
+		<div class="flex items-center h-full w-full col-span-3">
 			<LandingPage></LandingPage>
 		</div>
 		

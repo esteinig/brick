@@ -4,8 +4,8 @@
 
   import type { PlotConfig } from '$lib/types';
   import { downloadJSON, downloadPNG, downloadSVG, getDefaultScaleFactor } from './helpers';
-	import { RingType, type Ring, type RingSegment } from '$lib/types';
-	import { DEFAULT_CONFIG } from '$lib/data';
+	import { RingType, type Ring, type RingSegment, TitleStyle } from '$lib/types';
+	import { plotConfigStore } from '$lib/stores/PlotConfigStore';
 	import { fade } from 'svelte/transition';
   import { rings } from '$lib/stores/RingStore';
   import { createEventDispatcher } from 'svelte';
@@ -34,16 +34,13 @@
         segmentClicked = true;
       }
   }
-
   
-  export let config: PlotConfig = DEFAULT_CONFIG;
-
   export let id: string = "brickRingPlot";
   export let width: number = 1024;
   export let height: number = 768;
   
   export let border: boolean = false;
-  export let borderClass: string = "border border-gray-300 rounded-2xl border-opacity-10";
+  export let borderClass: string = "border border-gray-300 rounded-2xl border-opacity-5";
 
   export let scaleFactor: number = getDefaultScaleFactor();
 
@@ -99,8 +96,10 @@
 
   // Circular data scaling
   let degreeScale = d3.scaleLinear(
-    [0, config.reference.size], [0,360]
+    [0, $plotConfigStore.reference.size], [0,360] // TODO: What if you just go linear or implement the ST93 paper again with a couple changes ah 0 to 1; apply this to each of multiple input sequences to align in circle as e.g. Genome 1 0-10, Genome2 10-20
   );
+
+  
   
   // Reactive for controls to change `scaleFactor`
   $: scaledTransform = `translate(${width / 2},${height / 2}) scale(${scaleFactor})`;
@@ -138,8 +137,8 @@
     const ringHeight = getRingHeight($rings, 0, index);
 
     return d3.arc()
-      .innerRadius(config.rings.radius+(index*config.rings.gap)+ringHeight)
-      .outerRadius(config.rings.radius+(index*config.rings.gap)+ringHeight+height)
+      .innerRadius($plotConfigStore.rings.radius+(index*$plotConfigStore.rings.gap)+ringHeight)
+      .outerRadius($plotConfigStore.rings.radius+(index*$plotConfigStore.rings.gap)+ringHeight+height)
       .startAngle((d: RingSegment) => (degreeScale(d.start)) * (Math.PI / 180))
       .endAngle((d: RingSegment) => (degreeScale(d.end)) * (Math.PI / 180))
       (d);
@@ -150,7 +149,7 @@
   }
 
   function getOuterRingHeight(rings: Ring[]): number {
-    return rings.map(ring => ring.height+config.rings.gap).reduce((a, b) => a+b)+config.rings.radius
+    return rings.map(ring => ring.height+$plotConfigStore.rings.gap).reduce((a, b) => a+b)+$plotConfigStore.rings.radius
   }
 
   // Function to calculate the midpoint of an arc segment
@@ -170,30 +169,35 @@
 
   // Function to calculate the coordinates of the point on the outer edge of the arc
   function calculateOuterArcPointX2(d: RingSegment): number {
-      return calculateOuterArcPointX1(d) + config.annotation.lineLength * Math.cos(calculateMidpoint(d))
+      return calculateOuterArcPointX1(d) + $plotConfigStore.annotation.lineLength * Math.cos(calculateMidpoint(d))
   }
   // Function to calculate the coordinates of the point on the outer edge of the arc
   function calculateOuterArcPointY2(d: RingSegment): number {
-      return calculateOuterArcPointY1(d) + config.annotation.lineLength * Math.sin(calculateMidpoint(d))
+      return calculateOuterArcPointY1(d) + $plotConfigStore.annotation.lineLength * Math.sin(calculateMidpoint(d))
   }
 
-
-  // function resetZoom() {
-  //     svg.transition()
-  //         .duration(750)
-  //         .call(zoomBehaviour.transform, d3.zoomIdentity)
-  //         .select('g').attr('transform', `translate(${width / 2},${height / 2})`)
-  // }
+  function addAlphaToHexColor(hex: string, opacity: number) {
+    const alpha = Math.round(opacity * 255).toString(16).padStart(2, '0');
+    return hex + alpha;
+}
+  // TODO: implement reset zoom and zoom in/out button
 
 </script>
 
 <div id="{id}" bind:this={container} class="w-full h-full {border ? borderClass : ''}" >
   
     {#if visible}
-      <svg bind:this={svg} class="w-full h-full {enableZoom ? 'cursor-move' : ''}" transition:fade={{duration: fadeDuration, delay: fadeDelay}}>
+      <svg bind:this={svg} class="w-full h-full {enableZoom ? 'cursor-grab' : ''}" style={`background-color: ${addAlphaToHexColor($plotConfigStore.svg.backgroundColor, $plotConfigStore.svg.backgroundOpacity)}`} transition:fade={{duration: fadeDuration, delay: fadeDelay}}>
         <g bind:this={g} transform={scaledTransform}>
-          <text class="title" style="fill: {config.title.color}; opacity: {config.title.opacity}; font-style: {config.title.fontStyle}; text-anchor: middle">{config.title.text}</text>
-        
+            <g text-anchor="middle">
+              <text class="title {$plotConfigStore.title.styles.includes(TitleStyle.CODE) ? 'code': ''}" style="{$plotConfigStore.title.styles.includes(TitleStyle.BOLD) ? 'font-weight: bold': ''}; fill: {$plotConfigStore.title.color}; opacity: {$plotConfigStore.title.opacity}; {$plotConfigStore.title.styles.includes(TitleStyle.ITALIC) ? 'font-style: italic': ''}; transform: scale({$plotConfigStore.title.size / 100})">{$plotConfigStore.title.text}</text>
+              <text class="subtitle" dy="1.35em" style="fill: {$plotConfigStore.title.color}; opacity: {$plotConfigStore.title.opacity}; {$plotConfigStore.title.styles.includes(TitleStyle.ITALIC) ? 'font-style: italic': ''}; transform: scale({$plotConfigStore.title.size / 135})">{$plotConfigStore.title.subtext}</text>
+          </g>
+
+
+          <!-- <text class="title {$plotConfigStore.title.styles.includes(TitleStyle.CODE) ? 'code': ''}" style="{$plotConfigStore.title.styles.includes(TitleStyle.BOLD) ? 'font-weight: bold': ''}; fill: {$plotConfigStore.title.color}; opacity: {$plotConfigStore.title.opacity}; {$plotConfigStore.title.styles.includes(TitleStyle.ITALIC) ? 'font-style: italic': ''}; transform: scale({$plotConfigStore.title.size / 100}); text-anchor: middle">{$plotConfigStore.title.text}</text>
+          <text class="subtitle" style="fill: {$plotConfigStore.title.color}; opacity: {$plotConfigStore.title.opacity}; {$plotConfigStore.title.styles.includes(TitleStyle.ITALIC) ? 'font-style: italic': ''}; transform: scale({$plotConfigStore.title.size / 100}); text-anchor: middle">{$plotConfigStore.title.subtext}</text> -->
+          
           {#each $rings as ring}
             {#if ring.type === RingType.LABEL}
               {#each ring.data as ringAnnotation}
@@ -202,7 +206,7 @@
                 y1={calculateOuterArcPointY1(ringAnnotation)} 
                 x2={calculateOuterArcPointX2(ringAnnotation)} 
                 y2={calculateOuterArcPointY2(ringAnnotation)}
-                style="{config.annotation.lineStyle}"
+                style="{$plotConfigStore.annotation.lineStyle}"
                 class="brickAnnotationLine"
                 visibility={ring.visible ? 'visible': 'hidden'}
               />
@@ -211,13 +215,13 @@
               <text 
                 x={calculateOuterArcPointX2(ringAnnotation)} 
                 y={calculateOuterArcPointY2(ringAnnotation)}
-                style="{config.annotation.textStyle}; fill: {ring.color}"
+                style="{$plotConfigStore.annotation.textStyle}"
                 text-anchor={degreeScale(ringAnnotation.start) > 180 ? 'end' : 'start' }
                 dominant-baseline={degreeScale(ringAnnotation.start) > 180 ? 'middle': 'middle'}
                 class="brickAnnotationText"
                 visibility={ring.visible ? 'visible': 'hidden'}
               >
-              <tspan x={degreeScale(ringAnnotation.start) > 180 ? calculateOuterArcPointX2(ringAnnotation)-config.annotation.textGap : calculateOuterArcPointX2(ringAnnotation)+config.annotation.textGap}>{ringAnnotation.text}</tspan>
+              <tspan x={degreeScale(ringAnnotation.start) > 180 ? calculateOuterArcPointX2(ringAnnotation)-$plotConfigStore.annotation.textGap : calculateOuterArcPointX2(ringAnnotation)+$plotConfigStore.annotation.textGap}>{ringAnnotation.text}</tspan>
               </text>
             {/each}
           {:else}

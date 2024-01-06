@@ -8,6 +8,7 @@
   import { getToastStore } from '@skeletonlabs/skeleton';
 	import { applyAction, enhance } from '$app/forms';
 	import { completeUploadState, startUploadState } from '$lib/stores/UploadInProgressStore';
+	import { createEventDispatcher } from 'svelte';
 
   const toastStore = getToastStore();
   
@@ -18,6 +19,7 @@
   export let id: string = `brickFileUpload-${createUuid(true)}`;
   export let message: string = "Please upload a file"
   export let meta: string = "";
+  export let information: string = ""
 
   export let disabled: boolean = false;
 
@@ -26,9 +28,22 @@
 
   let loading: boolean = false;
 
+
+
+  const dispatch = createEventDispatcher();
+
+  function handleMouseover() {
+      dispatch('mouseover', information);
+  }
+  function handleMouseout() {
+      dispatch('mouseout', information);
+  }
+  
+  
+
 </script>
   
-<form id="form-{id}" bind:this={formElement} action="?/uploadFile" method="POST" enctype="multipart/form-data" use:enhance={({ formData }) => {
+<form on:mouseover={handleMouseover} on:mouseout={handleMouseout} id="form-{id}" bind:this={formElement} action="?/uploadFile" method="POST" enctype="multipart/form-data" use:enhance={({ formData }) => {
   
   // TODO: Multiple Files
 

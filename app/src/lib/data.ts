@@ -1,6 +1,4 @@
 import { type BlastRing, type AnnotationRing, type ReferenceRing, RingType, LabelRing } from "$lib/types";
-import type { AnnotationConfig, PlotConfig, ReferenceConfig, RingConfig, TitleConfig } from "./types";
-
 
 let innerRingData: Array<ReferenceRing | AnnotationRing> = [
 
@@ -88,30 +86,5 @@ let outerRingData: Array<AnnotationRing | LabelRing> = [
         ]
     },
 ];
-
-export const DEFAULT_CONFIG: PlotConfig = {
-    reference: {
-      size: 5983947
-    } satisfies ReferenceConfig,
-    title: {
-      text: "Mycobacterium sp. nov. (SOLO)",
-      color: "#d3d3d3",
-      opacity: 0.8,
-      fontStyle: 'italic',
-      size: '100%'
-    } satisfies TitleConfig, 
-    rings: {
-      radius: 200, 
-      height: 20, 
-      gap: 5
-    } satisfies RingConfig,
-    annotation: {
-      lineLength: 42,
-      lineStyle: "stroke: #d3d3d3; stroke-width: 0.07rem",
-      textGap: 5,
-      textStyle: "fill: #d3d3d3; opacity: 0.8; font-size: 90%"
-
-    } satisfies AnnotationConfig
-  }
 
 export const DEFAULT_RINGS: Array<ReferenceRing | AnnotationRing | BlastRing> = [...innerRingData, ...blastRingData, ...outerRingData];
