@@ -1,141 +1,9 @@
 <script lang="ts">
 	import ColorPalette from "$lib/session/palette/ColorPalette.svelte";
-	import PalettePopup from "$lib/session/palette/PalettePopup.svelte";
 	import { paletteStore, type Palette } from "$lib/stores/PaletteStore";
 	import { Accordion, AccordionItem } from "@skeletonlabs/skeleton";
 
-    const DALI = [
-        "#b4b87f", 
-        "#9c913f", 
-        "#585b33", 
-        "#6ea8ab", 
-        "#397893", 
-        "#31333f",
-        "#8f5715", 
-        "#ba9a44", 
-        "#cfbb83"
-    ]
-
-    const PANTON = [
-        "#e84a00",
-        "#bb1d2c",
-        "#9b0c43",
-        "#661f66",
-        "#2c1f62",
-        "#006289",
-        "#004759"
-    ]
-
-    const RATTNER = [
-        "#de8e69", 
-        "#f1be99", 
-        "#c1bd38", 
-        "#7a9132",  
-        "#4c849a", 
-        "#184363", 
-        "#5d5686",
-        "#a39fc9"
-    ]
-
-    const ALKALAY = [
-        "#241d1d", "#5b2125", "#8d3431", "#bf542e", "#e9a800"
-    ]
-    const CLAY = [
-        "#c48329", "#8b3b36", "#a2b4b7", "#514a2e", "#cf9860", "#8E4115"
-    ]
-    const CONNORS = [
-        "#d92a05", "#f35d36", "#fc9073", "#ffba1b", "#60cfa1"
-    ]
-    const DOUGHTON = [
-        "#155b51", "#216f63", "#2d8277", "#3a9387", "#45a395", "#c468b2","#af509c", "#803777", "#5d2155", "#45113f"
-    ]
-    const ERNST = [
-        "#e8e79a", "#c2d89a", "#8cbf9a", "#5fa2a4", "#477b95", "#315b88", "#24396b", "#191f40"
-    ]
-    const KLEIN = [
-        "#ff4d6f", "#579ea4", "#df7713", "#f9c000","#86ad34", "#5d7298","#81b28d", "#7e1a2f", "#2d2651", "#c8350d", "#bd777a"
-    ]
-    const LEVINE = [
-        "#E0D9B2", "#818053", "#6B3848", "#8B3E50", "#D5BB6C", "#3F3A4B", "#474C66", "#A5806F"
-    ]
-    const OKEEFFE = [
-        "#f3d567", "#ee9b43", "#e74b47", "#b80422", "#172767", "#19798b"
-    ]
-    const SIDHU = [
-        "#af4646", "#762b35", "#005187", "#251c4a", "#78adb7", "#4c9a77", "#1b7975"
-    ]
-    const VANGOGH = [
-        "#c3a016", "#c3d878", "#58a787", "#8ebacd", "#246893", "#163274", "#0C1F4b"
-    ]
-
-    // NZ 
-
-    const HOIHO = [
-        "#CABEE9",
-        "#7C7189", 
-        "#FAE093", 
-        "#D04E59", 
-        "#BC8E7D", 
-        "#2F3D70"
-    ]
-
-    const KAKAPO = [
-        "#7D9D33", 
-        "#CED38C", 
-        "#DCC949", 
-        "#BCA888", 
-        "#CD8862", 
-        "#775B24"
-    ]
-    const KAKARIKI = [
-        "#44781E", 
-        "#A1B654", 
-        "#2C3B75", 
-        "#B8321A", 
-        "#565052"
-    ]
-    const KERERU = [
-        "#325756", 
-        "#7d9fc2", 
-        "#C582B2", 
-        "#51806a", 
-        "#4d5f8e",
-        "#A092B7"
-    ]
-    const TAMBJA = [
-        "#3399ff", 
-        "#666600", 
-        "#003399", 
-        "#999900", 
-        "#000000"
-    ]
-    const MOMA_PALETTES = [
-        { name: 'Salvador Dalí', artwork: "The Persistence of Memory (1931)", colors: DALI, link: "https://www.moma.org/collection/works/79018" },
-        { name: 'Verner Panton', artwork: "Spectrum textile (1974", colors: PANTON, link: "https://www.moma.org/collection/works/292747?artist_id=4485&page=1&sov_referrer=artist" },
-        { name: "Vincent van Gogh", artwork: "The Starry Night (Saint Rémy, June 1889)", colors: VANGOGH, link: "https://www.moma.org/collection/works/79802?sov_referrer=theme&theme_id=5134" },
-        { name: 'Abraham Rattner', artwork: "Mother and Child (1938)", colors: RATTNER, link: "https://www.moma.org/collection/works/78474?classifications=9&date_begin=Pre-1850&date_end=2023&direction=fwd&include_uncataloged_works=1&page=37&q=&utf8=%E2%9C%93" },
-        { name: 'Shay Alkalay', artwork: "Stack (2008)", colors: ALKALAY, link: "https://www.moma.org/collection/works/126820?classifications=3&date_begin=Pre-1850&date_end=2023&direction=fwd&page=5&q=&utf8=%E2%9C%93&with_images=1" },
-        { name: 'Maude Schuyler Clay', artwork: "Sarah Cross (1980)", colors: CLAY, link: "https://www.moma.org/collection/works/49695?artist_id=1139&page=1&sov_referrer=artist" },
-        { name: 'Matt Connors', artwork: "Egypt, Hard G (2015)", colors: CONNORS, link: "https://www.moma.org/collection/works/202454?artist_id=36363&page=1&sov_referrer=artist" },
-        { name: 'Steve Doughton', artwork: "Ferrum 5000 (1995)", colors: DOUGHTON, link: "https://www.moma.org/collection/works/314423" },
-        { name: 'Max Ernst', artwork: "Two Children Are Threatened by a Nightingale (1924)", colors: ERNST, link: "https://www.moma.org/collection/works/79293" },
-        { name: 'David Klein', artwork: "New York Fly TWA (1956)", colors: KLEIN, link: "https://www.moma.org/collection/works/6291?artist_id=3134&page=1&sov_referrer=artist" },
-        { name: 'Sherrie Levine', artwork: "After Mondrian from Meltdown (1989)", colors: LEVINE, link: "https://www.moma.org/collection/works/65715" },
-        { name: "Georgia O'Keeffe", artwork: "Abstraction Blue (1927)", colors: OKEEFFE, link: "https://www.moma.org/collection/works/78677?sov_referrer=theme&theme_id=5264" },
-        { name: "Zorawar Sidhu, Rob Swainston", artwork: "May 24 from the series Doomscrolling (2020-21)", colors: SIDHU, link: "https://www.moma.org/collection/works/431041?artist_id=134546&page=1&sov_referrer=artist" },
-        
-    
-
-
-    ]
-    const NZ_PALETTES = [
-        { name: 'Hoiho', species: "Megadyptes antipodes", colors: HOIHO },
-        { name: 'Kākāpō', species: "Strigops habroptilus", colors: KAKAPO },
-        { name: 'Kākāriki', species: "Cyanoramphus spp.",colors: KAKARIKI },
-        { name: 'Kererū', species: "Hemiphaga novaeseelandiae", colors: KERERU },
-        { name: 'Gloomy nudibranch', species: "Tambja kushimotoensis", colors: TAMBJA },
-    ]
-
+    import { NZ_PALETTES, MOMA_PALETTES } from "$lib/data";
 
     function handlePaletteClick(colors: string[], name: string) {
         
@@ -172,15 +40,15 @@
                 <div class="my-6">
                     {#each NZ_PALETTES as palette }
                         <div class="flex items-center justify-between my-4 rounded-token hover:variant-soft hover:cursor-pointer p-4 rounded-2xl"  on:click={() => handlePaletteClick(palette.colors, palette.name) }>     
-                            <div class="">
-                                <ColorPalette title={palette.name} colors={palette.colors} subtitle={palette.species} subtitleClass="opacity-80 ml-2 text-sm italic"></ColorPalette>
-                            </div>
                             
+                            <ColorPalette title={palette.name} colors={palette.colors} subtitle={palette.species} colorFields={6} subtitleClass="opacity-80 ml-2 text-sm italic"></ColorPalette>
+                           
                             {#if $paletteStore.some(p => p.name === palette.name)}
                                 <div class="h-7 w-7 text-secondary-500">
-                                    <svg data-slot="icon" aria-hidden="true" fill="none" stroke-width="1.5" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M9.53 16.122a3 3 0 0 0-5.78 1.128 2.25 2.25 0 0 1-2.4 2.245 4.5 4.5 0 0 0 8.4-2.245c0-.399-.078-.78-.22-1.128Zm0 0a15.998 15.998 0 0 0 3.388-1.62m-5.043-.025a15.994 15.994 0 0 1 1.622-3.395m3.42 3.42a15.995 15.995 0 0 0 4.764-4.648l3.876-5.814a1.151 1.151 0 0 0-1.597-1.597L14.146 6.32a15.996 15.996 0 0 0-4.649 4.763m3.42 3.42a6.776 6.776 0 0 0-3.42-3.42" stroke-linecap="round" stroke-linejoin="round"></path>
-                                      </svg>
+                                    <svg data-slot="icon" aria-hidden="true" fill="none" stroke-width="1.5" stroke="currentColor"  viewBox="0 0 46.991 46.99" xmlns="http://www.w3.org/2000/svg">
+                                        <!-- viewBox="0 0 24 24" <path d="M9.53 16.122a3 3 0 0 0-5.78 1.128 2.25 2.25 0 0 1-2.4 2.245 4.5 4.5 0 0 0 8.4-2.245c0-.399-.078-.78-.22-1.128Zm0 0a15.998 15.998 0 0 0 3.388-1.62m-5.043-.025a15.994 15.994 0 0 1 1.622-3.395m3.42 3.42a15.995 15.995 0 0 0 4.764-4.648l3.876-5.814a1.151 1.151 0 0 0-1.597-1.597L14.146 6.32a15.996 15.996 0 0 0-4.649 4.763m3.42 3.42a6.776 6.776 0 0 0-3.42-3.42" stroke-linecap="round" stroke-linejoin="round"></path> -->
+                                         <path d="M22.082,2.61c-3.74,0-7.598,0.592-11.465,1.76C9.503,4.706,6.115,5.73,4.877,9.082c-1.222,3.312,0.536,6.051,1.819,8.052   c0.732,1.142,1.563,2.436,1.563,3.337c0,1.522-2.301,4.68-3.824,6.77c-2.771,3.804-5.914,8.113-3.672,12.523   c2.081,4.092,7.132,4.615,11.299,4.615c18.282,0,34.928-11.048,34.928-23.179C46.99,12.261,37.469,2.61,22.082,2.61z M16.5,34.109   c-0.027,2.194-1.809,3.967-4.01,3.967c-2.217,0-4.014-1.798-4.014-4.015c0-2.219,1.797-4.017,4.014-4.017   c0.682,0,1.314,0.188,1.877,0.486c1.266,0.675,2.137,1.991,2.137,3.526C16.503,34.078,16.5,34.095,16.5,34.109z M17.01,15.082   c-0.848-0.736-1.395-1.809-1.395-3.02c0-2.218,1.798-4.015,4.015-4.015c2.218,0,4.015,1.797,4.015,4.015   c0,0.205-0.031,0.401-0.061,0.599c-0.291,1.931-1.941,3.416-3.954,3.416C18.623,16.077,17.715,15.693,17.01,15.082z M24.63,35.076   c-1.424,0-2.668-0.746-3.381-1.864c-0.396-0.623-0.635-1.357-0.635-2.15c0-2.217,1.799-4.015,4.018-4.015   c1.975,0,3.607,1.431,3.941,3.31c0.041,0.23,0.07,0.466,0.07,0.705C28.644,33.278,26.849,35.076,24.63,35.076z M27.486,13.244   c-0.021-0.171-0.052-0.339-0.052-0.516c0-1.855,1.265-3.401,2.975-3.861c0.333-0.09,0.678-0.153,1.04-0.153   c1.575,0,2.925,0.916,3.582,2.237c0.27,0.538,0.432,1.136,0.432,1.777c0,1.387-0.701,2.609-1.771,3.33   c-0.641,0.433-1.412,0.685-2.242,0.685C29.408,16.743,27.742,15.215,27.486,13.244z M33.74,28.743   c-0.676,0-1.305-0.184-1.863-0.479c-1.271-0.675-2.148-1.996-2.148-3.535c0-2.218,1.797-4.017,4.014-4.017   c1.258,0,2.366,0.59,3.104,1.494c0.562,0.69,0.914,1.562,0.914,2.521C37.755,26.945,35.958,28.743,33.74,28.743z"/>
+                                    </svg>
                                 </div>
                             {/if}
                         </div>
@@ -188,7 +56,7 @@
                 </div>
             </svelte:fragment>
         </AccordionItem>
-        <AccordionItem>
+        <AccordionItem open>
             <svelte:fragment slot="lead"> <a href="https://github.com/BlakeRMills/MoMAColors"  target="_blank" rel="noreferrer">
                 <svg class="h-5 w-5" data-slot="icon" aria-hidden="true" fill="none" stroke-width="1.5" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path d="M9.53 16.122a3 3 0 0 0-5.78 1.128 2.25 2.25 0 0 1-2.4 2.245 4.5 4.5 0 0 0 8.4-2.245c0-.399-.078-.78-.22-1.128Zm0 0a15.998 15.998 0 0 0 3.388-1.62m-5.043-.025a15.994 15.994 0 0 1 1.622-3.395m3.42 3.42a15.995 15.995 0 0 0 4.764-4.648l3.876-5.814a1.151 1.151 0 0 0-1.597-1.597L14.146 6.32a15.996 15.996 0 0 0-4.649 4.763m3.42 3.42a6.776 6.776 0 0 0-3.42-3.42" stroke-linecap="round" stroke-linejoin="round"></path>
@@ -202,13 +70,15 @@
                 <div class="my-6">
                     {#each MOMA_PALETTES as palette }
                         <div class="flex items-center justify-between my-4 rounded-token hover:variant-soft hover:cursor-pointer p-4 rounded-2xl"  on:click={() => handlePaletteClick(palette.colors, palette.name) }>   
-                            <div>
-                                <ColorPalette title={palette.name} subtitle={palette.artwork} colors={palette.colors} subtitleClass="opacity-80 ml-2 text-sm truncate"></ColorPalette>
-                            </div>
+                           
+                            <ColorPalette title={palette.name} subtitle={palette.artwork} colors={palette.colors} colorFields={6} subtitleClass="opacity-80 ml-2 text-sm truncate"></ColorPalette>
+                            
                             {#if $paletteStore.some(p => p.name === palette.name)}
                                 <div class="h-7 w-7 text-secondary-500">
-                                    <svg data-slot="icon" aria-hidden="true" fill="none" stroke-width="1.5" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M9.53 16.122a3 3 0 0 0-5.78 1.128 2.25 2.25 0 0 1-2.4 2.245 4.5 4.5 0 0 0 8.4-2.245c0-.399-.078-.78-.22-1.128Zm0 0a15.998 15.998 0 0 0 3.388-1.62m-5.043-.025a15.994 15.994 0 0 1 1.622-3.395m3.42 3.42a15.995 15.995 0 0 0 4.764-4.648l3.876-5.814a1.151 1.151 0 0 0-1.597-1.597L14.146 6.32a15.996 15.996 0 0 0-4.649 4.763m3.42 3.42a6.776 6.776 0 0 0-3.42-3.42" stroke-linecap="round" stroke-linejoin="round"></path>
+                                    <svg data-slot="icon" aria-hidden="true" fill="none" stroke-width="1.5" stroke="currentColor"   viewBox="0 0 46.991 46.99"   xmlns="http://www.w3.org/2000/svg">
+                                        <!-- viewBox="0 0 24 24" <path d="M9.53 16.122a3 3 0 0 0-5.78 1.128 2.25 2.25 0 0 1-2.4 2.245 4.5 4.5 0 0 0 8.4-2.245c0-.399-.078-.78-.22-1.128Zm0 0a15.998 15.998 0 0 0 3.388-1.62m-5.043-.025a15.994 15.994 0 0 1 1.622-3.395m3.42 3.42a15.995 15.995 0 0 0 4.764-4.648l3.876-5.814a1.151 1.151 0 0 0-1.597-1.597L14.146 6.32a15.996 15.996 0 0 0-4.649 4.763m3.42 3.42a6.776 6.776 0 0 0-3.42-3.42" stroke-linecap="round" stroke-linejoin="round"></path> -->
+                                        <path d="M22.082,2.61c-3.74,0-7.598,0.592-11.465,1.76C9.503,4.706,6.115,5.73,4.877,9.082c-1.222,3.312,0.536,6.051,1.819,8.052   c0.732,1.142,1.563,2.436,1.563,3.337c0,1.522-2.301,4.68-3.824,6.77c-2.771,3.804-5.914,8.113-3.672,12.523   c2.081,4.092,7.132,4.615,11.299,4.615c18.282,0,34.928-11.048,34.928-23.179C46.99,12.261,37.469,2.61,22.082,2.61z M16.5,34.109   c-0.027,2.194-1.809,3.967-4.01,3.967c-2.217,0-4.014-1.798-4.014-4.015c0-2.219,1.797-4.017,4.014-4.017   c0.682,0,1.314,0.188,1.877,0.486c1.266,0.675,2.137,1.991,2.137,3.526C16.503,34.078,16.5,34.095,16.5,34.109z M17.01,15.082   c-0.848-0.736-1.395-1.809-1.395-3.02c0-2.218,1.798-4.015,4.015-4.015c2.218,0,4.015,1.797,4.015,4.015   c0,0.205-0.031,0.401-0.061,0.599c-0.291,1.931-1.941,3.416-3.954,3.416C18.623,16.077,17.715,15.693,17.01,15.082z M24.63,35.076   c-1.424,0-2.668-0.746-3.381-1.864c-0.396-0.623-0.635-1.357-0.635-2.15c0-2.217,1.799-4.015,4.018-4.015   c1.975,0,3.607,1.431,3.941,3.31c0.041,0.23,0.07,0.466,0.07,0.705C28.644,33.278,26.849,35.076,24.63,35.076z M27.486,13.244   c-0.021-0.171-0.052-0.339-0.052-0.516c0-1.855,1.265-3.401,2.975-3.861c0.333-0.09,0.678-0.153,1.04-0.153   c1.575,0,2.925,0.916,3.582,2.237c0.27,0.538,0.432,1.136,0.432,1.777c0,1.387-0.701,2.609-1.771,3.33   c-0.641,0.433-1.412,0.685-2.242,0.685C29.408,16.743,27.742,15.215,27.486,13.244z M33.74,28.743   c-0.676,0-1.305-0.184-1.863-0.479c-1.271-0.675-2.148-1.996-2.148-3.535c0-2.218,1.797-4.017,4.014-4.017   c1.258,0,2.366,0.59,3.104,1.494c0.562,0.69,0.914,1.562,0.914,2.521C37.755,26.945,35.958,28.743,33.74,28.743z"/>
+                                        
                                     </svg>
                                 </div>
                             {/if}

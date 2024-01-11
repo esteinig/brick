@@ -15,7 +15,7 @@
     
     {#if selectedReference}
         <div class="flex justify-right mt-4">
-            <button class="btn btn-sm variant-outline-surface" on:click={() => addRing(new ReferenceRing(-1, selectedReference.length))}>
+            <button class="btn variant-outline-surface" on:click={() => addRing(new ReferenceRing(-1, selectedReference.length))}>
                 <div class="flex items-center align-center">
                     <span>Create ring</span>
                 </div>

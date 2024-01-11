@@ -5,7 +5,6 @@
 */
 
 
-
 export enum RingType {
     GENERIC = "generic",
     REFERENCE = "reference",
@@ -238,6 +237,14 @@ export type PydanticValidationError = {
     type: string
     url: string
 }
+
+export type Session = {
+    id: string
+    date: string
+    files: SessionFile[]
+}
+
+export type SessionResponse = Session & ErrorResponse;
 
 
 /*  ==================

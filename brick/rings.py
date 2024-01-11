@@ -51,7 +51,7 @@ class BlastnEntry(BaseModel):
     def to_segment(self):
         return RingSegment(
             start=self.subject_start, end=self.subject_end,
-            text=f"Identity: {self.perc_identity:.2}%  E-value: {self.e_value}"
+            text=f"{self.perc_identity:.2}% nucleotide identity"
         )
 
 
@@ -132,10 +132,10 @@ def parse_genbank_features(file_path: str, feature_types: List[str]) -> List[Gen
 
                 # Add extra annotations if available
                 if 'gene' in feature.qualifiers:
-                    annotation += f" Gene: {feature.qualifiers['gene'][0]})"
+                    annotation += f" {feature.qualifiers['gene'][0]}"
 
                 if 'product' in feature.qualifiers:
-                    annotation += f"  Product: {feature.qualifiers['product'][0]}"
+                    annotation += f" {feature.qualifiers['product'][0]}"
 
                 entries.append(GenBankFeatureEntry(start=start, end=end, annotation=annotation))
 

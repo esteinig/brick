@@ -122,7 +122,7 @@
             </label>
             <label class="label text-xs">
                 <p class="opacity-40">Gap</p>
-                <input type="range" bind:value={$plotConfigStore.rings.gap} min="0" max="25" />
+                <input type="range" bind:value={$plotConfigStore.rings.gap} min="0" max="100" />
             </label>
 
         </div>
@@ -137,7 +137,6 @@
                         <p class="opacity-40">Line length</p>
                         <input type="range" bind:value={$plotConfigStore.annotation.lineLength} min="0" max="100" />
                     </label>
-        
                     <label class="label text-xs mb-4">
                         <p class="opacity-40">Line opacity</p>
                         <input type="range" bind:value={lineOpacity} min="0" max="100" />

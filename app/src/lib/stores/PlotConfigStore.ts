@@ -24,7 +24,7 @@ const initialPlotConfig: PlotConfig = {
         gap: 5 
     },
     annotation: {
-      lineLength: 50,
+      lineLength: 70,
       lineStyle: "stroke: #d3d3d3; stroke-width: 0.07rem",
       textGap: 5,
       textStyle: "fill: #d3d3d3; opacity: 0.8; font-size: 90%"

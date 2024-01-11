@@ -1,0 +1,130 @@
+version: '3.8'
+
+services:
+
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.app
+    command: npm run dev
+    volumes:
+      - ./app:/usr/src/app
+      - /usr/src/app/node_modules
+    expose:
+      - "5173"
+    ports:
+      - "5173:5173"
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: "proxy"
+      {{#if traefik.is_localhost }}
+      traefik.http.routers.cerebro-app-{{{ traefik.subdomain.router.app }}}.rule: "Host(`{{{ traefik.subdomain.app }}}.{{{ traefik.localhost.domain }}}`)"
+      traefik.http.routers.cerebro-app-{{{ traefik.subdomain.router.app }}}.tls: "{{ traefik.localhost.tls }}"
+      traefik.http.routers.cerebro-app-{{{ traefik.subdomain.router.app }}}.entrypoints: "{{{ traefik.localhost.entrypoint }}}"
+      {{else}}
+      traefik.http.routers.cerebro-app-{{{ traefik.subdomain.router.app }}}.rule: "Host(`{{{ traefik.subdomain.app }}}.{{{ traefik.web.domain }}}`)"
+      traefik.http.routers.cerebro-app-{{{ traefik.subdomain.router.app }}}.entrypoints: "https"
+      traefik.http.routers.cerebro-app-{{{ traefik.subdomain.router.app }}}.middlewares: "default@file"
+      traefik.http.routers.cerebro-app-{{{ traefik.subdomain.router.app }}}.tls.certresolver: "letsEncrypt"
+      traefik.http.routers.cerebro-app-{{{ traefik.subdomain.router.app }}}.tls.options: "modern@file"
+      traefik.http.routers.cerebro-app-{{{ traefik.subdomain.router.app }}}.tls: "true"
+      {{/if}}
+
+  api:
+    build: 
+      context: .
+      dockerfile: docker/Dockerfile.server
+      args:
+        BRICK_ENV: ${BRICK_ENV:-}
+    command: uvicorn brick.api.main:app --host 0.0.0.0 --port 8080
+    volumes:
+      - /tmp:/tmp
+    expose:
+      - "8080"
+    
+    depends_on:
+      - redis
+      - mongodb
+
+  worker1:
+    build: 
+      context: .
+      dockerfile: docker/Dockerfile.server
+    command: celery -A brick.api.core.celery.celery_app worker --loglevel=INFO
+    volumes:
+      - /tmp:/tmp
+    depends_on:
+      - redis
+      - mongodb
+  
+  worker2:
+    build: 
+      context: .
+      dockerfile: docker/Dockerfile.server
+    command: celery -A brick.api.core.celery.celery_app worker --loglevel=INFO
+    volumes:
+      - /tmp:/tmp
+    depends_on:
+      - redis
+      - mongodb
+
+  redis:
+    image: "redis:alpine"
+    expose:
+      - "6379"
+
+  mongodb:
+    image: mongo:latest
+    expose:
+      - "27017"
+    volumes:
+      - session_data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+
+
+
+  # ===================================
+  # DELETES UPLOADED FILES PERIODICALLY
+  # ===================================
+
+  # Defaults to `/tmp` directory if the environment 
+  # variable `PROD_BRICK_WORK_DIRECTORY` is not set
+
+  # Careful use of this one, make sure things 
+  # are working and BRICK_WORK_DIRECTORY is 
+  # properly configured. 
+
+  # Operates only with the `production` profile
+  # to run for the web service
+
+  data-cleaner:
+    restart: always
+    profiles:
+      - production
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.cleaner
+    environment:
+      - BRICK_WORK_DIRECTORY=${PROD_BRICK_WORK_DIRECTORY:-/tmp} 
+    volumes:
+      - ${PROD_BRICK_WORK_DIRECTORY:-/tmp}:/data:rw
+
+  # ============
+  # UNIT TESTING
+  # ============
+
+  tests:
+    profiles:
+      - test
+    build: 
+      context: .
+      dockerfile: docker/Dockerfile
+    command: pytest
+    depends_on:
+      - redis
+      - mongodb
+
+volumes:
+  session_data:
