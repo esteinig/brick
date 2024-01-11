@@ -2,13 +2,20 @@
 import typer
 from pathlib import Path
 
-from .brick import *
+from .legacy import *
 from .utils import *
 
 app = typer.Typer(add_completion=False)
 
-@app.command()
-def brig_viz(
+utils = typer.Typer(add_completion=False)
+app.add_typer(utils, name="utils")
+
+plot = typer.Typer(add_completion=False)
+app.add_typer(plot, name="plot")
+
+
+@plot.command()
+def legacy(
     reference: Path = typer.Option(
         ..., help="Reference genome against which the rings of other genomes are BLASTED (.fasta)"
     ),
@@ -84,7 +91,10 @@ def brig_viz(
     cds_ring_height: str = typer.Option(
         20, help="CDS ring color"
     )
-):  
+):
+    """
+    Legacy plot of the initial ported D3.js visualisation from ~ 2016
+    """
     
     
     genomes = [Path(s.strip()) for s in genomes.split(",")]
@@ -169,7 +179,7 @@ def brig_viz(
         json_output=json
     )
 
-@app.command()
+@utils.command()
 def concat(
     fasta: Path = typer.Argument(
         ..., help="Fasta contigs input"
@@ -194,7 +204,7 @@ def concat(
             f">{header if header else fasta.stem}\n{seq}"
         )
 
-@app.command()
+@utils.command()
 def slice(
     fasta: Path = typer.Argument(
         ..., help="Fasta contigs input"
