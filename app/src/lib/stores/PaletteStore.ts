@@ -1,3 +1,4 @@
+import { MOMA_PALETTES, NZ_PALETTES } from '$lib/data';
 import { writable } from 'svelte/store';
 
 export interface Palette {
@@ -6,7 +7,12 @@ export interface Palette {
 }
 
 function createPaletteStore() {
-    const { subscribe, set, update } = writable<Palette[]>([]);
+    const { subscribe, set, update } = writable<Palette[]>([
+        {name: NZ_PALETTES[1].name, colors: NZ_PALETTES[1].colors},
+        {name: MOMA_PALETTES[11].name, colors: MOMA_PALETTES[11].colors},
+        {name: MOMA_PALETTES[2].name, colors: MOMA_PALETTES[2].colors},
+
+    ]);
 
     return {
         subscribe,

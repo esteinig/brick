@@ -8,6 +8,7 @@
 
 	import { uploadInProgress } from '$lib/stores/UploadInProgressStore';
 	import PaletteControlPanel from './controls/panels/PaletteControlPanel.svelte';
+	import AboutPanel from './controls/panels/AboutPanel.svelte';
 
     let tab: number = 0;
 
@@ -45,7 +46,7 @@
             {:else if tab === 3}
                 <PaletteControlPanel></PaletteControlPanel>
             {:else if tab === 4}
-                <span></span>
+                <AboutPanel />
             {/if}
         </svelte:fragment>
     </TabGroup>

@@ -2,7 +2,6 @@
   import { onMount } from 'svelte';
   import * as d3 from 'd3';
 
-  import type { PlotConfig } from '$lib/types';
   import { downloadJSON, downloadPNG, downloadSVG, getDefaultScaleFactor } from './helpers';
 	import { RingType, type Ring, type RingSegment, TitleStyle } from '$lib/types';
 	import { plotConfigStore } from '$lib/stores/PlotConfigStore';
@@ -100,7 +99,6 @@
   );
 
   
-  
   // Reactive for controls to change `scaleFactor`
   $: scaledTransform = `translate(${width / 2},${height / 2}) scale(${scaleFactor})`;
 
@@ -132,13 +130,12 @@
   // All ring data is fed through this generator which will calculate the start
   // and end angles on the circle for each segment and adjust inner and outer
   // heights based on radius, ring height and gap size
-  function arcGenerator(d: RingSegment, index: number, height: number): string {
+  function arcGenerator(d: RingSegment, index: number, height: number, radius: number, gap: number): string {
     
     const ringHeight = getRingHeight($rings, 0, index);
-
     return d3.arc()
-      .innerRadius($plotConfigStore.rings.radius+(index*$plotConfigStore.rings.gap)+ringHeight)
-      .outerRadius($plotConfigStore.rings.radius+(index*$plotConfigStore.rings.gap)+ringHeight+height)
+      .innerRadius(radius+(index*gap)+ringHeight)
+      .outerRadius(radius+(index*gap)+ringHeight+height)
       .startAngle((d: RingSegment) => (degreeScale(d.start)) * (Math.PI / 180))
       .endAngle((d: RingSegment) => (degreeScale(d.end)) * (Math.PI / 180))
       (d);
@@ -148,8 +145,8 @@
     return rings.slice(start_index, end_index+1).map(ring => ring.height).reduce((a, b) => a+b)
   }
 
-  function getOuterRingHeight(rings: Ring[]): number {
-    return rings.map(ring => ring.height+$plotConfigStore.rings.gap).reduce((a, b) => a+b)+$plotConfigStore.rings.radius
+  function getOuterRingHeight(rings: Ring[], gap: number): number {
+    return rings.map(ring => ring.height+gap).reduce((a, b) => a+b)+$plotConfigStore.rings.radius
   }
 
   // Function to calculate the midpoint of an arc segment
@@ -158,22 +155,22 @@
   }
 
   // Function to calculate the coordinates of the point on the outer edge of the arc
-  function calculateOuterArcPointX1(d: RingSegment): number {
-      return Math.cos(calculateMidpoint(d)) * getOuterRingHeight($rings)
+  function calculateOuterArcPointX1(d: RingSegment, gap: number): number {
+      return Math.cos(calculateMidpoint(d)) * getOuterRingHeight($rings, gap)
   }
 
   // Function to calculate the coordinates of the point on the outer edge of the arc
-  function calculateOuterArcPointY1(d: RingSegment): number {
-      return Math.sin(calculateMidpoint(d)) * getOuterRingHeight($rings);
+  function calculateOuterArcPointY1(d: RingSegment, gap: number): number {
+      return Math.sin(calculateMidpoint(d)) * getOuterRingHeight($rings, gap);
   }
 
   // Function to calculate the coordinates of the point on the outer edge of the arc
-  function calculateOuterArcPointX2(d: RingSegment): number {
-      return calculateOuterArcPointX1(d) + $plotConfigStore.annotation.lineLength * Math.cos(calculateMidpoint(d))
+  function calculateOuterArcPointX2(d: RingSegment, lineLength: number, gap: number): number {
+      return calculateOuterArcPointX1(d, gap) + lineLength * Math.cos(calculateMidpoint(d))
   }
   // Function to calculate the coordinates of the point on the outer edge of the arc
-  function calculateOuterArcPointY2(d: RingSegment): number {
-      return calculateOuterArcPointY1(d) + $plotConfigStore.annotation.lineLength * Math.sin(calculateMidpoint(d))
+  function calculateOuterArcPointY2(d: RingSegment, lineLength: number, gap: number): number {
+      return calculateOuterArcPointY1(d, gap) + lineLength * Math.sin(calculateMidpoint(d))
   }
 
   function addAlphaToHexColor(hex: string, opacity: number) {
@@ -202,10 +199,10 @@
             {#if ring.type === RingType.LABEL}
               {#each ring.data as ringAnnotation}
               <line 
-                x1={calculateOuterArcPointX1(ringAnnotation)} 
-                y1={calculateOuterArcPointY1(ringAnnotation)} 
-                x2={calculateOuterArcPointX2(ringAnnotation)} 
-                y2={calculateOuterArcPointY2(ringAnnotation)}
+                x1={calculateOuterArcPointX1(ringAnnotation, $plotConfigStore.rings.gap)} 
+                y1={calculateOuterArcPointY1(ringAnnotation, $plotConfigStore.rings.gap)} 
+                x2={calculateOuterArcPointX2(ringAnnotation, $plotConfigStore.annotation.lineLength, $plotConfigStore.rings.gap)} 
+                y2={calculateOuterArcPointY2(ringAnnotation, $plotConfigStore.annotation.lineLength, $plotConfigStore.rings.gap)}
                 style="{$plotConfigStore.annotation.lineStyle}"
                 class="brickAnnotationLine"
                 visibility={ring.visible ? 'visible': 'hidden'}
@@ -213,22 +210,28 @@
             {/each}
             {#each ring.data as ringAnnotation}
               <text 
-                x={calculateOuterArcPointX2(ringAnnotation)} 
-                y={calculateOuterArcPointY2(ringAnnotation)}
+                x={calculateOuterArcPointX2(ringAnnotation, $plotConfigStore.annotation.lineLength, $plotConfigStore.rings.gap)} 
+                y={calculateOuterArcPointY2(ringAnnotation, $plotConfigStore.annotation.lineLength, $plotConfigStore.rings.gap)}
                 style="{$plotConfigStore.annotation.textStyle}"
                 text-anchor={degreeScale(ringAnnotation.start) > 180 ? 'end' : 'start' }
                 dominant-baseline={degreeScale(ringAnnotation.start) > 180 ? 'middle': 'middle'}
                 class="brickAnnotationText"
                 visibility={ring.visible ? 'visible': 'hidden'}
               >
-              <tspan x={degreeScale(ringAnnotation.start) > 180 ? calculateOuterArcPointX2(ringAnnotation)-$plotConfigStore.annotation.textGap : calculateOuterArcPointX2(ringAnnotation)+$plotConfigStore.annotation.textGap}>{ringAnnotation.text}</tspan>
+              <tspan x={
+              degreeScale(ringAnnotation.start) > 180 ? calculateOuterArcPointX2(
+                  ringAnnotation, $plotConfigStore.annotation.lineLength, $plotConfigStore.rings.gap
+                )-$plotConfigStore.annotation.textGap : calculateOuterArcPointX2(
+                  ringAnnotation, $plotConfigStore.annotation.lineLength, $plotConfigStore.rings.gap
+                )+$plotConfigStore.annotation.textGap
+              }>{ringAnnotation.text}</tspan>
               </text>
             {/each}
           {:else}
             {#each ring.data as ringSegment}
               <path 
                 class="brickRingSegment" 
-                d={arcGenerator(ringSegment, ring.index, ring.height)} 
+                d={arcGenerator(ringSegment, ring.index, $plotConfigStore.rings.height, $plotConfigStore.rings.radius, $plotConfigStore.rings.gap)} 
                 style="fill: {ring.color}; opacity: 1; cursor: pointer" 
                 visibility={ring.visible ? 'visible': 'hidden'} 
                 on:mouseover={() => handleMouseover(ringSegment)} 

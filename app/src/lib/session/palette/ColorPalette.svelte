@@ -23,7 +23,7 @@
 
 <div id="colorPalette">
     <p class={titleClass}>{title} <span class={subtitleClass}>{subtitle}</span><span class={displayValueClass}>{displayValue}</span></p>
-    <div class="grid grid-cols-{colorFields} gap-4">
+    <div class="grid grid-cols-12 gap-1">
         {#each colors as color}
             <div class="p-4 rounded shadow-lg" style="background-color: {color};" on:mouseover={() => displayValue = color} on:mouseout={() => displayValue = ""} on:click={() => colorClickHandler(color)}></div>
         {/each}

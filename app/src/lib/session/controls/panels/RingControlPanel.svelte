@@ -48,7 +48,7 @@
                     <div class="col-span-2">
                         <label class="label text-xs">
                             <p class="opacity-40">Sequence</p>
-                            <select class="select text-xs" bind:value={selectedReference}>
+                            <select class="select text-xs" bind:value={selectedReference} disabled>
                                 {#each $sessionFiles as file}
                                     {#if file.type === FileType.REFERENCE}
                                         <option value={file}>{file.name_original}</option>
@@ -59,16 +59,9 @@
                     </div>
                     <div class="col-span-1">
                         <label class="label text-xs">
-                            <p class="opacity-40">Sequence length (bp)</p>
-                            <input class="input text-xs" disabled value={selectedReference.length ?? 0}/>
+                            <p class="opacity-40">{selectedReference.length.toLocaleString()} bp</p>
                         </label>
-                    </div>
-                    <div class="col-span-1">
-                        <label class="label text-xs">
-                            <p class="opacity-40">GC content (%)</p>
-                            <input class="input text-xs" disabled value={selectedReference.length ?? 0}/>
-                        </label>
-                    </div>            
+                    </div>           
                 {/if}
             </div>
         {:else}
@@ -109,12 +102,17 @@
                 <div class="">
                     <button class="btn variant-outline-surface mr-2" disabled={selectedReference ? true : true} on:click={() => newRing = RingType.REFERENCE}>
                         <div class="flex items-center align-center">
-                            <span>LLM: CDS Annotation</span>
+                            <span>abritAMR: AMR Annotation</span>
                         </div>
                     </button>
                     <button class="btn variant-outline-surface mr-2" disabled={selectedReference ? true : true} on:click={() => newRing = RingType.REFERENCE}>
                         <div class="flex items-center align-center">
                             <span>geNomad: MGE Probability</span>
+                        </div>
+                    </button>
+                    <button class="btn variant-outline-surface mr-2" disabled={selectedReference ? true : true} on:click={() => newRing = RingType.REFERENCE}>
+                        <div class="flex items-center align-center">
+                            <span>LLM: CDS Annotation</span>
                         </div>
                     </button>
                 </div>                
@@ -147,7 +145,7 @@
                                     </div>
                                 </span>
                                 <div class="mt-0.5">
-                                    <PalettePopup id={`ringPalette-${ring.index}`} bind:color={ring.color} colorFields={6}></PalettePopup>
+                                    <PalettePopup id={`ringPalette-${ring.index}`} bind:color={ring.color} colorFields={8}></PalettePopup>
                                 </div>
                                 
                                 {#if ring.visible}
@@ -222,31 +220,6 @@
                             </svg>
                         </div>
                         <span class="ml-2 text-base">New ring</span>
-                    </div>
-                </button>
-            </div>
-            <div class="text-sm opacity-70 ml-6">
-                <button class="btn p-1" on:click={() => showNewRingMenu = true}>
-                    <div class="flex items-center align-center">
-                        <div class="w-5 h-5">
-                            <svg data-slot="icon" aria-hidden="true" fill="none" stroke-width="1.5" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125" stroke-linecap="round" stroke-linejoin="round"></path>
-                            </svg>
-                        </div>
-                        <span class="ml-2 text-base">Edit session</span>
-                    </div>
-                </button>
-            </div>
-            <div class="text-sm opacity-70 ml-6">
-                <button class="btn p-1" on:click={() => showNewRingMenu = true}>
-                    <div class="flex items-center align-center">
-                        <div class="w-5 h-5">
-                            
-                            <svg data-slot="icon" aria-hidden="true" fill="none" stroke-width="1.5" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" stroke-linecap="round" stroke-linejoin="round"></path>
-                            </svg>
-                        </div>
-                        <span class="ml-2 text-base">Share session</span>
                     </div>
                 </button>
             </div>

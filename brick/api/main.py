@@ -5,6 +5,8 @@ from .endpoints import sessions
 from .endpoints import tasks
 from .endpoints import rings
 
+from .core.config import settings
+
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
@@ -16,7 +18,7 @@ app.include_router(rings.router)
 # CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # or ["*"] for allowing any domain
+    allow_origins=settings.CORS_ORIGINS,  # or ["*"] for allowing any domain
     allow_credentials=True,
     allow_methods=["*"],  # Allows all methods
     allow_headers=["*"],  # Allows all headers

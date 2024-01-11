@@ -1,6 +1,6 @@
 import { fail, error} from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
-import type { FileUploadResponse, CreateRingResponse } from '$lib/types';
+import type { FileUploadResponse, CreateRingResponse, SessionResponse } from '$lib/types';
 import { RingType } from '$lib/types';
 import { checkCeleryResults, getErrorMessage } from '$lib/helpers';
 import { env } from '$env/dynamic/private';
@@ -16,7 +16,23 @@ export const load: PageServerLoad = async ({ url, params }) => {
         throw error(400, 'Invalid URL');
     }
 
-    return {}
+    const response = await fetch(`${env.PRIVATE_DOCKER_API_URL}/sessions/${params.session}?session_files_exist=true`);
+
+    try {
+        const sessionResponseData: SessionResponse = await response.json();
+
+        if (response.ok) {
+            return { session: sessionResponseData }
+        } else {
+            return { session: null, detail: sessionResponseData.detail }
+        }
+    } catch(error) {
+        // Catch if something bad happens during validation with pydantic
+        // there is no JSON object returned (error only)
+        return fail(response.status, {
+            detail: getErrorMessage(error)
+        })
+    }
 };
 
 
