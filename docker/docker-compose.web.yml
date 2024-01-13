@@ -17,18 +17,12 @@ services:
     labels:
       traefik.enable: "true"
       traefik.docker.network: "proxy"
-      {{#if traefik.is_localhost }}
-      traefik.http.routers.cerebro-app-{{{ traefik.subdomain.router.app }}}.rule: "Host(`{{{ traefik.subdomain.app }}}.{{{ traefik.localhost.domain }}}`)"
-      traefik.http.routers.cerebro-app-{{{ traefik.subdomain.router.app }}}.tls: "{{ traefik.localhost.tls }}"
-      traefik.http.routers.cerebro-app-{{{ traefik.subdomain.router.app }}}.entrypoints: "{{{ traefik.localhost.entrypoint }}}"
-      {{else}}
       traefik.http.routers.cerebro-app-{{{ traefik.subdomain.router.app }}}.rule: "Host(`{{{ traefik.subdomain.app }}}.{{{ traefik.web.domain }}}`)"
       traefik.http.routers.cerebro-app-{{{ traefik.subdomain.router.app }}}.entrypoints: "https"
       traefik.http.routers.cerebro-app-{{{ traefik.subdomain.router.app }}}.middlewares: "default@file"
       traefik.http.routers.cerebro-app-{{{ traefik.subdomain.router.app }}}.tls.certresolver: "letsEncrypt"
       traefik.http.routers.cerebro-app-{{{ traefik.subdomain.router.app }}}.tls.options: "modern@file"
       traefik.http.routers.cerebro-app-{{{ traefik.subdomain.router.app }}}.tls: "true"
-      {{/if}}
 
   api:
     build: 

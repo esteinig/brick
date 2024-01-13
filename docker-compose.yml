@@ -104,8 +104,10 @@ services:
       - test
     build: 
       context: .
-      dockerfile: docker/Dockerfile
+      dockerfile: docker/Dockerfile.server
     command: pytest
+    volumes:
+      - /tmp:/tmp
     depends_on:
       - redis
       - mongodb

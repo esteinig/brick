@@ -4,7 +4,7 @@ pandas
 requests
 pre-commit
 fastapi
-redis
+redis-py
 celery[redis]
 uvicorn
 pydantic-settings

@@ -20,7 +20,7 @@ async def get_session(session_id: str, session_files_exist: bool = False):
     else:
         session_data = Session(**session_data)
 
-    if files_exist:
+    if session_files_exist:
         session_data.validate_file_paths()
     
     return session_data
