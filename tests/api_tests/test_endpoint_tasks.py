@@ -1,7 +1,7 @@
 from unittest.mock import patch, MagicMock
 from fastapi.testclient import TestClient
 from brick.api.main import app
-from brick.api.schemas import TaskStatus, FileType, FileFormat
+from brick.api.schemas import TaskStatus, FileType, FileFormat, Selections
 from brick.api.models import SessionFile
 
 client = TestClient(app)
@@ -15,7 +15,8 @@ def mock_session_file():
         records=100,
         length=200,
         name="file_name.ext",
-        name_original="original_file_name.ext"
+        name_original="original_file_name.ext",
+        selections=Selections()
     )
 
 def create_mock_async_result(status: TaskStatus, ready: bool, success: bool, error_message: str):

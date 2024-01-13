@@ -1,0 +1,37 @@
+global:
+  sendAnonymousUsage: false
+
+providers:
+  docker:
+    endpoint: "unix:///var/run/docker.sock"     # Listen to the UNIX Docker socket
+    exposedByDefault: false                     # Only expose container that are explicitly enabled (using label traefik.enabled)
+    network: "proxy"                            # Default network to use for connections to all containers.
+  file:
+    filename: "/etc/traefik/dynamic.yml"        # Link to the dynamic configuration
+    watch: true                                 # Watch for modifications
+  providersThrottleDuration: 10                 # Configuration reload frequency
+
+api:
+  dashboard: true                               # Enable the dashboard
+
+# Certificate Resolvers are responsible for retrieving certificates from an ACME server
+# See https://doc.traefik.io/traefik/https/acme/#certificate-resolvers
+
+certificatesResolvers:
+  letsEncrypt:
+    acme:
+      email: "{{{ traefik.web.email }}}"          # Email address used for registration
+      storage: "/etc/traefik/certs/acme.json"     # File or key used for certificates storage
+      httpchallenge:
+        entryPoint: http                        
+
+entryPoints:
+  http:
+    address: ":80"                              # Create the HTTP entrypoint on port 80
+    http:
+      redirections:                             # HTTPS redirection (80 to 443)
+        entryPoint:
+          to: "https"                           # The target element
+          scheme: "https"                       # The redirection target scheme
+  https:
+    address: ":443"                             # Create the HTTPS entrypoint on port 443

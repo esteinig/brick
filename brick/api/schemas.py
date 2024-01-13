@@ -1,8 +1,11 @@
 from pydantic import BaseModel, validator
 from typing import Optional, Annotated, Tuple, List
+from contextlib import contextmanager
 from pathlib import Path
 from enum import StrEnum
 from uuid import UUID
+
+import uuid
 
 from .core.config import settings
 from ..rings import BlastRing, AnnotationRing, LabelRing, RingSegment
@@ -10,6 +13,40 @@ from ..rings import BlastRing, AnnotationRing, LabelRing, RingSegment
 SessionID = Annotated[str, "Session UUID used as directory name of the session directory"]
 SessionFileID = Annotated[str, "Uploaded file assigned UUID used as filename in session directory"]
 CeleryTaskID =  Annotated[str, "Celery task UUID"]
+
+# Schemas inherit from this class to provide a method to create a temporary sessions directory
+# for testing endpoint validators on the schema models
+
+class RingSchema(BaseModel):
+    
+    session_id: SessionID
+
+    @validator('session_id')
+    def check_uuid_v4(cls, v):
+        if v is not None:
+            try:
+                UUID(v, version=4)
+            except ValueError:
+                raise ValueError(f"value '{v}' is not a valid UUID version 4")
+        return v
+    
+    @validator('session_id')
+    def check_session_directory(cls, v):
+        if not (settings.WORK_DIRECTORY / v).exists():
+            raise ValueError(f"session directory '{v}' does not exist")
+        return v
+    
+    @contextmanager
+    def temporary_session_directory(self) -> Path:
+        temp_dir = (settings.WORK_DIRECTORY / self.session_id)
+        temp_dir.mkdir(parents=True)
+        try:
+            # Yield the temporary directory to the context block
+            yield Path(temp_dir)
+        finally:
+            # Cleanup: remove the directory after use
+            Path(temp_dir).rmdir()
+
 
 # File uploads
 
@@ -74,15 +111,15 @@ class TaskResultResponse(TaskStatusResponse):
 class BlastMethod(StrEnum):
     BLASTN = 'blastn'
 
-class BlastRingSchema(BaseModel):
-    session_id: SessionID
+class BlastRingSchema(RingSchema):
     reference_id: SessionFileID
     genome_id: SessionFileID
-    blast_method: BlastMethod
-    min_alignment: int
-    min_identity: float
+    blast_method: BlastMethod = BlastMethod.BLASTN
+    min_alignment: int = 0
+    min_identity: float = 0
 
-    @validator('session_id', 'reference_id', 'genome_id')
+
+    @validator('reference_id', 'genome_id')
     def check_uuid_v4(cls, v):
         try:
             UUID(v, version=4)
@@ -90,19 +127,18 @@ class BlastRingSchema(BaseModel):
             raise ValueError(f"value '{v}' is not a valid UUID version 4")
         return v
     
-    @validator('session_id')
-    def check_session_directory(cls, v):
-        if not (settings.WORK_DIRECTORY / v).exists():
-            raise ValueError(f"session directory '{v}' does not exist")
+    @validator('reference_id')
+    def check_reference_id_input_file(cls, v, values):
+        session_id = values.get('session_id')
+        if v is not None and not (settings.WORK_DIRECTORY / session_id / v).exists():
+            raise ValueError(f"reference input file '{v}' does not exist")
         return v
 
-
-    @validator('reference_id', 'genome_id')
-    def check_input_files(cls, v, values):
+    @validator('genome_id')
+    def check_genome_id_input_file(cls, v, values):
         session_id = values.get('session_id')
-        if v is not None:
-            if not (settings.WORK_DIRECTORY / session_id / v).exists():
-                raise ValueError(f"input file '{v}' does not exist")
+        if v is not None and not (settings.WORK_DIRECTORY / session_id / v).exists():
+            raise ValueError(f"genome input file '{v}' does not exist")
         return v
 
     @validator('min_alignment')
@@ -132,21 +168,21 @@ class BlastRingResponse(BaseModel):
 
 # Annotation ring
 
-class AnnotationRingSchema(BaseModel):
-    session_id: SessionID
-    genbank_id: SessionFileID | None
-    tsv_id: SessionFileID | None
-    genbank_features: List[str]
-    genbank_qualifiers: List[str]
+class AnnotationRingSchema(RingSchema):
+    genbank_id: SessionFileID | None = None
+    tsv_id: SessionFileID | None = None
+    genbank_features: List[str] = []
+    genbank_qualifiers: List[str] = []
 
-    @validator('genbank_id', pre=True)
+
+    @validator('genbank_id')
     def check_fields(cls, v, values):
         tsv_id = values.get('tsv_id')
         if tsv_id is None and v is None:
             ValueError("one of 'genbank_id' or 'tsv_id' fields must be provided")
         return v
     
-    @validator('session_id', 'genbank_id', 'tsv_id')
+    @validator('genbank_id', 'tsv_id')
     def check_uuid_v4(cls, v):
         if v is not None:
             try:
@@ -155,13 +191,6 @@ class AnnotationRingSchema(BaseModel):
                 raise ValueError(f"value '{v}' is not a valid UUID version 4")
         return v
     
-    @validator('session_id')
-    def check_session_directory(cls, v):
-        if not (settings.WORK_DIRECTORY / v).exists():
-            raise ValueError(f"session directory '{v}' does not exist")
-        return v
-
-    
     @validator('genbank_id', 'tsv_id')
     def check_input_files(cls, v, values):
         session_id = values.get('session_id')
@@ -169,8 +198,6 @@ class AnnotationRingSchema(BaseModel):
             if not (settings.WORK_DIRECTORY / session_id / v).exists():
                 raise ValueError(f"input file '{v}' does not exist")
         return v
-    
-    
     
     def get_file_paths(self) -> Tuple[Path, Path | None, Path | None]:
 
@@ -188,12 +215,12 @@ class AnnotationRingResponse(BaseModel):
 # Label ring
 
 
-class LabelRingSchema(BaseModel):
-    session_id: SessionID
-    tsv_id: SessionFileID | None
-    manual: List[RingSegment]
+class LabelRingSchema(RingSchema):
+    tsv_id: SessionFileID | None  = None
+    manual: List[RingSegment] = []
 
-    @validator('session_id','tsv_id')
+
+    @validator('tsv_id')
     def check_uuid_v4(cls, v):
         if v is not None:
             try:
@@ -201,13 +228,6 @@ class LabelRingSchema(BaseModel):
             except ValueError:
                 raise ValueError(f"value '{v}' is not a valid UUID version 4")
         return v
-    
-    @validator('session_id')
-    def check_session_directory(cls, v):
-        if not (settings.WORK_DIRECTORY / v).exists():
-            raise ValueError(f"session directory '{v}' does not exist")
-        return v
-
     
     @validator('tsv_id')
     def check_input_files(cls, v, values):
@@ -218,7 +238,7 @@ class LabelRingSchema(BaseModel):
         return v
     
     @validator('manual')
-    def check_input_files(cls, v, values):
+    def check_manual_input(cls, v, values):
         tsv_id = values.get('tsv_id')
         if not v and tsv_id is None:
             raise ValueError(f"either a label file or manual labels must be provided")

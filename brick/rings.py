@@ -17,8 +17,8 @@ class RingType(StrEnum):
     LABEL = 'label'
 
 class RingSegment(BaseModel):
-    start: int
-    end: int
+    start: int = 0
+    end: int = 0
     color: str = "#d3d3d3"
     text: str = ""
 

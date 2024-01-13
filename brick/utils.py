@@ -140,28 +140,34 @@ def summarize_protein_annotations_gpt35(annotations: List[str], api_key: str) ->
 
 
 # List of potentially dangerous SVG tags and attributes
+
 DANGEROUS_TAGS = ['script', 'alert', 'onclick', 'onerror', 'onload']
 DANGEROUS_ATTRS = ['href', 'xlink:href', 'style']
-
-def sanitize_input(input_string: str, is_for_db: bool = False, is_for_svg: bool = False) -> str:
-    # Basic HTML escape
-    sanitized = html.escape(input_string)
-
-    # Additional sanitization for SVG content
-    if is_for_svg:
-        sanitized = sanitize_svg_content(sanitized)
-
-    # Additional sanitization for MongoDB queries
-    if is_for_db:
-        sanitized = sanitize_for_mongodb(sanitized)
-
-    return sanitized
+DANGEROUS_HTML_ATTRS = ['onclick', 'onerror', 'onload', 'onmouseover', 'onmouseout', 'onmouseenter', 'onmouseleave']
 
 def sanitize_svg_content(input_string: str) -> str:
+    # Function to remove a single instance of a dangerous tag
+    def remove_dangerous_tag(input_str, tag):
+        # Regular expression to find all instances of the tag
+        tag_regex = re.compile(f'<{tag}.*?>.*?</{tag}>', flags=re.DOTALL | re.IGNORECASE)
+
+        # Keep removing the tag while it can be found
+        while True:
+            match = tag_regex.search(input_str)
+            if not match:
+                break
+            input_str = input_str[:match.start()] + input_str[match.end():]
+
+        return input_str
+
+    # Iteratively remove all instances of each dangerous tag
     for tag in DANGEROUS_TAGS:
-        input_string = re.sub(f'<{tag}.*?>.*?</{tag}>', '', input_string, flags=re.IGNORECASE)
+        input_string = remove_dangerous_tag(input_string, tag)
+    
+    # Remove dangerous attributes
     for attr in DANGEROUS_ATTRS:
-        input_string = re.sub(f'{attr}=".*?"', '', input_string, flags=re.IGNORECASE)
+        input_string = re.sub(f'\\s*{attr}\\s*=\\s*["\'][^"\']*["\']', '', input_string, flags=re.IGNORECASE)
+    
     return input_string
 
 def sanitize_for_mongodb(input_string: str) -> str:
@@ -169,3 +175,26 @@ def sanitize_for_mongodb(input_string: str) -> str:
     input_string = re.sub(r'^\$', '\uFF04', input_string)
     input_string = re.sub(r'^\{', '\uFF04', input_string)
     return input_string
+
+def sanitize_input(input_string: str, is_for_db: bool = False, is_for_svg: bool = False) -> str:
+
+    if not isinstance(input_string, str):
+        raise TypeError("Input must be a string")
+
+    # SVG tag and attribute sanitation
+    if is_for_svg:
+        input_string = sanitize_svg_content(input_string)  # must run before html escape
+
+    # Additional sanitization for MongoDB queries
+    if is_for_db:
+        input_string = sanitize_for_mongodb(input_string)
+
+    # Dangerous HTML attribute escape
+    for attr in DANGEROUS_HTML_ATTRS:
+        input_string = re.sub(f'{attr}=[\'"].*?[\'"]', '', input_string, flags=re.IGNORECASE)
+
+    # Basic HTML escape
+    sanitized = html.escape(input_string)
+
+    return sanitized
+

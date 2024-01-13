@@ -36,7 +36,7 @@ class Settings(BaseSettings):
     MONGODB_DATABASE: str = "brick"
     MONGODB_SESSION_COLLECTION: str = "sessions"
 
-    class Config:
+    class ConfigDict:
         case_sensitive = True
         env_file = ".env"
         env_file_encoding = 'utf-8'
@@ -51,11 +51,11 @@ class Settings(BaseSettings):
         return []
 
 class DevelopmentSettings(Settings):
-    class Config:
+    class ConfigDict:
         env_prefix = "DEV_BRICK_"
 
 class ProductionSettings(Settings):
-    class Config:
+    class ConfigDict:
         env_prefix = "PROD_BRICK_"
 
 def get_settings():

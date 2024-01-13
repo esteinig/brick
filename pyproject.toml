@@ -41,6 +41,7 @@ brick = "brick.terminal:app"
 [tool.pytest.ini_options]
 testpaths = [
     "tests/api_tests",
+    "tests/core_tests"
 ]
 addopts = "-v"
 
