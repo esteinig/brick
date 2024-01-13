@@ -8,13 +8,14 @@ from brick.utils import sanitize_svg_content
 from brick.utils import enough_disk_space
 from brick.utils import DANGEROUS_ATTRS, DANGEROUS_TAGS
 
-# Tests for enough_space
+# Tests for `enough_space`
 
 EXISTENT_PATH = Path('/tmp') # exists in test container
 NONEXISTENT_PATH = Path("/path/that/does/not/exist") 
 INVALID_PATH = 12345  # invalid path type
 
 # Helper function to get available space for a path
+
 def get_available_space(path):
     return shutil.disk_usage(path).free
 
@@ -38,7 +39,7 @@ def test_with_negative_space_limit():
     with pytest.raises(ValueError):
         enough_disk_space(EXISTENT_PATH, -1)
 
-# Tests for sanitize_input
+# Tests for `sanitize_input`
 
 def test_sanitize_input_basic_html():
     input_string = "<div>Test & <b>bold</b></div>"
@@ -57,7 +58,7 @@ def test_sanitize_input_for_db():
     input_string = "{$ne: null}"
     assert sanitize_input(input_string, is_for_db=True) != input_string
 
-# Tests for sanitize_svg_content
+# Tests for `sanitize_svg_content`
 
 def test_sanitize_svg_content_remove_dangerous_tags():
     for tag in DANGEROUS_TAGS:
@@ -69,7 +70,7 @@ def test_sanitize_svg_content_remove_dangerous_attrs():
         input_string = f'<svg><circle {attr}="dangerous"/></svg>'
         assert attr not in sanitize_svg_content(input_string)
 
-# Tests for sanitize_for_mongodb
+# Tests for `sanitize_for_mongodb`
 
 def test_sanitize_for_mongodb_dollar_prefix():
     assert sanitize_for_mongodb("$set") == "\uFF04set"
@@ -77,12 +78,12 @@ def test_sanitize_for_mongodb_dollar_prefix():
 def test_sanitize_for_mongodb_brace_prefix():
     assert sanitize_for_mongodb("{test: 'value'}") == "\uFF04test: 'value'}"
 
-# Test escaping does not affect normal content
+# Tests for string sanitation cases (common and edge)
+
 def test_sanitize_no_effect_on_normal_content():
     input_string = "Normal string with no special characters"
     assert sanitize_input(input_string) == input_string
 
-# Test input with both DB and SVG sanitization
 def test_sanitize_both_db_and_svg():
     input_string = "<svg><script>alert('xss')</script></svg>{$ne: null}"
     svg_sanitized = sanitize_svg_content(input_string)
@@ -91,8 +92,6 @@ def test_sanitize_both_db_and_svg():
     assert "<script>" not in both_sanitized
     # assert "{$" not in both_sanitized
 
-# Edge cases
-    
 def test_sanitize_empty_string():
     assert sanitize_input("") == ""
 
@@ -111,8 +110,6 @@ def test_sanitize_input_unicode_characters():
     assert "测试" in sanitized
     assert "🚀" in sanitized
     assert "<script>" not in sanitized
-
-# SVG
 
 def test_sanitize_input_mixed_content():
     input_string = "<div onclick='alert(1)'>Hello {$ne: null}<svg><script></script></svg></div>"
@@ -133,11 +130,11 @@ def test_sanitize_svg_content_valid_attributes():
     assert 'cx="50"' in sanitized
     assert 'stroke="black"' in sanitized
 
+# TODO: nested tag and multiple operator sanitation
+
 # def test_sanitize_svg_content_nested_dangerous_tags():
 #     input_string = "<svg><script><script>alert('xss')</script></script></svg>"
 #     assert sanitize_svg_content(input_string) == "<svg></svg>"
-
-# Mongo
 
 # def test_sanitize_for_mongodb_normal_text():
 #     input_string = "This is a $text with curly {braces}"

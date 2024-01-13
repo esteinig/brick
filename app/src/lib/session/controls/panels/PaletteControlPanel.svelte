@@ -38,8 +38,8 @@
             </svelte:fragment>
             <svelte:fragment slot="content">
                 <div class="my-6">
-                    {#each NZ_PALETTES as palette }
-                        <div class="flex items-center justify-between my-4 rounded-token hover:variant-soft hover:cursor-pointer p-4 rounded-2xl"  on:click={() => handlePaletteClick(palette.colors, palette.name) }>     
+                    {#each NZ_PALETTES as palette, i }
+                        <div role="button" tabindex="{i}" class="flex items-center justify-between my-4 rounded-token hover:variant-soft hover:cursor-pointer p-4"  on:click={() => handlePaletteClick(palette.colors, palette.name) } on:keydown={() => handlePaletteClick(palette.colors, palette.name) }>     
                             
                             <ColorPalette title={palette.name} colors={palette.colors} subtitle={palette.species} colorFields={6} subtitleClass="opacity-80 ml-2 text-sm italic"></ColorPalette>
                            
@@ -68,8 +68,8 @@
             </svelte:fragment>
             <svelte:fragment slot="content">
                 <div class="my-6">
-                    {#each MOMA_PALETTES as palette }
-                        <div class="flex items-center justify-between my-4 rounded-token hover:variant-soft hover:cursor-pointer p-4 rounded-2xl"  on:click={() => handlePaletteClick(palette.colors, palette.name) }>   
+                    {#each MOMA_PALETTES as palette, i }
+                        <div role="button" tabindex="{i}" class="flex items-center justify-between my-4 rounded-token hover:variant-soft hover:cursor-pointer p-4"  on:click={() => handlePaletteClick(palette.colors, palette.name)} on:keydown={() => handlePaletteClick(palette.colors, palette.name) }>   
                            
                             <ColorPalette title={palette.name} subtitle={palette.artwork} colors={palette.colors} colorFields={6} subtitleClass="opacity-80 ml-2 text-sm truncate"></ColorPalette>
                             
