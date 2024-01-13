@@ -203,7 +203,7 @@ export type AnnotationRingSchema = {
 export type LabelRingSchema = {
     session_id: string
     tsv_id: string | null
-    manual: RingSegment[]
+    labels: RingSegment[]
 }
 
 /*  =============

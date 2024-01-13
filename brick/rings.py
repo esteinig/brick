@@ -198,7 +198,7 @@ class LabelRing(Ring):
             data=[segment for segment in parse_tsv_segments(file_path=file, sanitize=sanitize)]
         )
     
-    def add_manual_labels(self, labels: List[RingSegment], sanitize: bool = True) -> None:
+    def add_custom_labels(self, labels: List[RingSegment], sanitize: bool = True) -> None:
 
         for segment in labels:
             if sanitize:

@@ -16,7 +16,7 @@
     let ringConfig: LabelRingSchema = {
         session_id: $page.params.session,
         tsv_id: null,
-        manual: []
+        labels: []
     }
 
     let loading: boolean = false;
@@ -45,7 +45,7 @@
             ringConfig =  {
                 session_id: $page.params.session,
                 tsv_id: null,
-                manual: []
+                labels: []
             }
 
             return async ({ result }) => {
@@ -89,8 +89,8 @@
                     </select>
                 </label>
 
-                {#each ringConfig.manual as segment, idx}
-                    <EditableRingSegment index={idx} bind:segment={segment} on:delete={() => {ringConfig.manual.splice(idx, 1); ringConfig.manual = ringConfig.manual}}></EditableRingSegment>
+                {#each ringConfig.labels as segment, idx}
+                    <EditableRingSegment index={idx} bind:segment={segment} on:delete={() => {ringConfig.labels.splice(idx, 1); ringConfig.labels = ringConfig.labels}}></EditableRingSegment>
                 {/each}
 
             </div>
@@ -98,7 +98,7 @@
             
 
             <div class="mt-12">
-                <button class="btn variant-outline-surface mr-2" type="submit" disabled={loading || !(ringConfig.tsv_id || ringConfig.manual.length)}>
+                <button class="btn variant-outline-surface mr-2" type="submit" disabled={loading || !(ringConfig.tsv_id || ringConfig.labels.length)}>
                     <div class="flex items-center align-center">
                         {#if labelRingPresent}
                             <span>Add to ring</span>
@@ -108,7 +108,7 @@
                         
                     </div>
                 </button>
-                <button class="btn variant-outline-surface" type="button" disabled={loading} on:click={() => ringConfig.manual = [...ringConfig.manual, { start: 0, end: 0, text: "", color: "#d3d3d3"}]}>
+                <button class="btn variant-outline-surface" type="button" disabled={loading} on:click={() => ringConfig.labels = [...ringConfig.labels, { start: 0, end: 0, text: "", color: "#d3d3d3"}]}>
                     <div class="flex items-center align-center">
                         <span>New label</span>
                     </div>
