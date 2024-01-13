@@ -12,11 +12,18 @@ const initialPlotConfig: PlotConfig = {
     },
     title: {
       text: "BRICK v0.1.0",
-      subtext: "",
       color: "#d3d3d3",
       opacity: 100,
       styles: [TitleStyle.ITALIC],
       size: 120
+    },
+    subtitle: {
+        text: "",
+        color: "#d3d3d3",
+        opacity: 100,
+        styles: [TitleStyle.ITALIC],
+        size: 100,
+        height: 100
     },
     rings: { 
         radius: 200, 
