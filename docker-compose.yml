@@ -106,8 +106,10 @@ services:
       context: .
       dockerfile: docker/Dockerfile.server
     command: pytest
+    environment:
+      - BRICK_WORK_DISK_SPACE_GB=${TEST_WORK_DISK_SPACE_GB:-0.1}  # testing does not need a lot of disk space
     volumes:
-      - /tmp:/tmp
+      - /tmp:/tmp  # test of disk space (test_utils.py) assumes /tmp
     depends_on:
       - redis
       - mongodb

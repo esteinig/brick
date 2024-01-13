@@ -6,6 +6,8 @@ from pydantic_settings import BaseSettings
 from typing import List, Optional
 from pathlib import Path
 
+from ...utils import enough_disk_space
+
 class Settings(BaseSettings):
 
     # Basic application configuration
@@ -19,6 +21,7 @@ class Settings(BaseSettings):
 
     # Working directory for session and tasks
     WORK_DIRECTORY: Path = Path(f"/tmp/brick-work")
+    WORK_DISK_SPACE_GB: int = 5
 
     # Session directory limits
     SESSION_MAX_SIZE_MB: int = 200
@@ -67,26 +70,42 @@ def get_settings():
         return DevelopmentSettings()    
     else:
         return Settings()
-    
 
+def init_app(settings: Settings):
+
+    # Absolute working directory path
+    try:
+        settings.WORK_DIRECTORY = settings.WORK_DIRECTORY.resolve()
+    except Exception as _:
+        logging.error(f"Working directory path could not be resolved: {settings.WORK_DIRECTORY}")
+        exit(1)
+
+    # Disk space check
+    if not enough_disk_space(path=settings.WORK_DIRECTORY, disk_space_limit_gb=settings.WORK_DISK_SPACE_GB):
+        logging.error("Not enough disk space for working directory")
+        logging.error(f"Application requires at least {settings.WORK_DISK_SPACE_GB} gigabytes free disk space at {settings.WORK_DIRECTORY}")
+        exit(1)
+    else:
+        logging.info(f"Sufficient disk space (>= {settings.WORK_DISK_SPACE_GB} GB) at working directory: {settings.WORK_DIRECTORY}")
+
+    # Create working directory
+    if not settings.WORK_DIRECTORY.exists():
+        logging.warn(f"Working directory does not exist: {settings.WORK_DIRECTORY}")
+        logging.warn(f"Attempting to create working directory path for server operations...")
+        try:
+            settings.WORK_DIRECTORY.mkdir(parents=True)
+            logging.info(f"Working directory created at: {settings.WORK_DIRECTORY}")
+
+        except Exception as _:
+            logging.error(f"Working directory could not be created: {settings.WORK_DIRECTORY}")
+            exit(1)
+
+    
 
 settings = get_settings()
 
-# TODO: add disk size checks with a minimum required
+# Intitate working directories and other related matters 
+# for the app deployment structure on host
+init_app(settings=settings)
 
-# Absolute working directory path
-try:
-    settings.WORK_DIRECTORY = settings.WORK_DIRECTORY.resolve()
-except Exception as _:
-    logging.error(f"Working directory path could not be resolved: {settings.WORK_DIRECTORY}")
-    exit(1)
 
-# Create working directory
-if not settings.WORK_DIRECTORY.exists():
-    logging.info(f"Working directory does not exist: {settings.WORK_DIRECTORY}")
-    logging.info(f"Attempting to create working directory path for server operations...")
-    try:
-        settings.WORK_DIRECTORY.mkdir(parents=True)
-    except Exception as _:
-        logging.error(f"Working directory could not be created: {settings.WORK_DIRECTORY}")
-        exit(1)
