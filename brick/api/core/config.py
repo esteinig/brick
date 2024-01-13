@@ -1,7 +1,7 @@
 import os
 import logging 
 
-from pydantic import AnyHttpUrl, validator
+from pydantic import AnyHttpUrl, field_validator
 from pydantic_settings import BaseSettings
 from typing import List, Optional
 from pathlib import Path
@@ -42,7 +42,7 @@ class Settings(BaseSettings):
         env_file_encoding = 'utf-8'
         env_prefix = "BRICK_"
 
-    @validator('CORS_ORIGINS', pre=True)
+    @field_validator('CORS_ORIGINS', mode="before")
     def assemble_cors_origins(cls, v: Optional[str]) -> List[AnyHttpUrl]:
         if isinstance(v, str) and not v.startswith("["):
             return [i.strip() for i in v.split(",")]

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, ValidationInfo, field_validator
 from typing import Optional, Annotated, Tuple, List
 from contextlib import contextmanager
 from pathlib import Path
@@ -21,8 +21,8 @@ class RingSchema(BaseModel):
     
     session_id: SessionID
 
-    @validator('session_id')
-    def check_uuid_v4(cls, v):
+    @field_validator('session_id')
+    def check_uuid_v4(cls, v: SessionID):
         if v is not None:
             try:
                 UUID(v, version=4)
@@ -30,8 +30,8 @@ class RingSchema(BaseModel):
                 raise ValueError(f"value '{v}' is not a valid UUID version 4")
         return v
     
-    @validator('session_id')
-    def check_session_directory(cls, v):
+    @field_validator('session_id')
+    def check_session_directory(cls, v: SessionID):
         if not (settings.WORK_DIRECTORY / v).exists():
             raise ValueError(f"session directory '{v}' does not exist")
         return v
@@ -119,36 +119,36 @@ class BlastRingSchema(RingSchema):
     min_identity: float = 0
 
 
-    @validator('reference_id', 'genome_id')
-    def check_uuid_v4(cls, v):
+    @field_validator('reference_id', 'genome_id')
+    def check_uuid_v4(cls, v: SessionFileID):
         try:
             UUID(v, version=4)
         except ValueError:
             raise ValueError(f"value '{v}' is not a valid UUID version 4")
         return v
     
-    @validator('reference_id')
-    def check_reference_id_input_file(cls, v, values):
-        session_id = values.get('session_id')
+    @field_validator('reference_id')
+    def check_reference_id_input_file(cls, v: SessionFileID, info: ValidationInfo):
+        session_id = info.data.get('session_id')
         if v is not None and not (settings.WORK_DIRECTORY / session_id / v).exists():
             raise ValueError(f"reference input file '{v}' does not exist")
         return v
 
-    @validator('genome_id')
-    def check_genome_id_input_file(cls, v, values):
-        session_id = values.get('session_id')
+    @field_validator('genome_id')
+    def check_genome_id_input_file(cls, v: SessionFileID, info: ValidationInfo):
+        session_id = info.data.get('session_id')
         if v is not None and not (settings.WORK_DIRECTORY / session_id / v).exists():
             raise ValueError(f"genome input file '{v}' does not exist")
         return v
 
-    @validator('min_alignment')
-    def check_min_alignment(cls, v):
+    @field_validator('min_alignment')
+    def check_min_alignment(cls, v: int):
         if not v >= 0:
             raise ValueError('minimum alignment length must be greater or equal to 0')
         return v
     
-    @validator('min_identity')
-    def check_min_identity(cls, v):
+    @field_validator('min_identity')
+    def check_min_identity(cls, v: int):
         if not 0 <= v <= 100:
             raise ValueError('minimum identity must be between 0 and 100')
         return v
@@ -175,15 +175,15 @@ class AnnotationRingSchema(RingSchema):
     genbank_qualifiers: List[str] = []
 
 
-    @validator('genbank_id')
-    def check_fields(cls, v, values):
-        tsv_id = values.get('tsv_id')
+    @field_validator('genbank_id')
+    def check_fields(cls, v: SessionFileID, info: ValidationInfo):
+        tsv_id = info.data.get('tsv_id')
         if tsv_id is None and v is None:
-            ValueError("one of 'genbank_id' or 'tsv_id' fields must be provided")
+            ValueError("one of 'genbank_id' (genbank file) or 'tsv_id' (ring segment file) identifiers must be provided")
         return v
     
-    @validator('genbank_id', 'tsv_id')
-    def check_uuid_v4(cls, v):
+    @field_validator('genbank_id', 'tsv_id')
+    def check_uuid_v4(cls, v: SessionFileID):
         if v is not None:
             try:
                 UUID(v, version=4)
@@ -191,9 +191,9 @@ class AnnotationRingSchema(RingSchema):
                 raise ValueError(f"value '{v}' is not a valid UUID version 4")
         return v
     
-    @validator('genbank_id', 'tsv_id')
-    def check_input_files(cls, v, values):
-        session_id = values.get('session_id')
+    @field_validator('genbank_id', 'tsv_id')
+    def check_input_files(cls, v: SessionFileID, info: ValidationInfo):
+        session_id = info.data.get('session_id')
         if v is not None:
             if not (settings.WORK_DIRECTORY / session_id / v).exists():
                 raise ValueError(f"input file '{v}' does not exist")
@@ -217,11 +217,11 @@ class AnnotationRingResponse(BaseModel):
 
 class LabelRingSchema(RingSchema):
     tsv_id: SessionFileID | None  = None
-    manual: List[RingSegment] = []
+    labels: List[RingSegment] = []
 
 
-    @validator('tsv_id')
-    def check_uuid_v4(cls, v):
+    @field_validator('tsv_id')
+    def check_uuid_v4(cls, v: SessionFileID):
         if v is not None:
             try:
                 UUID(v, version=4)
@@ -229,19 +229,19 @@ class LabelRingSchema(RingSchema):
                 raise ValueError(f"value '{v}' is not a valid UUID version 4")
         return v
     
-    @validator('tsv_id')
-    def check_input_files(cls, v, values):
-        session_id = values.get('session_id')
+    @field_validator('tsv_id')
+    def check_input_files(cls, v: SessionFileID, info: ValidationInfo):
+        session_id = info.data.get('session_id')
         if v is not None:
             if not (settings.WORK_DIRECTORY / session_id / v).exists():
                 raise ValueError(f"input file '{v}' does not exist")
         return v
     
-    @validator('manual')
-    def check_manual_input(cls, v, values):
-        tsv_id = values.get('tsv_id')
+    @field_validator('labels')
+    def check_labels_input(cls, v: List[RingSegment], info: ValidationInfo):
+        tsv_id = info.data.get('tsv_id')
         if not v and tsv_id is None:
-            raise ValueError(f"either a label file or manual labels must be provided")
+            raise ValueError(f"one of 'tsv_id' (file identifier) or 'labels' (list of ring segments) must be provided")
         return v
     
     def get_file_paths(self) -> Tuple[Path, Path]:

@@ -7,7 +7,6 @@ from httpx import AsyncClient
 from unittest.mock import AsyncMock, patch
 from brick.api.main import app, settings
 
-from brick.rings import RingSegment
 from brick.api.schemas import BlastRingSchema, BlastRingResponse
 from brick.api.schemas import AnnotationRingSchema, AnnotationRingResponse
 from brick.api.schemas import LabelRingSchema, LabelRingResponse

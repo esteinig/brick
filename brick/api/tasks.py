@@ -136,9 +136,9 @@ def process_label_ring(
         else:
             ring: LabelRing = LabelRing()
 
-        if ring_schema.manual:
-            ring.add_manual_labels(
-                labels=ring_schema.manual, 
+        if ring_schema.labels:
+            ring.add_custom_labels(
+                labels=ring_schema.labels, 
                 sanitize=True
             )
 
