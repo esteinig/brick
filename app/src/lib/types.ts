@@ -262,6 +262,7 @@ export enum TitleStyle {
 export type PlotConfig = {
     reference: ReferenceConfig
     title: TitleConfig
+    subtitle: SubtitleConfig
     rings: RingConfig
     svg: SvgConfig
     annotation: AnnotationConfig
@@ -277,11 +278,20 @@ export type SvgConfig = {
 
 export type TitleConfig = {
     text: string
-    subtext: string
     color: string
     opacity: number
     styles: TitleStyle[]
     size: number
+}
+
+
+export type SubtitleConfig = {
+    text: string
+    color: string
+    opacity: number
+    styles: TitleStyle[]
+    size: number
+    height: number
 }
 
 export type AnnotationConfig = {

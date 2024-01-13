@@ -188,7 +188,7 @@
         <g bind:this={g} transform={scaledTransform}>
             <g text-anchor="middle">
               <text class="title {$plotConfigStore.title.styles.includes(TitleStyle.CODE) ? 'code': ''}" style="{$plotConfigStore.title.styles.includes(TitleStyle.BOLD) ? 'font-weight: bold': ''}; fill: {$plotConfigStore.title.color}; opacity: {$plotConfigStore.title.opacity}; {$plotConfigStore.title.styles.includes(TitleStyle.ITALIC) ? 'font-style: italic': ''}; transform: scale({$plotConfigStore.title.size / 100})">{$plotConfigStore.title.text}</text>
-              <text class="subtitle" dy="1.35em" style="fill: {$plotConfigStore.title.color}; opacity: {$plotConfigStore.title.opacity}; {$plotConfigStore.title.styles.includes(TitleStyle.ITALIC) ? 'font-style: italic': ''}; transform: scale({$plotConfigStore.title.size / 135})">{$plotConfigStore.title.subtext}</text>
+              <text class="subtitle" dy="{1.35*$plotConfigStore.subtitle.height}em" style="fill: {$plotConfigStore.subtitle.color}; opacity: {$plotConfigStore.subtitle.opacity}; {$plotConfigStore.subtitle.styles.includes(TitleStyle.ITALIC) ? 'font-style: italic': ''}; transform: scale({$plotConfigStore.subtitle.size / 135})">{$plotConfigStore.subtitle.text}</text>
           </g>
 
 
