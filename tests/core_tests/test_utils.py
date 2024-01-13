@@ -1,7 +1,42 @@
 import pytest
+import shutil
 
-from brick.utils import sanitize_input, sanitize_for_mongodb, sanitize_svg_content
+from pathlib import Path
+from brick.utils import sanitize_input
+from brick.utils import sanitize_for_mongodb
+from brick.utils import sanitize_svg_content
+from brick.utils import enough_disk_space
 from brick.utils import DANGEROUS_ATTRS, DANGEROUS_TAGS
+
+# Tests for enough_space
+
+EXISTENT_PATH = Path('/tmp') # exists in test container
+NONEXISTENT_PATH = Path("/path/that/does/not/exist") 
+INVALID_PATH = 12345  # invalid path type
+
+# Helper function to get available space for a path
+def get_available_space(path):
+    return shutil.disk_usage(path).free
+
+def test_with_enough_space():
+    disk_space_required_gb = get_available_space(EXISTENT_PATH) / 1024**3 - 1  # slightly less than available space
+    assert enough_disk_space(EXISTENT_PATH, disk_space_required_gb)
+
+def test_with_insufficient_space():
+    disk_space_required_gb = get_available_space(EXISTENT_PATH) / 1024**3 + 1  # slightly more than available space
+    assert not enough_disk_space(EXISTENT_PATH, disk_space_required_gb)
+
+def test_with_nonexistent_path():
+    with pytest.raises(FileNotFoundError):
+        enough_disk_space(NONEXISTENT_PATH, 1)
+
+def test_with_invalid_path_type():
+    with pytest.raises(TypeError):
+        enough_disk_space(INVALID_PATH, 1)
+
+def test_with_negative_space_limit():
+    with pytest.raises(ValueError):
+        enough_disk_space(EXISTENT_PATH, -1)
 
 # Tests for sanitize_input
 

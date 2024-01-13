@@ -1,8 +1,10 @@
+import os
 import re
 import html
 import requests
 
-from typing import List, Dict
+from pathlib import Path
+from typing import List, Dict, Union
 
 from Bio import SeqIO
 from Bio.Seq import Seq
@@ -137,6 +139,35 @@ def summarize_protein_annotations_gpt35(annotations: List[str], api_key: str) ->
         return response_data["choices"][0]["text"].strip()
     else:
         raise Exception(f"API request failed with status code {response.status_code}: {response.text}")
+
+
+def enough_disk_space(path: Union[str, Path], disk_space_limit_gb: float) -> bool:
+    """
+    Check if there's enough disk space for the given path
+    """
+    
+    # Convert disk space limit to bytes
+    disk_space_limit_bytes = disk_space_limit_gb * 1024**3
+
+    if not isinstance(path, Path):
+        raise TypeError("Path must be a str or pathlib.Path")
+    
+    if disk_space_limit_bytes < 0:
+        raise ValueError("Disk space limit must be >= 0")
+
+    if isinstance(path, str):
+        path = Path(path)
+
+    if not path.exists():
+        raise FileNotFoundError(f"Path does not exist: {path}")
+
+    free_space_bytes = os.statvfs(path).f_bavail * os.statvfs(path).f_frsize
+
+    return free_space_bytes >= disk_space_limit_bytes
+
+# =================
+# String sanitizers
+# =================
 
 
 # List of potentially dangerous SVG tags and attributes
