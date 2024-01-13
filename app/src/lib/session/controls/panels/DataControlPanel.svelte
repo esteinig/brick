@@ -66,7 +66,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-x-8 gap-y-4">
             <div class="my-2">
                 <p class="opacity-60 mb-2">{config[0].title}</p>
-                <FileUpload message={config[0].message} meta={config[0].meta} format={config[0].format} type={config[0].type}>
+                <FileUpload message={config[0].message} meta={config[0].meta} format={config[0].format} type={config[0].type} on:mouseover={handleInfoMouseover}  on:mouseout={handleInfoMouseout}  information="Ideally one or multiple chromosome-level assemblies">
                     <svelte:fragment slot="icon">
                     <div class="md:w-12 text-primary-500">
                         <svg data-slot="icon" aria-hidden="true" fill="none" stroke-width="1.5" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -78,7 +78,7 @@
             </div>
             <div class="my-2">
                 <p class="opacity-60 mb-2">{config[2].title}</p>
-                <FileUpload message={config[2].message} meta={config[2].meta} format={config[2].format} type={config[2].type} disabled={!referenceAvailable}>
+                <FileUpload message={config[2].message} meta={config[2].meta} format={config[2].format} type={config[2].type} disabled={!referenceAvailable} on:mouseover={handleInfoMouseover}  on:mouseout={handleInfoMouseout}  information="Custom annotations file is tab-delimited with header: start  end  text  color">
                     <svelte:fragment slot="icon">
                     <div class="md:w-12 text-primary-500">
                         <svg data-slot="icon" aria-hidden="true" fill="none" stroke-width="1.5" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -90,7 +90,7 @@
             </div>
             <div class="my-2">
                 <p class="opacity-60 mb-2">{config[1].title}</p>
-                <FileUpload message={config[1].message} meta={config[1].meta} format={config[1].format} type={config[1].type} disabled={!referenceAvailable}>
+                <FileUpload message={config[1].message} meta={config[1].meta} format={config[1].format} type={config[1].type} disabled={!referenceAvailable} on:mouseover={handleInfoMouseover}  on:mouseout={handleInfoMouseout}  information="One or multiple genome sequences (contigs or complete)">
                     <svelte:fragment slot="icon">
                     <div class="md:w-12 text-secondary-500">
                         <svg data-slot="icon" aria-hidden="true" fill="none" stroke-width="1.5" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -102,7 +102,7 @@
             </div>
             <div class="my-2">
                 <p class="opacity-60 mb-2">{config[3].title}</p>
-                <FileUpload message={config[3].message} meta={config[3].meta} format={config[3].format} type={config[3].type} disabled={!referenceAvailable} on:mouseover={handleInfoMouseover}  on:mouseout={handleInfoMouseout}  information="Tab-delimited, header line, columns: start  end  text  color">
+                <FileUpload message={config[3].message} meta={config[3].meta} format={config[3].format} type={config[3].type} disabled={!referenceAvailable} on:mouseover={handleInfoMouseover}  on:mouseout={handleInfoMouseout}  information="Custom labels file is tab-delimited with header: start  end  text  color">
                     <svelte:fragment slot="icon">
                     <div class="md:w-12 text-secondary-500">
                         <svg data-slot="icon" aria-hidden="true" fill="none" stroke-width="1.5" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">

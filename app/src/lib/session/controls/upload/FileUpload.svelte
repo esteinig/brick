@@ -28,8 +28,6 @@
 
   let loading: boolean = false;
 
-
-
   const dispatch = createEventDispatcher();
 
   function handleMouseover() {
@@ -39,11 +37,14 @@
       dispatch('mouseout', information);
   }
   
-  
-
 </script>
   
-<form on:mouseover={handleMouseover} on:mouseout={handleMouseout} id="form-{id}" bind:this={formElement} action="?/uploadFile" method="POST" enctype="multipart/form-data" use:enhance={({ formData }) => {
+<form 
+  on:mouseover={handleMouseover} 
+  on:mouseout={handleMouseout} 
+  on:focus={handleMouseover} 
+  on:blur={handleMouseout}
+  id="form-{id}" bind:this={formElement} action="?/uploadFile" method="POST" enctype="multipart/form-data" use:enhance={({ formData }) => {
   
   // TODO: Multiple Files
 
