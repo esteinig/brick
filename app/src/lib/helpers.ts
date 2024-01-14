@@ -1,5 +1,3 @@
-
-import { env } from '$env/dynamic/public';
 import { RingType, type Ring } from '$lib/types';
 import { TaskStatus, type TaskStatusResponse } from './types';
 import { v4 as uuidv4 } from 'uuid';

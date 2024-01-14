@@ -5,7 +5,6 @@
 
     export let id: string = "";
     export let color: string = "#d3d3d3";
-    export let colorFields: number = 6;
 
     const popupPalette: PopupSettings = {
         // Represents the type of event that opens/closed the popup
@@ -36,7 +35,7 @@
         <div class="body">
             {#each $paletteStore as palette}
                 <div class="my-4">
-                    <ColorPalette colors={palette.colors} title={palette.name} on:selectColor={handleColorSelection} colorFields={colorFields}/>
+                    <ColorPalette colors={palette.colors} title={palette.name} on:selectColor={handleColorSelection}/>
                 </div>
             {/each}
         </div>

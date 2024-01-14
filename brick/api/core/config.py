@@ -80,18 +80,11 @@ def init_app(settings: Settings):
         logging.error(f"Working directory path could not be resolved: {settings.WORK_DIRECTORY}")
         exit(1)
 
-    # Disk space check
-    if not enough_disk_space(path=settings.WORK_DIRECTORY, disk_space_limit_gb=settings.WORK_DISK_SPACE_GB):
-        logging.error("Not enough disk space for working directory")
-        logging.error(f"Application requires at least {settings.WORK_DISK_SPACE_GB} gigabytes free disk space at {settings.WORK_DIRECTORY}")
-        exit(1)
-    else:
-        logging.info(f"Sufficient disk space (>= {settings.WORK_DISK_SPACE_GB} GB) at working directory: {settings.WORK_DIRECTORY}")
-
     # Create working directory
     if not settings.WORK_DIRECTORY.exists():
         logging.warn(f"Working directory does not exist: {settings.WORK_DIRECTORY}")
         logging.warn(f"Attempting to create working directory path for server operations...")
+
         try:
             settings.WORK_DIRECTORY.mkdir(parents=True)
             logging.info(f"Working directory created at: {settings.WORK_DIRECTORY}")
@@ -99,6 +92,14 @@ def init_app(settings: Settings):
         except Exception as _:
             logging.error(f"Working directory could not be created: {settings.WORK_DIRECTORY}")
             exit(1)
+
+    # Disk space check
+    if not enough_disk_space(path=settings.WORK_DIRECTORY, disk_space_limit_gb=settings.WORK_DISK_SPACE_GB):
+        logging.error("Not enough disk space for working directory")
+        logging.error(f"Application requires at least {settings.WORK_DISK_SPACE_GB} gigabytes free disk space at {settings.WORK_DIRECTORY}")
+        exit(1)
+    else:
+        logging.info(f"Sufficient disk space (>= {settings.WORK_DISK_SPACE_GB} GB) at working directory: {settings.WORK_DIRECTORY}")
 
     
 

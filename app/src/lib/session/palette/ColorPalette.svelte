@@ -4,7 +4,6 @@
     export let colors: string[];
     export let title: string = "";
     export let subtitle: string = "";
-    export let colorFields: number = 12;
 
     export let titleClass: string = "opacity-80 mb-2";
     export let subtitleClass: string = "opacity-80 ml-2 text-sm";
@@ -25,7 +24,16 @@
     <p class={titleClass}>{title} <span class={subtitleClass}>{subtitle}</span><span class={displayValueClass}>{displayValue}</span></p>
     <div class="grid grid-cols-12 gap-1">
         {#each colors as color}
-            <div class="p-4 rounded shadow-lg" style="background-color: {color};" on:mouseover={() => displayValue = color} on:mouseout={() => displayValue = ""} on:click={() => colorClickHandler(color)}></div>
+            <div 
+            class="p-4 rounded shadow-lg" 
+            style="background-color: {color};" 
+            on:mouseover={() => displayValue = color} 
+            on:mouseout={() => displayValue = ""}
+            on:keypress={() => displayValue = color} 
+            on:blur={() => displayValue = ""}            
+            on:focus={() => displayValue = color} 
+            on:click={() => colorClickHandler(color)}
+            role="presentation"></div>
         {/each}
     </div>
 </div>

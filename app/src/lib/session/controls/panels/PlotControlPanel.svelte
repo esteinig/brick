@@ -65,7 +65,7 @@
         
     }
 
-    let selectedConfig: string = "title";
+    let selectedConfig: string = "";
 
 </script>
 
@@ -111,9 +111,9 @@
 
     <p class="opacity-40 mb-4">Plot settings</p>
     <ListBox class="text-sm opacity-80">
-        <ListBoxItem bind:group={selectedConfig} name="medium" value="title">Title text styles</ListBoxItem>
+        <ListBoxItem bind:group={selectedConfig} name="medium" value="title">Title styles</ListBoxItem>
+        <ListBoxItem bind:group={selectedConfig} name="medium" value="labels">Label styles</ListBoxItem>
         <ListBoxItem bind:group={selectedConfig} name="medium" value="rings">Ring spacing</ListBoxItem>
-        <ListBoxItem bind:group={selectedConfig} name="medium" value="labels">Label line and text styles</ListBoxItem>
     </ListBox>
     
     <div class="p-4 my-8">
