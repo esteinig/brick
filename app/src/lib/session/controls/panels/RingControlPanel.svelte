@@ -57,11 +57,7 @@
                             </select>
                         </label>
                     </div>
-                    <div class="col-span-1">
-                        <label class="label text-xs">
-                            <p class="opacity-40">{selectedReference.length.toLocaleString()} bp</p>
-                        </label>
-                    </div>           
+                             
                 {/if}
             </div>
         {:else}

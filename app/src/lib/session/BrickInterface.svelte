@@ -28,10 +28,10 @@
         </Tab>
 
         <Tab bind:group={tab} name="tab4" value={3} disabled={$uploadInProgress}>
-            <span class={$uploadInProgress ? 'opacity-30 cursor-not-allowed' : ''}><span class="opacity-80 text-surface-500">Palettes</span></span>
+            <span class={$uploadInProgress ? 'opacity-30 cursor-not-allowed' : ''}><span class="opacity-60">Palettes</span></span>
         </Tab>
         <Tab bind:group={tab} name="tab4" value={4} disabled={$uploadInProgress}>
-            <span class={$uploadInProgress ? 'opacity-30 cursor-not-allowed' : ''}><span class="opacity-80 text-surface-500">About</span></span>
+            <span class={$uploadInProgress ? 'opacity-30 cursor-not-allowed' : ''}><span class="opacity-60">About</span></span>
         </Tab>
 
 
