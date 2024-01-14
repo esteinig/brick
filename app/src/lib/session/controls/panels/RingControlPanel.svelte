@@ -70,24 +70,24 @@
         <div>
             <p class="opacity-60 mb-2">Basic rings</p>
             <div class="p-2">
-                <div class="">
-                    <button class="btn variant-outline-primary mr-2" disabled={selectedReference ? false : true} on:click={() => newRing = RingType.REFERENCE}>
-                        <div class="flex items-center align-center">
+                <div class="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-4 gap-4 my-3">
+                    <button class="btn variant-outline-primary" disabled={selectedReference ? false : true} on:click={() => newRing = RingType.REFERENCE}>
+                        <div class="flex items-center align-center truncate">
                             <span>Reference</span>
                         </div>
                     </button>
-                    <button class="btn variant-outline-primary mr-2" disabled={selectedReference ? false : true}  on:click={() => newRing = RingType.ANNOTATION}>
-                        <div class="flex items-center align-center">
+                    <button class="btn variant-outline-primary" disabled={selectedReference ? false : true}  on:click={() => newRing = RingType.ANNOTATION}>
+                        <div class="flex items-center align-center truncate">
                             <span>Annotations</span>
                         </div>
                     </button>
-                    <button class="btn variant-outline-secondary mr-2" disabled={selectedReference ? false : true}  on:click={() => newRing = RingType.BLAST}>
-                        <div class="flex items-center align-center">
+                    <button class="btn variant-outline-secondary" disabled={selectedReference ? false : true}  on:click={() => newRing = RingType.BLAST}>
+                        <div class="flex items-center align-center truncate">
                             <span>BLAST</span>
                         </div>
                     </button>
-                    <button class="btn variant-outline-secondary mr-2" disabled={selectedReference ? false : true}  on:click={() => newRing = RingType.LABEL}>
-                        <div class="flex items-center align-center">
+                    <button class="btn variant-outline-secondary" disabled={selectedReference ? false : true}  on:click={() => newRing = RingType.LABEL}>
+                        <div class="flex items-center align-center truncate">
                             <span>Labels</span>
                         </div>
                     </button>
@@ -95,20 +95,20 @@
             </div>
             <p class="opacity-60 mt-4 mb-2">Specialty rings</p>
             <div class="p-2">
-                <div class="">
-                    <button class="btn variant-outline-surface mr-2" disabled={selectedReference ? true : true} on:click={() => newRing = RingType.REFERENCE}>
-                        <div class="flex items-center align-center">
-                            <span>abritAMR: AMR Annotation</span>
+                <div class="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-4 gap-4 my-3">
+                    <button class="btn variant-outline-surface" disabled={selectedReference ? true : true} on:click={() => newRing = RingType.REFERENCE}>
+                        <div class="flex items-center align-center truncate">
+                            <span>abritAMR</span>
                         </div>
                     </button>
-                    <button class="btn variant-outline-surface mr-2" disabled={selectedReference ? true : true} on:click={() => newRing = RingType.REFERENCE}>
-                        <div class="flex items-center align-center">
-                            <span>geNomad: MGE Probability</span>
+                    <button class="btn variant-outline-surface" disabled={selectedReference ? true : true} on:click={() => newRing = RingType.REFERENCE}>
+                        <div class="flex items-center align-center truncate">
+                            <span>geNomad</span>
                         </div>
                     </button>
-                    <button class="btn variant-outline-surface mr-2" disabled={selectedReference ? true : true} on:click={() => newRing = RingType.REFERENCE}>
-                        <div class="flex items-center align-center">
-                            <span>LLM: CDS Annotation</span>
+                    <button class="btn variant-outline-surface" disabled={selectedReference ? true : true} on:click={() => newRing = RingType.REFERENCE}>
+                        <div class="flex items-center align-center truncate">
+                            <span>LLM</span>
                         </div>
                     </button>
                 </div>                

@@ -65,13 +65,13 @@
 
     <dl class="list-dl opacity-60">
         <div>
-            <span class="badge text-lg">🧬</span>
+            <span class="badge text-lg">📑</span>
             <span class="flex-auto">
                 <dt><a href="https://pubmed.ncbi.nlm.nih.gov/2231712/">Altschul et al. (1990) -  Basic local alignment search tool</a></dt>
             </span>
         </div>
         <div>
-            <span class="badge text-lg">🧬</span>
+            <span class="badge text-lg">📑</span>
             <span class="flex-auto">
                 <dt><a href="https://www.nature.com/articles/s41587-023-01953-y">Camargo et al. (2023) - Identification of mobile genetic elements with geNomad</a></dt>
             </span>
