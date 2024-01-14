@@ -319,3 +319,23 @@ export interface Color {
     color: string; // HEX color code
     url: string;
   }
+
+
+export type Palette = {
+    name: string
+    subtitle: string
+    colors: string[]
+    link: string
+}
+
+export type PaletteItem = {
+    name: PaletteName
+    palettes: Palette[]
+    link: string
+}
+
+export enum PaletteName {
+    NZ = "Manu New Zealand - George Thompson",
+    NP = "National Parks Palettes - Kevin S. Blake",
+    MOMA = "Museum of Modern Art - Blake R. Mills"
+}

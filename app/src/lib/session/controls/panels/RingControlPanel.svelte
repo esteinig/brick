@@ -141,7 +141,7 @@
                                     </div>
                                 </span>
                                 <div class="mt-0.5">
-                                    <PalettePopup id={`ringPalette-${ring.index}`} bind:color={ring.color} colorFields={8}></PalettePopup>
+                                    <PalettePopup id={`ringPalette-${ring.index}`} bind:color={ring.color}></PalettePopup>
                                 </div>
                                 
                                 {#if ring.visible}
