@@ -59,10 +59,7 @@
  </script>
 
 <div id="brickRingControlPanel" class="p-2 text-base">
-    
-    {#if showFileTable}
-        <FileTable></FileTable>
-    {:else}
+
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-x-8 gap-y-4">
             <div class="my-2">
                 <p class="opacity-60 mb-2">{config[0].title}</p>
@@ -113,7 +110,6 @@
                 </FileUpload>
             </div>
         </div>
-    {/if}
 
     <div class="mt-4 mb-8 flex justify-between items-center">
         <p class="text-xs opacity-60">{infoText}</p>
@@ -122,4 +118,10 @@
         </div>
     </div>
 
+
+    {#if showFileTable}
+        <div class="mt-8">
+            <FileTable></FileTable>
+        </div>
+    {/if}
 </div>
