@@ -8,8 +8,9 @@
 	import { createSessionId } from '$lib/helpers';
 	import { clearSessionFiles } from '$lib/stores/SessionFileStore';
 	import { clearRings } from '$lib/stores/RingStore';
- 
-	const modalStore = getModalStore();
+	import { requestInProgress } from '$lib/stores/RequestInProgressStore';
+
+	const modalStore = getModalStore();	
 
 	const newSessionPrompt: ModalSettings = {
 		type: 'confirm',
@@ -70,8 +71,11 @@
 				</a>
 			</svelte:fragment>
 		</AppBar>
-		{#if $navigating}
+		{#if $navigating || $requestInProgress}
 			<ProgressBar height="h-1"/>
+		{:else}
+			<!-- Placeholder to not respond to screen size adjustment -->
+			<div class="h-1"></div>
 		{/if}
 	</svelte:fragment>
 

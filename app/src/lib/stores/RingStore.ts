@@ -1,4 +1,4 @@
-import { writable } from 'svelte/store';
+import { writable, derived } from 'svelte/store';
 import { RingType, type Ring } from '$lib/types';
 
 // Define the type for the store
@@ -9,6 +9,7 @@ const rings = writable<RingStore>([]);
 
 // Function to add a new ring using the addNewRing logic
 function addRing(newRing: Ring, newIndex?: number) {
+
     rings.update(currentRings => {
         // Use the provided addNewRing function to add the ring
         return addNewRing(currentRings, newRing, newIndex);
@@ -30,6 +31,18 @@ function toggleRingVisibility(index: number) {
         return currentRings.map(ring => {
             if (ring.index === index) {
                 ring.visible = !ring.visible;
+            }
+            return ring;
+        });
+    });
+}
+
+// Function to toggle visibility of a ring
+function changeRingColor(index: number, color: string) {
+    rings.update(currentRings => {
+        return currentRings.map(ring => {
+            if (ring.index === index) {
+                ring.color = color
             }
             return ring;
         });
@@ -83,8 +96,23 @@ function changeRingTitle(index: number, title: string) {
     })
 }
 
+// Derived store
+
+import type { RingReference } from '$lib/types'; // adjust the import path as needed
+
+// Function to create a derived store based on RingReference
+function createFilteredRingsStore(ringReference: RingReference) {
+    return derived(rings, $rings => {
+        return $rings.filter(ring => 
+            ring.reference.reference_id === ringReference.reference_id && 
+            ring.reference.session_id === ringReference.session_id &&
+            ring.reference.sequence.id === ringReference.sequence.id
+        );
+    });
+}
+
 // Export the store and functions
-export { rings, addRing, removeRing, clearRings, toggleRingVisibility, moveRingInside, moveRingOutside, changeRingTitle, isRingTypePresent};
+export { rings, addRing, removeRing, clearRings, toggleRingVisibility, moveRingInside, moveRingOutside, changeRingTitle, isRingTypePresent, createFilteredRingsStore, changeRingColor};
 
 // Add new ring helper function
 function addNewRing(rings: Ring[], newRing: Ring, newIndex: number = rings.length): Ring[] {

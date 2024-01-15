@@ -1,10 +1,9 @@
 <script lang="ts">
-    import { RingType } from "$lib/types";
-    import { plotConfigStore } from "$lib/stores/PlotConfigStore";
-	import type { PlotConfig } from "$lib/types";
+    import { RingType, type Sequence, type Ring } from "$lib/types";
 	import { FileType, type SessionFile } from "$lib/types";
     import { sessionFiles } from "$lib/stores/SessionFileStore";
-    import { changeRingTitle, moveRingInside, moveRingOutside, removeRing, isRingTypePresent, rings } from "$lib/stores/RingStore";
+    import { ringReferenceStore } from "$lib/stores/RingReferenceStore";
+    import { changeRingTitle, moveRingInside, moveRingOutside, removeRing, isRingTypePresent, toggleRingVisibility, changeRingColor} from "$lib/stores/RingStore";
 
 	import NewReferenceRing from "$lib/session/controls/rings/NewReferenceRing.svelte";
 	import NewBlastRing from "$lib/session/controls/rings/NewBlastRing.svelte";
@@ -15,16 +14,52 @@
 	import EditableTitle from "../helpers/EditableTitle.svelte";
 	import PalettePopup from "$lib/session/palette/PalettePopup.svelte";
 
+    import { createFilteredRingsStore } from '$lib/stores/RingStore';
+    import { requestInProgress } from '$lib/stores/RequestInProgressStore';
+
+    $: rings = createFilteredRingsStore($ringReferenceStore) // reactive so it updates on changes to reference sequence
+
     let newRing: RingType;
 
-    let selectedReference: SessionFile;
+    let selectedReference: SessionFile | null;
+    let selectedSequence: Sequence | null;
+
+    let previousReference: SessionFile | null = null; // Variable to track the previous selected reference
+
+    $: if (selectedReference !== previousReference) {
+        previousReference = selectedReference; // Update the previous reference
+
+        // Automatically select the first sequence if it exists
+        if (selectedReference && selectedReference.selections && selectedReference.selections.sequences.length > 0) {
+            selectedSequence = selectedReference.selections.sequences[0];
+        } else {
+            selectedSequence = null;
+        }
+    }
+
     let showNewRingMenu: boolean = false;
 
     function handleTitleUpdate(event: any, index: number) {
         changeRingTitle(index, event.detail.newTitle)
     }
 
+    $: if (selectedSequence) {
+
+        $ringReferenceStore = {
+            session_id: selectedReference?.session_id ?? "", reference_id: selectedReference?.id ?? "", sequence: { id: selectedSequence?.id ?? "", length: selectedSequence?.length ?? 0 }
+        }
+    }
+
+    function handleColorPickerChange(event: Event, ring: Ring) {
+        const target = event.target as HTMLInputElement;
+        if (target) changeRingColor(ring.index, target.value)
+    }
+
 </script>
+
+
+    
+    
 
 <div id="brickRingControlPanel" class="p-2 text-base">
     <div class="mb-8">
@@ -47,17 +82,14 @@
                 {#if selectedReference}
                     <div class="col-span-2">
                         <label class="label text-xs">
-                            <p class="opacity-40">Sequence</p>
-                            <select class="select text-xs" bind:value={selectedReference} disabled>
-                                {#each $sessionFiles as file}
-                                    {#if file.type === FileType.REFERENCE}
-                                        <option value={file}>{file.name_original}</option>
-                                    {/if}
+                            <p class="opacity-40">Select a reference sequence</p>
+                            <select class="select text-xs" bind:value={selectedSequence}>
+                                {#each selectedReference.selections.sequences as seq}
+                                    <option value={seq}>{seq.id}</option>
                                 {/each}
                             </select>
                         </label>
-                    </div>
-                             
+                    </div>        
                 {/if}
             </div>
         {:else}
@@ -71,22 +103,22 @@
             <p class="opacity-60 mb-2">Basic rings</p>
             <div class="p-2">
                 <div class="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-4 gap-4 my-3">
-                    <button class="btn variant-outline-primary" disabled={selectedReference ? false : true} on:click={() => newRing = RingType.REFERENCE}>
+                    <button class="btn variant-outline-primary" disabled={!selectedReference || $requestInProgress ? true : false} on:click={() => newRing = RingType.REFERENCE}>
                         <div class="flex items-center align-center truncate">
                             <span>Reference</span>
                         </div>
                     </button>
-                    <button class="btn variant-outline-primary" disabled={selectedReference ? false : true}  on:click={() => newRing = RingType.ANNOTATION}>
+                    <button class="btn variant-outline-primary" disabled={!selectedReference || $requestInProgress ? true : false}  on:click={() => newRing = RingType.ANNOTATION}>
                         <div class="flex items-center align-center truncate">
                             <span>Annotations</span>
                         </div>
                     </button>
-                    <button class="btn variant-outline-secondary" disabled={selectedReference ? false : true}  on:click={() => newRing = RingType.BLAST}>
+                    <button class="btn variant-outline-secondary" disabled={!selectedReference || $requestInProgress ? true : false}  on:click={() => newRing = RingType.BLAST}>
                         <div class="flex items-center align-center truncate">
                             <span>BLAST</span>
                         </div>
                     </button>
-                    <button class="btn variant-outline-secondary" disabled={selectedReference ? false : true}  on:click={() => newRing = RingType.LABEL}>
+                    <button class="btn variant-outline-secondary" disabled={!selectedReference || $requestInProgress ? true : false}  on:click={() => newRing = RingType.LABEL}>
                         <div class="flex items-center align-center truncate">
                             <span>Labels</span>
                         </div>
@@ -117,13 +149,13 @@
         
         <div class="mt-8">
             {#if newRing == RingType.REFERENCE}
-                <NewReferenceRing selectedReference={selectedReference}></NewReferenceRing>
+                <NewReferenceRing></NewReferenceRing>
             {:else if newRing == RingType.BLAST}
-                <NewBlastRing selectedReference={selectedReference}></NewBlastRing>
+                <NewBlastRing></NewBlastRing>
             {:else if newRing == RingType.ANNOTATION}
-                <NewAnnotationRing selectedReference={selectedReference}></NewAnnotationRing>
+                <NewAnnotationRing></NewAnnotationRing>
             {:else if newRing == RingType.LABEL}
-                <NewLabelRing selectedReference={selectedReference}></NewLabelRing>
+                <NewLabelRing></NewLabelRing>
             {/if}
         </div>
 
@@ -137,22 +169,23 @@
 
                                 <span class="text-black ml-2">
                                     <div class="grid grid-cols-[auto_1fr] gap- align-center items-center">
-                                        <input class="input" style="height: 0.9rem; width: 0.9rem;" type="color" bind:value={ring.color} />
+                                        <input class="input" style="height: 0.9rem; width: 0.9rem;" type="color" value={ring.color} on:change={(event) => handleColorPickerChange(event, ring)}/>
+                                        
                                     </div>
                                 </span>
                                 <div class="mt-0.5">
-                                    <PalettePopup id={`ringPalette-${ring.index}`} bind:color={ring.color}></PalettePopup>
+                                    <PalettePopup id={`ringPalette-${ring.index}`} on:selectColor={(event) => changeRingColor(ring.index, event.detail.color)} color={ring.color}></PalettePopup>
                                 </div>
                                 
                                 {#if ring.visible}
-                                    <button class="btn btn-icon h-4 w-4 mr-4" on:click={() => ring.visible ? ring.visible = false : ring.visible = true}>
+                                    <button class="btn btn-icon h-4 w-4 mr-4" on:click={() => toggleRingVisibility(ring.index)}>
                                         <svg data-slot="icon" aria-hidden="true" fill="none" stroke-width="1.5" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                             <path d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" stroke-linecap="round" stroke-linejoin="round"></path>
                                             <path d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" stroke-linecap="round" stroke-linejoin="round"></path>
                                         </svg>
                                     </button>
                                 {:else}
-                                    <button class="btn btn-icon h-4 w-4 mr-4" on:click={() => ring.visible ? ring.visible = false : ring.visible = true}>
+                                    <button class="btn btn-icon h-4 w-4 mr-4" on:click={() => toggleRingVisibility(ring.index)}>
                                         <svg data-slot="icon" aria-hidden="true" fill="none" stroke-width="1.5" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                             <path d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" stroke-linecap="round" stroke-linejoin="round"></path>
                                         </svg>

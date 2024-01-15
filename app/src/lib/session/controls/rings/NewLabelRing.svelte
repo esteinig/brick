@@ -1,27 +1,27 @@
 <script lang="ts">
-	import { RingType, type RingSegment, type LabelRingSchema, type PydanticValidationError } from "$lib/types";
+	import { RingType, type LabelRingSchema } from "$lib/types";
 	import { ToastType, triggerToast } from "$lib/helpers";
-	import { FileType, type SessionFile } from "$lib/types";
+	import { FileType } from "$lib/types";
     import { sessionFiles, sessionFileTypeAvailable } from "$lib/stores/SessionFileStore";
-    import { addRing, isRingTypePresent } from "$lib/stores/RingStore";
+    import { addRing } from "$lib/stores/RingStore";
 	import { page } from '$app/stores';
     import { getToastStore } from '@skeletonlabs/skeleton';
 	import { applyAction, enhance } from "$app/forms";
 	import EditableRingSegment from "../helpers/EditableRingSegment.svelte";
+    import { ringReferenceStore } from "$lib/stores/RingReferenceStore";
+
+    import { startRequestState, completeRequestState } from '$lib/stores/RequestInProgressStore';
     
     const toastStore = getToastStore();
 
-    export let selectedReference: SessionFile;
-    
     let ringConfig: LabelRingSchema = {
-        session_id: $page.params.session,
+        reference: $ringReferenceStore,
         tsv_id: null,
         labels: []
     }
 
     let loading: boolean = false;
 
-    let labelRingPresent: boolean = isRingTypePresent(RingType.LABEL);
 
 </script>
 
@@ -34,7 +34,7 @@
         Labels are always added to the outer ring and can be added manually or using custom annotation files. If start and end values in the annotation
         file are different, their midpoint is used to draw the annotation line.</p>
     
-    {#if selectedReference}
+    {#if $ringReferenceStore}
         <form id="createLabelRingForm" action="?/createRing" method="POST" use:enhance={({ formData }) => {
             
             loading = true;
@@ -43,14 +43,18 @@
 
             // Clear the data in this component
             ringConfig =  {
-                session_id: $page.params.session,
+                reference: $ringReferenceStore,
                 tsv_id: null,
                 labels: []
             }
 
+            // Tracks the common request state from multiple components 
+            startRequestState();
+
             return async ({ result }) => {
                 await applyAction(result);
                 loading = false;
+                completeRequestState();
                     
                 if (result.type === "success"){
                     addRing($page.form.result)
@@ -99,13 +103,8 @@
 
             <div class="mt-12">
                 <button class="btn variant-outline-surface mr-2" type="submit" disabled={loading || !(ringConfig.tsv_id || ringConfig.labels.length)}>
-                    <div class="flex items-center align-center">
-                        {#if labelRingPresent}
-                            <span>Add to ring</span>
-                        {:else}                            
-                            <span>Create ring</span>
-                        {/if}
-                        
+                    <div class="flex items-center align-center">    
+                        <span>Construct</span>
                     </div>
                 </button>
                 <button class="btn variant-outline-surface" type="button" disabled={loading} on:click={() => ringConfig.labels = [...ringConfig.labels, { start: 0, end: 0, text: "", color: "#d3d3d3"}]}>

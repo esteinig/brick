@@ -1,11 +1,8 @@
 // store.ts
 import { writable } from 'svelte/store';
-import { type PlotConfig, type TitleConfig, type ReferenceConfig, type AnnotationConfig, type RingConfig, TitleStyle } from '$lib/types';
+import { type PlotConfig, TitleStyle } from '$lib/types';
 
 const initialPlotConfig: PlotConfig = {
-    reference: { 
-        size: 5983947
-    },
     svg: {
         backgroundOpacity: 100,
         backgroundColor: "#d3d3d3"
@@ -39,28 +36,3 @@ const initialPlotConfig: PlotConfig = {
 };
 
 export const plotConfigStore = writable<PlotConfig>(initialPlotConfig);
-
-// Functions to update store attributes
-export const updateTitle = (newTitle: TitleConfig) => {
-    plotConfigStore.update(currentConfig => {
-        return { ...currentConfig, title: newTitle };
-    });
-};
-
-export const updateReference = (newReference: ReferenceConfig) => {
-    plotConfigStore.update(currentConfig => {
-        return { ...currentConfig, reference: newReference };
-    });
-};
-
-export const updateAnnotation = (newAnnotation: AnnotationConfig) => {
-    plotConfigStore.update(currentConfig => {
-        return { ...currentConfig, annotation: newAnnotation };
-    });
-};
-
-export const updateRings = (newRings: RingConfig) => {
-    plotConfigStore.update(currentConfig => {
-        return { ...currentConfig, rings: newRings };
-    });
-};

@@ -11,7 +11,7 @@ from datetime import datetime
 from .core.config import settings
 from .core.celery import celery_app
 from .core.db import get_session_collection_pymongo
-from .schemas import FileFormat, FileType, SessionFile, Selections, FileConfig, AnnotationRingSchema, LabelRingSchema
+from .schemas import FileFormat, FileType, SessionFile, Selections, FileConfig, AnnotationRingSchema, LabelRingSchema, Sequence, BlastRingSchema
 from .models import Session
 from ..rings import BlastRing, AnnotationRing, LabelRing
 
@@ -26,7 +26,7 @@ def process_file(file_path: str, file_config: Annotated[dict, "Model dump of Fil
         records = 0; total_length = 0; selections = Selections()
 
         if config.file_format == FileFormat.FASTA:
-            total_length, records, selections = validate_fasta(path=file, file_type=config.file_type)
+            total_length, records, selections = validate_fasta(path=file)
         elif config.file_format == FileFormat.GENBANK:
             records, selections = validate_genbank(path=file)
         elif config.file_format == FileFormat.TSV:
@@ -66,6 +66,8 @@ def process_blast_ring(
 ):
 
     try:
+        ring_schema = BlastRingSchema(**blast_ring_schema)
+
         with create_tmp_directory(root_dir=settings.WORK_DIRECTORY) as working_directory:
             output_file = run_blast(
                 query_fasta=Path(genome_file_path), 
@@ -73,7 +75,7 @@ def process_blast_ring(
                 working_directory=working_directory
             )
             ring: BlastRing = BlastRing.from_blast_output(
-                file=output_file
+                file=output_file, reference=ring_schema.reference
             )
 
              
@@ -101,11 +103,13 @@ def process_annotation_ring(
             ring: AnnotationRing  = AnnotationRing.from_genbank_file(
                 file=Path(genbank_file_path), 
                 features=ring_schema.genbank_features,
+                reference=ring_schema.reference,
                 sanitize=True
             )
         elif tsv_file_path:
             ring: AnnotationRing = AnnotationRing.from_tsv_file(
                 file=Path(tsv_file_path),
+                reference=ring_schema.reference,
                 sanitize=True
             )
         else:
@@ -131,10 +135,13 @@ def process_label_ring(
         if tsv_file_path:
             ring: LabelRing = LabelRing.from_tsv_file(
                 file=Path(tsv_file_path),
+                reference=ring_schema.reference,
                 sanitize=True
             )
         else:
-            ring: LabelRing = LabelRing()
+            ring: LabelRing = LabelRing(
+                reference=ring_schema.reference
+            )
 
         if ring_schema.labels:
             ring.add_custom_labels(
@@ -183,7 +190,7 @@ def run_blast(query_fasta: Path, reference_fasta: Path, working_directory: Path)
 
 # Validation helpers
 
-def validate_fasta(path: Path, file_type: FileType) -> Tuple[int, int, Selections]:
+def validate_fasta(path: Path) -> Tuple[int, int, Selections]:
 
     records = [r for r in SeqIO.parse(str(path), 'fasta')]
     num_records = len(records)
@@ -194,14 +201,11 @@ def validate_fasta(path: Path, file_type: FileType) -> Tuple[int, int, Selection
 
     if num_records < 1:
         raise ValueError("Sequence files cannot be empty")
-
-    if file_type == FileType.REFERENCE and num_records > 1:
-        raise ValueError("Reference files must consist of a single contig")
     
     total_length = sum([len(r.seq) for r in records])
 
     return total_length, num_records, Selections(
-        sequences=[r.id for r in records]
+        sequences=[Sequence(id=r.id, length=len(r.seq)) for r in records]
     )
 
 
@@ -227,7 +231,7 @@ def validate_genbank(path: Path) -> Tuple[int, Selections]:
                 unique_qualifiers.add(key)
     
     return num_records, Selections(
-        sequences=[r.id for r in records],
+        sequences=[Sequence(id=r.id, length=len(r.seq)) for r in records],
         qualifiers=list(unique_qualifiers),
         features=list(unique_features)
     )

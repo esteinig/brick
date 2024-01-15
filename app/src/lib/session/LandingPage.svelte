@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { createSessionId } from "$lib/helpers";
+    import { clearRings } from "$lib/stores/RingStore";
+    
     const published: boolean = false;
 </script>
 
@@ -19,6 +21,7 @@
             <a
                 class="btn border border-primary-500"
                 href="/brick/{createSessionId()}"
+                on:click={() => clearRings()}
             >
                 Create Figure
             </a>

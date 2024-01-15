@@ -2,7 +2,15 @@
     import { popup, type PopupSettings } from "@skeletonlabs/skeleton";
     import { paletteStore } from "$lib/stores/PaletteStore";
 	import ColorPalette from "./ColorPalette.svelte";
+    import { createEventDispatcher, tick } from 'svelte';
 
+    const dispatch = createEventDispatcher();
+
+    function selectColor(event: any) {
+        color = event.detail.color
+        dispatch('selectColor', { color: event.detail.color });
+    }
+    
     export let id: string = "";
     export let color: string = "#d3d3d3";
 
@@ -13,11 +21,9 @@
         target: `popupPalette-${id}`,
         // Defines which side of your trigger the popup will appear
         placement: 'left',
+        closeQuery: '#will-close'
     };
 
-    function handleColorSelection(event: any) {
-        color = event.detail.color
-    }
 
 </script>
 
@@ -29,13 +35,20 @@
     </button>
 
     <div class="card p-4 shadow-xl border border-opacity-80 border-surface-500 bg-surface-300 z-50" data-popup={`popupPalette-${id}`}>
-        <div class="head mb-4">
+        <div class="head mb-4 flex justify-between items-center align-mddle">
             <p class="opacity-80">Palette selections</p>
+            
+		    <button id="will-close" class="btn">
+                <svg class="w-6 h-6" data-slot="icon" aria-hidden="true" fill="none" stroke-width="1.5" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke-linecap="round" stroke-linejoin="round"></path>
+                  </svg>
+            </button>
+
         </div>
         <div class="body">
             {#each $paletteStore as palette}
                 <div class="my-4">
-                    <ColorPalette colors={palette.colors} title={palette.name} on:selectColor={handleColorSelection}/>
+                    <ColorPalette colors={palette.colors} title={palette.name} on:selectColor={selectColor}/>
                 </div>
             {/each}
         </div>

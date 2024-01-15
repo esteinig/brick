@@ -6,7 +6,6 @@ from enum import StrEnum
 from Bio import SeqIO
 
 import csv
-from pydantic import BaseModel
 
 from .utils import sanitize_input
 
@@ -22,6 +21,15 @@ class RingSegment(BaseModel):
     color: str = "#d3d3d3"
     text: str = ""
 
+class RingReferenceSequence(BaseModel):
+    id: str = ""
+    length: int = 0
+
+class RingReference(BaseModel):
+    session_id: str = ""
+    reference_id: str = ""
+    sequence: RingReferenceSequence = RingReferenceSequence()
+
 class Ring(BaseModel):
     index: int = -1
     visible: bool = True
@@ -29,8 +37,8 @@ class Ring(BaseModel):
     height: int = 20
     type: RingType = RingType.GENERIC
     title: str = "Ring"
+    reference: RingReference | None = None
     data: List[RingSegment] = Field(default_factory=list)
-
 
 # Blast Ring
         
@@ -55,7 +63,7 @@ class BlastnEntry(BaseModel):
         )
 
 
-def parse_blastn_output(file_path: Path) -> List[BlastnEntry]:
+def parse_blastn_output(file_path: Path, reference: RingReference = None) -> List[BlastnEntry]:
     """
     Parses a BLASTn output file with `-outfmt 6` format.
     
@@ -84,7 +92,12 @@ def parse_blastn_output(file_path: Path) -> List[BlastnEntry]:
                 e_value=float(fields[10]),
                 bit_score=float(fields[11])
             )
-            result.append(entry)
+            if reference:
+                if entry.subject_id == reference.sequence.id:
+                    result.append(entry)
+            else:
+                result.append(entry)
+            
 
     return result
 
@@ -94,9 +107,10 @@ class BlastRing(Ring):
     title: str = "BLAST Ring"
     
     @staticmethod
-    def from_blast_output(file: Path) -> BlastRing:
+    def from_blast_output(file: Path, reference: RingReference | None = None) -> BlastRing:
         return BlastRing(
-            data=[entry.to_segment() for entry in parse_blastn_output(file_path=file)]
+            data=[entry.to_segment() for entry in parse_blastn_output(file_path=file, reference=reference)],
+            reference=reference
         )
     
 # Annotation Rings
@@ -170,32 +184,36 @@ class AnnotationRing(Ring):
     type: RingType = RingType.ANNOTATION
     title: str = "Annotation Ring"
     
-    def from_genbank_file(file: Path, features: List[str], sanitize: bool = True) -> AnnotationRing:
+    def from_genbank_file(file: Path, features: List[str], reference: RingReference | None = None, sanitize: bool = True) -> AnnotationRing:
         return AnnotationRing(
             data=[entry.to_segment(sanitize=sanitize) for entry in parse_genbank_features(
                 file_path=str(file), feature_types=features
-            )]
+            )],
+            reference=reference
         )
     
-    def from_tsv_file(file: Path, sanitize: bool = True) -> AnnotationRing:
+    def from_tsv_file(file: Path, reference: RingReference | None = None, sanitize: bool = True) -> AnnotationRing:
         return AnnotationRing(
-            data=[segment for segment in parse_tsv_segments(file_path=file, sanitize=sanitize)]
+            data=[segment for segment in parse_tsv_segments(file_path=file, sanitize=sanitize)],
+            reference=reference
         )
     
 class LabelRing(Ring):
     type: RingType = RingType.LABEL
     title: str = "Label Ring"
     
-    def from_genbank_file(file: Path, features: List[str], sanitize: bool = True) -> LabelRing:
+    def from_genbank_file(file: Path, features: List[str], reference: RingReference | None = None, sanitize: bool = True) -> LabelRing:
         return LabelRing(
             data=[entry.to_segment(sanitize=sanitize) for entry in parse_genbank_features(
                 file_path=str(file), feature_types=features
-            )]
+            )],
+            reference=reference
         )
     
-    def from_tsv_file(file: Path, sanitize: bool = True) -> LabelRing:
+    def from_tsv_file(file: Path, reference: RingReference | None = None, sanitize: bool = True) -> LabelRing:
         return LabelRing(
-            data=[segment for segment in parse_tsv_segments(file_path=file, sanitize=sanitize)]
+            data=[segment for segment in parse_tsv_segments(file_path=file, sanitize=sanitize)],
+            reference=reference
         )
     
     def add_custom_labels(self, labels: List[RingSegment], sanitize: bool = True) -> None:

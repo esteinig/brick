@@ -5,26 +5,28 @@
 	import { page } from "$app/stores";
 	import { sessionFiles } from "$lib/stores/SessionFileStore";
 	
-	
+
 	// Events from the figure to display in control interface
 	function handleClick(event: any)  {
         console.log(`Clicked: ${ event.detail}`);
     }
 
-	$: console.log($page.data)
-
+	// Update session files store when
+	$: if ($page.data.session) {
+		$sessionFiles = $page.data.session.files
+	}
 	
 </script>	
 
 
 
-<div class="container mt-[2.5%] mx-auto max-w-[90%] max-h-[90%] h-full">
+<div class="container mt-[2.5%] mx-auto max-w-[95%] max-h-[90%]">
 
-    <div class="grid sm:grid-cols-1 md:grid-cols-8 gap-8 h-full">
-		<div class="col-span-5 h-screen w-full">
+    <div class="grid sm:grid-cols-1 md:grid-cols-8 gap-8 h-screen overflow-hidden">
+		<div class="col-span-5 w-full max-h-[85%]">
             <Brick id="brickPlotSession" scaleFactor={getDefaultScaleFactor() + 0.4} on:click={handleClick} border></Brick>
 		</div>
-		<div class="col-span-3 h-full w-full">
+		<div class="col-span-3 h-full w-full overflow-auto">
             <BrickInterface></BrickInterface>
 		</div>
 	</div>

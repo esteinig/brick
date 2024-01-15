@@ -5,10 +5,10 @@
 	import DataControlPanel from "$lib/session/controls/panels/DataControlPanel.svelte";
 	import RingControlPanel from "$lib/session/controls/panels/RingControlPanel.svelte";
     import PlotControlPanel from '$lib/session/controls/panels/PlotControlPanel.svelte';
-
-	import { uploadInProgress } from '$lib/stores/UploadInProgressStore';
 	import PaletteControlPanel from './controls/panels/PaletteControlPanel.svelte';
 	import AboutPanel from './controls/panels/AboutPanel.svelte';
+
+	import { uploadInProgress } from '$lib/stores/UploadInProgressStore';
 
     let tab: number = 0;
 

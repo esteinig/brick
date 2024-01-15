@@ -1,14 +1,19 @@
-import { type BlastRing, type AnnotationRing, type ReferenceRing, RingType, LabelRing, type Palette } from "$lib/types";
+import { type BlastRing, type AnnotationRing, type ReferenceRing, RingType, LabelRing, type Palette, type RingReference } from "$lib/types";
+
+export const DEFAULT_RING_REFERENCE: RingReference = {
+    session_id: "DEFAULT", reference_id: "DEFAULT", sequence: { id: "SOLO", length: 5983947 }
+}
 
 let innerRingData: Array<ReferenceRing | AnnotationRing> = [
 
-    {
+    {   
         index: 0,
         visible: true,
         color: '#b4b87f',
         height: 20,
         type: RingType.ANNOTATION,
         title: "Open reading frames from Bakta v1.9.3",
+        reference: DEFAULT_RING_REFERENCE,
         data: [
             {
                 "color": "#b4b87f",
@@ -17,17 +22,18 @@ let innerRingData: Array<ReferenceRing | AnnotationRing> = [
                 "text": ""
             }
         ]
-    } satisfies AnnotationRing,
+    },
 ];
 
 let blastRingData: Array<BlastRing> = [
-    {
+    {   
         index: 1,
         visible: true,
         color: '#6ea8ab',
         height: 20,
         type: RingType.BLAST,
         title: "Mycobacterium sp. SMC-2",
+        reference: DEFAULT_RING_REFERENCE,
         data: [
             {
                 "color": "#6ea8ab",
@@ -37,13 +43,14 @@ let blastRingData: Array<BlastRing> = [
             }
         ]
     },
-    {
+    {   
         index: 2,
         visible: true,
         color: '#8f5715',
         height: 20,
         type: RingType.BLAST,
         title: "Mycobacterium nebraskense",
+        reference: DEFAULT_RING_REFERENCE,
         data: [
             {
                 "color": "#8f5715",
@@ -57,13 +64,14 @@ let blastRingData: Array<BlastRing> = [
 ];
 
 let outerRingData: Array<AnnotationRing | LabelRing> = [
-    {
+    {   
         index: 3,
         visible: true,
         color: '#d3d3d3',
         height: 20,
         type: RingType.LABEL,
         title: "Custom feature labels",
+        reference: DEFAULT_RING_REFERENCE,
         data: [
             {
                 "color": "#8f5715",
