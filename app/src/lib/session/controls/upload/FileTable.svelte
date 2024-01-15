@@ -22,7 +22,7 @@
                         <td>{sessionFile.type}</td>
                         <td>{sessionFile.format}</td>
                         <td>{sessionFile.records}</td>
-                        <td>{sessionFile.length}</td>
+                        <td>{sessionFile.total_length}</td>
                     </tr>
                 {/each}
             </tbody>

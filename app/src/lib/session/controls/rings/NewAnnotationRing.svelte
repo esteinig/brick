@@ -7,13 +7,14 @@
 	import { page } from '$app/stores';
     import { getToastStore } from '@skeletonlabs/skeleton';
 	import { applyAction, enhance } from "$app/forms";
+    import { ringReferenceStore } from "$lib/stores/RingReferenceStore";
+    import { startRequestState, completeRequestState } from '$lib/stores/RequestInProgressStore';
     
     const toastStore = getToastStore();
 
-    export let selectedReference: SessionFile;
     
     let ringConfig: AnnotationRingSchema = {
-        session_id: $page.params.session,
+        reference: $ringReferenceStore,
         genbank_id: null,
         tsv_id: null,
         genbank_features: [],
@@ -35,7 +36,7 @@
     <p class="opacity-20 mb-2 text-xs w-full">Annotation rings consist of segments representing features along the 
         selected reference genome. Annotations can be extracted from Genbank or custom table files.</p>
     
-    {#if selectedReference}
+    {#if $ringReferenceStore}
         <form id="createAnnotationRingForm" action="?/createRing" method="POST" use:enhance={({ formData }) => {
                     
             loading = true;
@@ -44,16 +45,21 @@
 
             // Clear data in this component
             ringConfig = {
-                session_id: $page.params.session,
+                reference: $ringReferenceStore,
                 genbank_id: null,
                 tsv_id: null,
                 genbank_features: [],
                 genbank_qualifiers: []
             }
+
+            // Tracks the common request state from multiple components 
+            startRequestState();
+
         
             return async ({ result }) => {
                 await applyAction(result);
                 loading = false;
+                completeRequestState();
                     
                 if (result.type === "success"){
                     addRing($page.form.result)
@@ -125,7 +131,7 @@
             <div class="flex items-center mt-12">
                 <button class="btn variant-outline-surface" type="submit" disabled={loading || !(ringConfig.genbank_id || ringConfig.tsv_id)}>
                     <div class="flex items-center align-center">
-                        <span>Create ring</span>
+                        <span>Construct</span>
                     </div>
                 </button>
                  

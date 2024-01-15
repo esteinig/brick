@@ -24,14 +24,12 @@
     </div>
     
 
-    <p class="opacity-70 mt-12">
-        BRICK implements a variant of the iconic
-        <a class="opacity-60" href="https://bmcgenomics.biomedcentral.com/articles/10.1186/1471-2164-12-402">BLAST Ring Image Generator (BRIG)</a>
-        and is supported by:
+    <p class="opacity-80 mt-12 mb-4">
+        BRICK implements an interactive derivative of the iconic
+        <a class="opacity-60" href="https://bmcgenomics.biomedcentral.com/articles/10.1186/1471-2164-12-402">BLAST Ring Image Generator (BRIG)</a>. 
+        Support for development, maintenance and deployment comes from the following institutions:
     </p>
         
-    <p class="opacity-80 mt-8 mb-4">
-    </p>
 
     <dl class="list-dl">
         <div>
@@ -68,13 +66,26 @@
         <div>
             <span class="badge text-lg">📑</span>
             <span class="flex-auto opacity-60">
-                <dt><a href="https://pubmed.ncbi.nlm.nih.gov/2231712/">Altschul et al. (1990) -  Basic local alignment search tool</a></dt>
+                <dt><a href="https://pubmed.ncbi.nlm.nih.gov/2231712/">Altschul et al. (1990) - Basic local alignment search tool</a></dt>
             </span>
         </div>
         <div>
             <span class="badge text-lg">📑</span>
             <span class="flex-auto opacity-60">
                 <dt><a href="https://www.nature.com/articles/s41587-023-01953-y">Camargo et al. (2023) - Identification of mobile genetic elements with geNomad</a></dt>
+            </span>
+        </div>
+    </dl>
+
+    <p class="opacity-80 mt-8 mb-4">
+        If you also want to acknowledge the authors of the original visualization, please cite:
+    </p>
+
+    <dl class="list-dl">
+        <div>
+            <span class="badge text-lg">📑</span>
+            <span class="flex-auto opacity-60">
+                <dt><a href="https://bmcgenomics.biomedcentral.com/articles/10.1186/1471-2164-12-402">Alikhan et al. (2011) - BLAST Ring Image Generator (BRIG)</a></dt>
             </span>
         </div>
     </dl>

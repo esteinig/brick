@@ -22,9 +22,9 @@ export const load: PageServerLoad = async ({ url, params }) => {
         const sessionResponseData: SessionResponse = await response.json();
 
         if (response.ok) {
-            return { session: sessionResponseData }
+            return { session: sessionResponseData, detail: undefined }
         } else {
-            return { session: null, detail: sessionResponseData.detail }
+            return { session: undefined, detail: sessionResponseData.detail }
         }
     } catch(error) {
         // Catch if something bad happens during validation with pydantic

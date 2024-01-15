@@ -1,9 +1,7 @@
 <script lang="ts">
 	import { ReferenceRing } from "$lib/types";
-	import { type SessionFile } from "$lib/types";
     import { addRing } from "$lib/stores/RingStore";
-
-    export let selectedReference: SessionFile;
+    import { ringReferenceStore } from '$lib/stores/RingReferenceStore';
     
 </script>
 
@@ -13,13 +11,11 @@
         reference genome against which other genomes or sequences are compared.
         Reference rings are usually shown on the inner track and can be omitted entirely.</p>
     
-    {#if selectedReference}
-        <div class="flex justify-right mt-4">
-            <button class="btn variant-outline-surface" on:click={() => addRing(new ReferenceRing(-1, selectedReference.length))}>
+        <div class="flex justify-right mt-12">
+            <button class="btn variant-outline-surface" type="button" on:click={() => addRing(new ReferenceRing($ringReferenceStore, -1, $ringReferenceStore.sequence.length))} disabled={!$ringReferenceStore}>
                 <div class="flex items-center align-center">
-                    <span>Create ring</span>
+                    <span>Construct</span>
                 </div>
             </button>
         </div>
-    {/if}
 </div>

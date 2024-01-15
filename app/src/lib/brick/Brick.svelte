@@ -2,14 +2,16 @@
   import { onMount } from 'svelte';
   import * as d3 from 'd3';
 
-  import { downloadJSON, downloadPNG, downloadSVG, getDefaultScaleFactor } from './helpers';
+  import { downloadJSON, downloadSVG, getDefaultScaleFactor } from './helpers';
 	import { RingType, type Ring, type RingSegment, TitleStyle } from '$lib/types';
 	import { plotConfigStore } from '$lib/stores/PlotConfigStore';
 	import { fade } from 'svelte/transition';
-  import { rings } from '$lib/stores/RingStore';
+  import { createFilteredRingsStore } from '$lib/stores/RingStore';
+  import { ringReferenceStore } from '$lib/stores/RingReferenceStore';
   import { createEventDispatcher } from 'svelte';
 	import { removeTooltip, setTooltip } from '$lib/stores/TooltipStore';
 
+  $: rings = createFilteredRingsStore($ringReferenceStore) // reactive so it updates on changes to reference sequence
 
   const dispatch = createEventDispatcher();
   let segmentClicked: boolean = false;
@@ -33,7 +35,8 @@
         segmentClicked = true;
       }
   }
-  
+   
+
   export let id: string = "brickRingPlot";
   export let width: number = 1024;
   export let height: number = 768;
@@ -94,8 +97,8 @@
   let scaledTransform: string;
 
   // Circular data scaling
-  let degreeScale = d3.scaleLinear(
-    [0, $plotConfigStore.reference.size], [0,360] // TODO: What if you just go linear or implement the ST93 paper again with a couple changes ah 0 to 1; apply this to each of multiple input sequences to align in circle as e.g. Genome 1 0-10, Genome2 10-20
+  $: degreeScale = d3.scaleLinear(
+    [0, $ringReferenceStore.sequence.length], [0,360] // TODO: What if you just go linear or implement the ST93 paper again with a couple changes ah 0 to 1; apply this to each of multiple input sequences to align in circle as e.g. Genome 1 0-10, Genome2 10-20
   );
 
   
@@ -254,12 +257,6 @@
               <path d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" stroke-linecap="round" stroke-linejoin="round"></path>
             </svg>
             SVG
-          </button>
-          <button class="btn border border-primary-500 text-xs mr-2" on:click={() => downloadPNG(id)}>
-            <svg class="w-4 h-4 mr-2" data-slot="icon" aria-hidden="true" fill="none" stroke-width="1.5" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" stroke-linecap="round" stroke-linejoin="round"></path>
-            </svg>
-            PNG
           </button>
           <button class="btn border border-primary-500 text-xs" on:click={() => downloadJSON($rings)}>
             <svg class="w-4 h-4 mr-2" data-slot="icon" aria-hidden="true" fill="none" stroke-width="1.5" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">

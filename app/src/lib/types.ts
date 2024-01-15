@@ -21,7 +21,14 @@ export type RingSegment = {
     text: string
 }
 
+export type RingReference = {
+    session_id: string
+    reference_id: string
+    sequence: Sequence
+}
+
 export class Ring {
+    reference: RingReference;
     index: number;
     visible: boolean;
     color: string;
@@ -31,6 +38,7 @@ export class Ring {
     data: RingSegment[]
 
     constructor(
+        reference: RingReference,
         index: number, 
         visible: boolean = true,
         type: RingType = RingType.GENERIC, 
@@ -38,7 +46,7 @@ export class Ring {
         height: number = 20, 
         title: string = "Ring"
     ) {
-        
+        this.reference = reference
         this.index = index;
         this.visible = visible;
         this.color = color;
@@ -55,6 +63,7 @@ export class ReferenceRing extends Ring {
     size: number;
 
     constructor(
+        reference: RingReference,
         index: number,
         size: number,
         visible: boolean = true,
@@ -63,7 +72,7 @@ export class ReferenceRing extends Ring {
         height: number = 20, 
         title: string = "Reference Ring"
     ) {
-        super(index, visible, type, color, height, title)
+        super(reference, index, visible, type, color, height, title)
         this.size = size;
         this.data = [
             {start: 0, end: size, color: color, text: title}
@@ -74,6 +83,7 @@ export class ReferenceRing extends Ring {
 
 export class AnnotationRing extends Ring {
     constructor(
+        reference: RingReference,
         index: number,
         visible: boolean = true,
         type: RingType = RingType.ANNOTATION, 
@@ -81,12 +91,13 @@ export class AnnotationRing extends Ring {
         height: number = 20, 
         title: string = "Annotation Ring"
     ) {
-        super(index, visible, type, color, height, title)
+        super(reference, index, visible, type, color, height, title)
     }
 }
 
 export class BlastRing extends Ring {
     constructor(
+        reference: RingReference,
         index: number,
         visible: boolean = true,
         type: RingType = RingType.BLAST, 
@@ -94,12 +105,13 @@ export class BlastRing extends Ring {
         height: number = 20, 
         title: string = "Blast Ring"
     ) {
-        super(index, visible, type, color, height, title)
+        super(reference, index, visible, type, color, height, title)
     }
 }
 
 export class LabelRing extends Ring {
     constructor(
+        reference: RingReference,
         index: number,
         visible: boolean = true,
         type: RingType = RingType.LABEL, 
@@ -107,7 +119,7 @@ export class LabelRing extends Ring {
         height: number = 20, 
         title: string = "Label Ring"
     ) {
-        super(index, visible, type, color, height, title)
+        super(reference, index, visible, type, color, height, title)
     }
 }
 
@@ -118,9 +130,13 @@ export class LabelRing extends Ring {
 */
 
 
+export type Sequence = {
+    id: string
+    length: number
+}
 
 export type Selections = {
-    sequences: string[]
+    sequences: Sequence[]
     features: string[]
     qualifiers: string[]
 }
@@ -131,7 +147,7 @@ export type SessionFile = {
     type: string
     format: string
     records: number
-    length: number
+    total_length: number
     name_original: string,
     selections: Selections
 }
@@ -182,29 +198,29 @@ export enum BlastMethod {
     BLASTN = "blastn"
 }
 
+export type RingSchema = {
+    reference: RingReference
+}
+
 export type BlastRingSchema = {
-    session_id: string
-    reference_id: string
     genome_id: string
     blast_method: BlastMethod,
     min_identity: number
     min_alignment: number
-}
+} & RingSchema
 
 export type AnnotationRingSchema = {
-    session_id: string
     genbank_id: string | null
     tsv_id: string | null
     genbank_features: string[]
     genbank_qualifiers: string[]
-}
+} & RingSchema
 
 
 export type LabelRingSchema = {
-    session_id: string
     tsv_id: string | null
     labels: RingSegment[]
-}
+} & RingSchema
 
 /*  =============
  *  API RESPONSES
@@ -242,6 +258,7 @@ export type Session = {
     id: string
     date: string
     files: SessionFile[]
+    rings: Ring[]
 }
 
 export type SessionResponse = Session & ErrorResponse;
@@ -260,15 +277,11 @@ export enum TitleStyle {
 }
 
 export type PlotConfig = {
-    reference: ReferenceConfig
     title: TitleConfig
     subtitle: SubtitleConfig
     rings: RingConfig
     svg: SvgConfig
     annotation: AnnotationConfig
-}
-export type ReferenceConfig = {
-    size: number
 }
 
 export type SvgConfig = {

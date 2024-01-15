@@ -1,4 +1,4 @@
-import { RingType, type Ring } from '$lib/types';
+
 import { TaskStatus, type TaskStatusResponse } from './types';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -9,27 +9,6 @@ export const createUuid = (short: boolean = false) => {
 export const createSessionId = () => { return uuidv4() };
 export const shortenSessionId = (sessionId: string): string => { return sessionId.substring(0,8) };
 
-
-export function addNewRing(rings: Ring[], newRing: Ring, newIndex: number = rings.length): Ring[] {
-
-    // If rings are present, and addition to the last index is requested, but the outer
-    // ring is `RingType.LABEL`, insert the new ring into the second-to-last index instead
-    if (rings.length > 0 && newIndex === rings.length && rings[rings.length - 1].type === RingType.LABEL) {
-        
-        newIndex = rings.length - 1;
-    }
-
-    // Create a copy of the array
-    let newArray = [...rings];
-
-    // Add a new object at the specified index
-    newArray.splice(newIndex, 0, newRing); // with temporary index
-
-    // Update the index of each object to match its position
-    newArray = newArray.map((item, idx) => ({ ...item, index: idx }));
-
-    return newArray;
-}
 
 // Celery results checking
 
