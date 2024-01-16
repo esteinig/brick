@@ -1,12 +1,14 @@
 <script lang="ts">
+
 	import Brick from "$lib/brick/Brick.svelte";
 	import LandingPage from "$lib/session/LandingPage.svelte";
-	import { DEFAULT_RINGS } from "$lib/data";
-	import { rings } from "$lib/stores/RingStore";
-	import { getDefaultScaleFactor } from "$lib/brick/helpers";
-	
-	import { onMount } from 'svelte';
 
+	import { onMount } from 'svelte';
+	import { rings } from "$lib/stores/RingStore";
+	import { getDefaultScaleFactor } from "$lib/brick/helpers";	
+	import { DEFAULT_RINGS } from "$lib/data";
+
+	
 	onMount(() => {
 		$rings = DEFAULT_RINGS;
 	});

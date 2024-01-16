@@ -3,11 +3,17 @@ FROM condaforge/mambaforge:latest as builder
 # Set the working directory in the builder stage
 WORKDIR /app
 
-# Create a new environment with Python 3.11
-RUN mamba create -n brick -c bioconda blast python=3.11 --yes
+# Create a new environment for bioinformatics dependencies
+COPY conda.yml ./
+RUN mamba env create -f conda.yml
 
 # Activate the new environment
 SHELL ["conda", "run", "-n", "brick", "/bin/bash", "-c"]
+
+# See if any databases must be downloaded - this may not 
+# be necessary for testing containers
+
+# GENOMAD DB 
 
 # Copy the requirements file
 COPY requirements.txt ./
@@ -20,8 +26,6 @@ RUN mamba install --file requirements.txt --yes \
 FROM condaforge/mambaforge:latest as runner
 
 # Environment variable that determines API settings
-ARG BRICK_ENV=
-
 ARG UID=9234
 ARG GID=9234
 ARG USERNAME=brick-app

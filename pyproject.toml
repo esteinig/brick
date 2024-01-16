@@ -10,24 +10,22 @@ description = "BRICK implements BRIG-like interactive figures in D3 for bacteria
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-  "typer", 
-  "biopython", 
-  "pandas", 
-  "requests", 
-  "pre-commit", 
-  "fastapi", 
-  "redis",
-  "celery[redis]", 
-  "uvicorn", 
-  "pydantic-settings", 
-  "python-multipart", 
-  "pymongo", 
-  "motor",
-  "pytest",
-  "pytest-asyncio",
-  "httpx",
-  "pytest-celery",
-  "asgi-lifespan"
+  "typer==0.9.0",
+  "biopython==1.83",
+  "pandas==2.1.4",
+  "requests==2.31.0",
+  "pre-commit==3.6.0",
+  "fastapi==0.109.0",
+  "redis-py==5.0.1",
+  "celery[redis]==5.3.6",
+  "uvicorn==0.25.0",
+  "pydantic-settings==2.1.0",
+  "python-multipart==0.0.6",
+  "motor==3.3.2",
+  "pytest==7.4.4",
+  "pytest-asyncio==0.23.3",
+  "httpx==0.26.0",
+  "asgi-lifespan==2.1.0",
 ]
 
 [tool.setuptools.packages.find]
@@ -41,7 +39,7 @@ brick = "brick.terminal:app"
 [tool.pytest.ini_options]
 testpaths = [
     "tests/api_tests",
-    "tests/core_tests"
+    "tests/core_tests",
 ]
 addopts = "-v"
 

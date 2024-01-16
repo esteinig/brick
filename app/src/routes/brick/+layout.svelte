@@ -4,7 +4,7 @@
 	import { AppShell, AppBar, type ModalSettings} from '@skeletonlabs/skeleton';
 	import { getModalStore } from '@skeletonlabs/skeleton';
 	import { ProgressBar } from '@skeletonlabs/skeleton';
-	import { PUBLIC_BRICK_VERSION } from '$env/static/public';
+	import { env } from '$env/dynamic/public';
 	import { createSessionId } from '$lib/helpers';
 	import { clearSessionFiles } from '$lib/stores/SessionFileStore';
 	import { clearRings } from '$lib/stores/RingStore';
@@ -43,7 +43,7 @@
 	<svelte:fragment slot="header">
 		<AppBar>
 			<svelte:fragment slot="lead">
-				<a href="/"><code class="text-xl">BRICK {PUBLIC_BRICK_VERSION}</code></a>
+				<a href="/"><code class="text-xl">BRICK {env.PUBLIC_BRICK_VERSION}</code></a>
 			</svelte:fragment>
 			<svelte:fragment slot="trail">
 

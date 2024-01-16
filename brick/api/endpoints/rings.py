@@ -17,7 +17,7 @@ router = APIRouter(
 def create_blast_ring(ring_config: BlastRingSchema):
     
     _, reference_file, genome_file = ring_config.get_file_paths()
-
+    
     try:
         task = process_blast_ring.delay(
             str(reference_file), 

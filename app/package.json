@@ -1,5 +1,5 @@
 {
-  "name": "app",
+  "name": "brick",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -15,6 +15,7 @@
     "@skeletonlabs/skeleton": "2.6.1",
     "@skeletonlabs/tw-plugin": "0.3.0",
     "@sveltejs/adapter-auto": "^3.0.0",
+    "@sveltejs/adapter-node": "^3.0.0",
     "@sveltejs/kit": "^2.0.0",
     "@sveltejs/vite-plugin-svelte": "^3.0.0",
     "@tailwindcss/forms": "0.5.7",
@@ -42,6 +43,7 @@
   "dependencies": {
     "@floating-ui/dom": "1.5.3",
     "d3": "^7.8.5",
+    "dotenv": "^16.3.1",
     "highlight.js": "11.9.0",
     "uuid": "^9.0.1"
   }
