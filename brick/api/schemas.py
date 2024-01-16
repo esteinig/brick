@@ -72,7 +72,7 @@ class SessionFile(BaseModel):
     type: FileType
     format: FileFormat
     records: int 
-    length: int 
+    total_length: int 
     name_original: str  
     selections: Selections
 

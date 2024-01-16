@@ -9,16 +9,19 @@
         { 
             name: PaletteName.NP,
             link: "https://github.com/kevinsblake/NatParksPalettes/",
-            palettes: NATIONAL_PARK_PALETTES
+            palettes: NATIONAL_PARK_PALETTES,
+            author: " Kevin S. Blake"
         },
         { 
             name: PaletteName.MOMA,
             link: "https://github.com/BlakeRMills/MoMAColors",
-            palettes: MOMA_PALETTES
+            palettes: MOMA_PALETTES,
+            author: "Blake R. Mills"
         },{
             name: PaletteName.NZ,
             link: "https://g-thomson.github.io/Manu/",
-            palettes: NZ_PALETTES
+            palettes: NZ_PALETTES,
+            author:  "George Thompson"
         },
     ]
 

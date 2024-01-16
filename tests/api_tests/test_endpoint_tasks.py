@@ -13,7 +13,7 @@ def mock_session_file():
         type=FileType.GENOME, 
         format=FileFormat.FASTA, 
         records=100,
-        length=200,
+        total_length=200,
         name="file_name.ext",
         name_original="original_file_name.ext",
         selections=Selections()

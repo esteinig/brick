@@ -31,7 +31,7 @@ class Settings(BaseSettings):
     CELERY_RESULT_BACKEND: str = "redis://redis:6379/1"
 
     # CORS configuration
-    CORS_ORIGINS: List[str] = ['http://app:5173']
+    CORS_ORIGINS: List[str] | str = ['http://app:5173']
 
     # Database configuration
     MONGODB_USERNAME: str = ""
@@ -67,7 +67,7 @@ class Settings(BaseSettings):
     @field_validator('SECRET_KEY', 'MONGODB_USERNAME', 'MONGODB_PASSWORD', mode="after")
     def check_required_secrets(cls, v: str):        
         if not v:
-            raise ValueError(f"required API configuration not provided")
+            raise ValueError(f"required configuration not provided")
         return v
 
 def get_settings():

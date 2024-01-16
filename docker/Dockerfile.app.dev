@@ -1,0 +1,24 @@
+# Use an official Node runtime as a parent image
+FROM node:20.9.0 AS build
+
+USER node
+
+# Set the working directory in the container to /app
+WORKDIR /usr/src/app
+
+# Copy the package.json and package-lock.json from the /app directory
+COPY --chown=node:node app/package*.json ./
+
+# Install any needed packages
+RUN npm install
+
+# Bundle app source inside the Docker image
+COPY --chown=node:node app/ .
+
+# Set the node env vars required
+ENV PORT=5174
+ENV PROTOCOL_HEADER=x-forwarded-proto
+ENV HOST_HEADER=x-forwarded-host
+
+# Command to run 
+CMD ["npm", "run", "dev", "--", "--port", "5174", "--host"]
