@@ -5,7 +5,10 @@ import { type PlotConfig, TitleStyle } from '$lib/types';
 const initialPlotConfig: PlotConfig = {
     svg: {
         backgroundOpacity: 100,
-        backgroundColor: "#d3d3d3"
+        backgroundColor: "#d3d3d3",
+        zoomEnabled: false,
+        zoomLowerLimit: 0.5,
+        zoomUpperLimit: 10
     },
     title: {
       text: "BRICK v0.1.0",

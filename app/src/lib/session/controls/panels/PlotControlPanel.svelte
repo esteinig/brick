@@ -73,48 +73,73 @@
 
 
 
-    <div id="brickPlotConfigExport" class="mt-8 mb-16">
-        
-        <div class="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 gap-8">
-            <div>
-                <div class="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-5 gap-8">
-                    <label class="label text-xs col-span-3">
-                        <p class="opacity-40 mb-2">Opacity</p>
-                        <input type="range" bind:value={svgOpacity} min="0" max="100" />
+   
+    <div class="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 gap-8">
+        <div id="brickPlotBackground" class="mt-8 mb-16">
+           <div id="brickPlotExports">
+            
+            <div class="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-5 gap-8">
+                <label class="label text-xs col-span-3">
+                    <p class="opacity-40 mb-2">Background opacity</p>
+                    <input type="range" bind:value={svgOpacity} min="0" max="100" />
+                </label>
+                <label class="label text-xs col-span-2">
+                    <p class="opacity-40 mb-2">Color</p>
+                    <input class="input" type="color" style="height: 2rem; width: 2rem;" bind:value={svgColor} />
+                </label>
+            </div>
+            <div class="flex justify-start mb-5 mt-4">
+                <button class="btn border border-primary-500 text-base mr-3 truncate" on:click={() => downloadSVG("brickPlotSession")}>
+                  <svg class="w-6 h-6 mr-2" data-slot="icon" aria-hidden="true" fill="none" stroke-width="1.5" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" stroke-linecap="round" stroke-linejoin="round"></path>
+                  </svg>
+                  SVG
+                </button>
+                <button class="btn border border-secondary-500 text-base truncate" on:click={() => downloadJSON($rings)}>
+                  <svg class="w-6 h-6 mr-2" data-slot="icon" aria-hidden="true" fill="none" stroke-width="1.5" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" stroke-linecap="round" stroke-linejoin="round"></path>
+                  </svg>
+                  JSON
+                </button>
+            </div>
+        </div>
+            
+        </div>
+        <div id="brickPlotZoom" class="mt-8 mb-16">
+            <div class="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-5 gap-8 ">
+                <div class="col-span-2">
+                    <label class="text-sm flex items-center">
+                        <input class="checkbox focus:ring-offset-surface-500 focus:checked:ring-offset-secondary-500" type="checkbox" bind:checked={$plotConfigStore.svg.zoomEnabled} />
+                        <div class="opacity-40 ml-2">Enable Zoom</div>
                     </label>
-                    <label class="label text-xs col-span-2">
-                        <p class="opacity-40 mb-2">Color</p>
-                        <input class="input" type="color" style="height: 2rem; width: 2rem;" bind:value={svgColor} />
+                    <p class="text-xs opacity-20 mt-4">Use the mousewheel or buttons below the plot</p>
+                </div>
+                
+                <div class="flex-1 col-span-3">
+                    <label class="label text-xs mb-4">
+                        <p class="opacity-40">Zoom-out limit ({$plotConfigStore.svg.zoomLowerLimit})</p>
+                        <input type="range" bind:value={$plotConfigStore.svg.zoomLowerLimit} min="0" max="10" step="0.1" />
+                    </label>
+                    <label class="label text-xs mb-4">
+                        <p class="opacity-40">Zoom-in limit ({$plotConfigStore.svg.zoomUpperLimit})</p>
+                        <input type="range" bind:value={$plotConfigStore.svg.zoomUpperLimit} min="0" max="100" step="1" />
                     </label>
                 </div>
             </div>
-            <div>
-                <div class="flex justify-start mb-5 mt-4">
-                    <button class="btn border border-primary-500 text-base mr-2" on:click={() => downloadSVG("brickPlotSession")}>
-                      <svg class="w-6 h-6 mr-2" data-slot="icon" aria-hidden="true" fill="none" stroke-width="1.5" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" stroke-linecap="round" stroke-linejoin="round"></path>
-                      </svg>
-                      SVG
-                    </button>
-                    <button class="btn border border-secondary-500 text-base" on:click={() => downloadJSON($rings)}>
-                      <svg class="w-6 h-6 mr-2" data-slot="icon" aria-hidden="true" fill="none" stroke-width="1.5" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" stroke-linecap="round" stroke-linejoin="round"></path>
-                      </svg>
-                      JSON
-                    </button>
-                </div>
-            </div>
-            
-            
         </div>
     </div>
 
-    <p class="opacity-40 mb-4">Plot settings</p>
-    <ListBox class="text-sm opacity-80">
-        <ListBoxItem bind:group={selectedConfig} name="medium" value="title">Title styles</ListBoxItem>
-        <ListBoxItem bind:group={selectedConfig} name="medium" value="labels">Label styles</ListBoxItem>
-        <ListBoxItem bind:group={selectedConfig} name="medium" value="rings">Ring spacing</ListBoxItem>
-    </ListBox>
+    <div class="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-1 gap-8">
+        <div id="brickPlotSettings">
+            <p class="opacity-60 mb-4">Settings</p>
+            <ListBox class="text-sm opacity-80">
+                <ListBoxItem bind:group={selectedConfig} name="medium" value="title">Title styles</ListBoxItem>
+                <ListBoxItem bind:group={selectedConfig} name="medium" value="labels">Label styles</ListBoxItem>
+                <ListBoxItem bind:group={selectedConfig} name="medium" value="rings">Ring spacing</ListBoxItem>
+            </ListBox>
+        </div>
+        
+    </div>
     
     <div class="p-4 my-8">
         {#if selectedConfig === "title"}
@@ -295,3 +320,24 @@
     </div>
     
 </div>
+
+<style lang="postcss">
+    .checkbox:checked, .checkbox:indeterminate {
+        background-color: rgb(var(--color-secondary-500) / var(--tw-bg-opacity));
+    }
+
+    /* .checkbox:checked:focus, .checkbox:indeterminate:focus {
+        --tw-bg-opacity: 1;
+        background-color: rgb(var(--color-secondary-500) / var(--tw-bg-opacity));
+        --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
+        --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(0px + var(--tw-ring-offset-width)) var(--tw-ring-color);
+        box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
+    }
+    .checkbox:focus {
+        --tw-bg-opacity: 1;
+        background-color: rgb(var(--color-secondary-500) / var(--tw-bg-opacity));
+        --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
+        --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(0px + var(--tw-ring-offset-width)) var(--tw-ring-color);
+        box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
+    } */
+</style>

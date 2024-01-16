@@ -40,4 +40,6 @@ ENV PORT=5173
 ENV PROTOCOL_HEADER=x-forwarded-proto
 ENV HOST_HEADER=x-forwarded-host
 
-ENV NODE_ENV=production
+
+# Command to run 
+CMD ["node", "build"]

@@ -59,7 +59,7 @@
     </dl>
 
     <p class="opacity-80 mt-8 mb-4">
-        BRICK depends on open-source research tools and libraries. Please cite the following publications, dependening on usage in the visualization:
+        BRICK depends on open-source research tools and libraries. Please cite the following publications, dependening on their use in the visualization:
     </p>
 
     <dl class="list-dl">

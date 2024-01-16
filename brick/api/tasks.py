@@ -39,7 +39,7 @@ def process_file(file_path: str, file_config: Annotated[dict, "Model dump of Fil
             type=config.file_type,
             format=config.file_format,
             records=records,
-            length=total_length,
+            total_length=total_length,
             selections=selections
         )
 

@@ -10,6 +10,7 @@
   import { ringReferenceStore } from '$lib/stores/RingReferenceStore';
   import { createEventDispatcher } from 'svelte';
 	import { removeTooltip, setTooltip } from '$lib/stores/TooltipStore';
+	import Page from '../../routes/+page.svelte';
 
   $: rings = createFilteredRingsStore($ringReferenceStore) // reactive so it updates on changes to reference sequence
 
@@ -46,8 +47,6 @@
 
   export let scaleFactor: number = getDefaultScaleFactor();
 
-  export let enableZoom: boolean = true;
-  export let zoomRange: [number, number] = [0.5, 20];
 
   export let enableControls: boolean = false;
 
@@ -106,28 +105,66 @@
   $: scaledTransform = `translate(${width / 2},${height / 2}) scale(${scaleFactor})`;
 
 
+  let centerX: number
+  let centerY: number;
+  let zoomBehavior: any;
+
+  let zoomLevel = 1;
+  const zoomStep = 0.5; // Define how much each zoom step should scale
+
+  // Function to zoom in
+  function zoomIn() {
+    zoomLevel = Math.min(zoomLevel + zoomStep, $plotConfigStore.svg.zoomUpperLimit);
+    applyZoom();
+  }
+
+  // Function to zoom out
+  function zoomOut() {
+    zoomLevel = Math.max(zoomLevel - zoomStep, $plotConfigStore.svg.zoomLowerLimit);
+    applyZoom();
+  }
+
+  // Function to reset zoom
+  function resetZoom() {
+    zoomLevel = 1;
+    applyZoom();
+  }
+
+  // Function to apply the zoom transformation
+  function applyZoom() {
+    if ($plotConfigStore.svg.zoomEnabled){
+      const zoomTransform = d3.zoomIdentity.translate(centerX, centerY).scale(zoomLevel);
+      d3.select(svg).call(zoomBehavior.transform, zoomTransform);
+    }
+  }
+
   // Reactive statement instead of onMount to allow 
   // for conditional visibility with fade transtion
   $: if (svg && g) {
 
     // Calculate the center of the SVG element
-    const centerX = svg.clientWidth / 2;
-    const centerY = svg.clientHeight / 2;
+    centerX = svg.clientWidth / 2;
+    centerY = svg.clientHeight / 2;
 
     // Define the initial transform to center the content
     const initialTransform = d3.zoomIdentity.translate(centerX, centerY);
 
     // Set up the zoom behavior
-    const zoomBehavior = d3.zoom()
-      .scaleExtent(zoomRange)
+    zoomBehavior = d3.zoom()
+      .scaleExtent([$plotConfigStore.svg.zoomLowerLimit, $plotConfigStore.svg.zoomUpperLimit])
       .on('zoom', (event: any) => {
         g.setAttribute('transform', event.transform);
-      });
+      })
 
     // Apply the zoom behavior and set the initial transform
-    d3.select(svg)
-      .call(zoomBehavior)
-      .call(zoomBehavior.transform, initialTransform);
+    if ($plotConfigStore.svg.zoomEnabled) {
+      d3.select(svg)
+        .call(zoomBehavior)
+        .call(zoomBehavior.transform, initialTransform);
+    } else {
+       d3.select(svg).on('.zoom', null);
+    }
+    
   }
 
   // All ring data is fed through this generator which will calculate the start
@@ -179,25 +216,20 @@
   function addAlphaToHexColor(hex: string, opacity: number) {
     const alpha = Math.round(opacity * 255).toString(16).padStart(2, '0');
     return hex + alpha;
-}
-  // TODO: implement reset zoom and zoom in/out button
+  }
 
 </script>
 
-<div id="{id}" bind:this={container} class="w-full h-full {border ? borderClass : ''}" >
+<div id="{id}" bind:this={container} class="w-full h-full {border ? borderClass : ''}">
   
     {#if visible}
-      <svg bind:this={svg} class="w-full h-full {enableZoom ? 'cursor-grab' : ''}" style={`background-color: ${addAlphaToHexColor($plotConfigStore.svg.backgroundColor, $plotConfigStore.svg.backgroundOpacity)}`} transition:fade={{duration: fadeDuration, delay: fadeDelay}}>
+      <svg bind:this={svg} class="w-full h-full {$plotConfigStore.svg.zoomEnabled ? 'cursor-grab': ''}" style={`background-color: ${addAlphaToHexColor($plotConfigStore.svg.backgroundColor, $plotConfigStore.svg.backgroundOpacity)}`} transition:fade={{duration: fadeDuration, delay: fadeDelay}}>
         <g bind:this={g} transform={scaledTransform}>
             <g text-anchor="middle">
               <text class="title {$plotConfigStore.title.styles.includes(TitleStyle.CODE) ? 'code': ''}" style="{$plotConfigStore.title.styles.includes(TitleStyle.BOLD) ? 'font-weight: bold': ''}; fill: {$plotConfigStore.title.color}; opacity: {$plotConfigStore.title.opacity}; {$plotConfigStore.title.styles.includes(TitleStyle.ITALIC) ? 'font-style: italic': ''}; transform: scale({$plotConfigStore.title.size / 100})">{$plotConfigStore.title.text}</text>
               <text class="subtitle" dy="{1.35*$plotConfigStore.subtitle.height}em" style="fill: {$plotConfigStore.subtitle.color}; opacity: {$plotConfigStore.subtitle.opacity}; {$plotConfigStore.subtitle.styles.includes(TitleStyle.ITALIC) ? 'font-style: italic': ''}; transform: scale({$plotConfigStore.subtitle.size / 135})">{$plotConfigStore.subtitle.text}</text>
           </g>
 
-
-          <!-- <text class="title {$plotConfigStore.title.styles.includes(TitleStyle.CODE) ? 'code': ''}" style="{$plotConfigStore.title.styles.includes(TitleStyle.BOLD) ? 'font-weight: bold': ''}; fill: {$plotConfigStore.title.color}; opacity: {$plotConfigStore.title.opacity}; {$plotConfigStore.title.styles.includes(TitleStyle.ITALIC) ? 'font-style: italic': ''}; transform: scale({$plotConfigStore.title.size / 100}); text-anchor: middle">{$plotConfigStore.title.text}</text>
-          <text class="subtitle" style="fill: {$plotConfigStore.title.color}; opacity: {$plotConfigStore.title.opacity}; {$plotConfigStore.title.styles.includes(TitleStyle.ITALIC) ? 'font-style: italic': ''}; transform: scale({$plotConfigStore.title.size / 100}); text-anchor: middle">{$plotConfigStore.title.subtext}</text> -->
-          
           {#each $rings as ring}
             {#if ring.type === RingType.LABEL}
               {#each ring.data as ringAnnotation}
@@ -231,7 +263,7 @@
               </text>
             {/each}
           {:else}
-            {#each ring.data as ringSegment}
+            {#each ring.data as ringSegment, idx}
               <path 
                 class="brickRingSegment" 
                 d={arcGenerator(ringSegment, ring.index, $plotConfigStore.rings.height, $plotConfigStore.rings.radius, $plotConfigStore.rings.gap)} 
@@ -242,7 +274,9 @@
                 on:mouseout={handleMouseout} 
                 on:blur={handleMouseout}
                 on:click={() => handleClick(ringSegment)}
-                role="tooltip"
+                on:keypress={() => handleClick(ringSegment)}
+                role="button" 
+                tabindex={idx}
               ></path>
             {/each}
           {/if}
@@ -250,21 +284,26 @@
         </g>
       </svg>
 
-      {#if enableControls}
-        <div class="flex justify-center mb-5">
-          <button class="btn border border-primary-500 text-xs mr-2" on:click={() => downloadSVG(id)}>
-            <svg class="w-4 h-4 mr-2" data-slot="icon" aria-hidden="true" fill="none" stroke-width="1.5" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" stroke-linecap="round" stroke-linejoin="round"></path>
+      {#if $plotConfigStore.svg.zoomEnabled}
+        <div class="mt-2">
+          <button class="btn btn-sm variant-outline-secondary" on:click={zoomIn}>
+            <svg class="w-4 h-4" data-slot="icon" aria-hidden="true" fill="none" stroke-width="1.5" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607ZM10.5 7.5v6m3-3h-6" stroke-linecap="round" stroke-linejoin="round"></path>
             </svg>
-            SVG
           </button>
-          <button class="btn border border-primary-500 text-xs" on:click={() => downloadJSON($rings)}>
-            <svg class="w-4 h-4 mr-2" data-slot="icon" aria-hidden="true" fill="none" stroke-width="1.5" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" stroke-linecap="round" stroke-linejoin="round"></path>
+          <button class="btn btn-sm variant-outline-secondary" on:click={zoomOut}>
+            <svg class="w-4 h-4" data-slot="icon" aria-hidden="true" fill="none" stroke-width="1.5" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607ZM13.5 10.5h-6" stroke-linecap="round" stroke-linejoin="round"></path>
             </svg>
-            JSON
+          </button>
+          <button class="btn btn-sm variant-outline-secondary" on:click={resetZoom}>
+            <svg class="w-4 h-4" data-slot="icon" aria-hidden="true" fill="none" stroke-width="1.5" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
           </button>
         </div>
       {/if}
+
+    
     {/if}
 </div>
