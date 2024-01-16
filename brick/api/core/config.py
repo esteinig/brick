@@ -1,4 +1,3 @@
-import os
 import logging 
 
 from pydantic import AnyHttpUrl, field_validator
@@ -17,11 +16,11 @@ class Settings(BaseSettings):
     DEBUG_MODE: bool = False
 
     # Secret key for instance
-    SECRET_KEY: str = ""
+    SECRET_KEY: str = "CURRENTLY_NOT_USED"
 
     # Working directory for session and tasks
     WORK_DIRECTORY: Path = Path(f"/tmp/brick-work")
-    WORK_DISK_SPACE_GB: int = 5
+    WORK_DISK_SPACE_GB: float = 5
 
     # Session directory limits
     SESSION_MAX_SIZE_MB: int = 200
@@ -35,15 +34,13 @@ class Settings(BaseSettings):
     CORS_ORIGINS: List[str] = ['http://app:5173']
 
     # Database configuration
-    MONGODB_URL: str = "mongodb://root:example@mongodb:27017"
+    MONGODB_USERNAME: str = ""
+    MONGODB_PASSWORD: str = ""
     MONGODB_DATABASE: str = "brick"
     MONGODB_SESSION_COLLECTION: str = "sessions"
 
     class ConfigDict:
         case_sensitive = True
-        env_file = ".env"
-        env_file_encoding = 'utf-8'
-        env_prefix = "BRICK_"
 
     @field_validator('CORS_ORIGINS', mode="before")
     def assemble_cors_origins(cls, v: Optional[str]) -> List[AnyHttpUrl]:
@@ -52,24 +49,29 @@ class Settings(BaseSettings):
         elif isinstance(v, (list, str)):
             return v
         return []
+    
+    @field_validator('MONGODB_USERNAME', mode="before")
+    def get_mongodb_secret_username(cls, v: str):   
+        path = Path(v)     
+        if path.is_file() and path.exists():
+            v = path.read_text()
+        return v
+    
+    @field_validator('MONGODB_PASSWORD', mode="before")
+    def get_mongodb_secret_pwd(cls, v: str):        
+        if Path(v).exists():
+            v = Path(v).read_text()
+        return v
 
-class DevelopmentSettings(Settings):
-    class ConfigDict:
-        env_prefix = "DEV_BRICK_"
 
-class ProductionSettings(Settings):
-    class ConfigDict:
-        env_prefix = "PROD_BRICK_"
+    @field_validator('SECRET_KEY', 'MONGODB_USERNAME', 'MONGODB_PASSWORD', mode="after")
+    def check_required_secrets(cls, v: str):        
+        if not v:
+            raise ValueError(f"required API configuration not provided")
+        return v
 
 def get_settings():
-    environment = os.getenv("BRICK_ENV", "").lower()
-    
-    if environment == "production":
-        return ProductionSettings()
-    elif environment == "development":
-        return DevelopmentSettings()    
-    else:
-        return Settings()
+    return Settings()
 
 def init_app(settings: Settings):
 
