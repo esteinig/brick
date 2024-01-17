@@ -57,7 +57,7 @@ services:
     command: uvicorn brick.api.main:app --host 0.0.0.0 --port 8080
     volumes:
       - api:/data
-      - ${HOST_DATA_DIRECTORY:-/tmp}:/tmp
+      - work:/tmp
     env_file: docker/brick.env
     environment:
       CORS_ORIGINS: http://app:5173
@@ -84,7 +84,7 @@ services:
     command: uvicorn brick.api.main:app --host 0.0.0.0 --port 8080
     volumes:
       - api_dev:/data
-      - ${HOST_DATA_DIRECTORY:-/tmp}:/tmp
+      - work:/tmp
     env_file: docker/brick.env
     environment:
       CORS_ORIGINS: http://app-dev:5174
@@ -115,7 +115,7 @@ services:
     restart: unless-stopped
     command: celery -A brick.api.core.celery.celery_app worker --loglevel=INFO
     volumes:
-      - ${HOST_DATA_DIRECTORY:-/tmp}:/tmp
+      - work:/tmp
     env_file: docker/brick.env
     environment:
       CORS_ORIGINS: http://app:5173
@@ -140,7 +140,7 @@ services:
     restart: unless-stopped
     command: celery -A brick.api.core.celery.celery_app worker --loglevel=INFO
     volumes:
-      - ${HOST_DATA_DIRECTORY:-/tmp}:/tmp
+      - work:/tmp
     env_file: docker/brick.env
     environment:
       CORS_ORIGINS: http://app-dev:5174
@@ -224,7 +224,7 @@ services:
       dockerfile: docker/Dockerfile.cleaner
     env_file: docker/brick.env
     volumes:
-      - ${HOST_DATA_DIRECTORY:-/tmp}:/data:rw
+      - work:/data:rw
 
   # ============
   # UNIT TESTING
@@ -243,7 +243,7 @@ services:
       MONGODB_PASSWORD: /run/secrets/brick_db_pwd
       WORK_DISK_SPACE_GB: 0.01  # 10 MB for testing disk space required - see if this works on runners
     volumes:
-      - ${HOST_DATA_DIRECTORY:-/tmp}:/tmp  # test of disk space (test_utils.py) assumes /tmp
+      - work:/tmp  # test of disk space (test_utils.py) assumes /tmp
     depends_on:
       - redis
       - mongodb
@@ -252,6 +252,8 @@ services:
       - brick_db_pwd
 
 volumes:
+  work:
+    driver: local
   api:
     driver: local
   api_dev:

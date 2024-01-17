@@ -58,7 +58,6 @@
             completeRequestState();
                 
             if (result.type === "success"){
-                console.log($page.form.result)
                 addRing($page.form.result)
                 triggerToast("Ring created sucessfully", ToastType.SUCCESS, toastStore);
             } else {

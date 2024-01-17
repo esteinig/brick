@@ -9,12 +9,13 @@
 	import { clearSessionFiles } from '$lib/stores/SessionFileStore';
 	import { clearRings } from '$lib/stores/RingStore';
 	import { requestInProgress } from '$lib/stores/RequestInProgressStore';
+    import { page } from '$app/stores';
 
 	const modalStore = getModalStore();	
 
 	const newSessionPrompt: ModalSettings = {
 		type: 'confirm',
-		title: 'Please Confirm',
+		title: 'New session',
 		body: 'Are you sure you wish to create a new session? All current data will be lost.',
 		// TRUE if confirm pressed, FALSE if cancel pressed
 		response: (r: boolean) => {
@@ -28,8 +29,10 @@
 	
 	const saveSessionPrompt: ModalSettings = {
 		type: 'confirm',
-		title: 'Please Confirm',
-		body: 'Are you sure you wish to create a new session? All current data will be lost.',
+		title: 'Download session',
+		body: `Sessions are stored in our database for one week and accessible with the unique identifier <span class="code"><a href="${$page.url.href}">${$page.params.session}</a></span> on this page <br><br> 
+		If you want to revisit your session, confirming this prompt will download the raw data model as JSON. You can then upload the data in a new session. <br><br>
+		Please note that uploaded files will not be available after one week due to storage limitations.`,
 		response: (r: boolean) => {
 			if (r) {
 				goto('/brick/'+createSessionId())
@@ -51,24 +54,22 @@
 				class="btn btn-sm variant-ghost-surface"
 				on:click={() => modalStore.trigger(newSessionPrompt)}
 				>
-					New Session
+					New
 				</button>
 				
 				<button
 					class="btn btn-sm variant-ghost-surface"
 					on:click={() => modalStore.trigger(saveSessionPrompt)}
 				>
-					Save Session
+					Save
 				</button>
 
-				<a
+				<button
 					class="btn btn-sm variant-ghost-surface"
-					href="https://github.com/esteinig/brick"
-					target="_blank"
-					rel="noreferrer"
+					on:click={() => modalStore.trigger(saveSessionPrompt)}
 				>
-					GitHub
-				</a>
+					Share
+				</button>
 			</svelte:fragment>
 		</AppBar>
 		{#if $navigating || $requestInProgress}
@@ -81,3 +82,7 @@
 
     <slot />
 </AppShell>
+
+<style lang="postcss">
+
+</style>

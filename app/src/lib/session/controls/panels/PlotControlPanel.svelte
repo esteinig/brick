@@ -132,7 +132,7 @@
     <div class="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-1 gap-8">
         <div id="brickPlotSettings">
             <p class="opacity-60 mb-4">Settings</p>
-            <ListBox class="text-sm opacity-80">
+            <ListBox class="text-sm opacity-80" active="variant-outline-secondary">
                 <ListBoxItem bind:group={selectedConfig} name="medium" value="title">Title styles</ListBoxItem>
                 <ListBoxItem bind:group={selectedConfig} name="medium" value="labels">Label styles</ListBoxItem>
                 <ListBoxItem bind:group={selectedConfig} name="medium" value="rings">Ring spacing</ListBoxItem>
