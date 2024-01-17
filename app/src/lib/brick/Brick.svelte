@@ -47,9 +47,6 @@
 
   export let scaleFactor: number = getDefaultScaleFactor();
 
-
-  export let enableControls: boolean = false;
-
   export let responsive: boolean = true;
   export let visible: boolean = !responsive;
 
