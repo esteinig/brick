@@ -7,6 +7,7 @@ export const DEFAULT_RING_REFERENCE: RingReference = {
 let innerRingData: Array<ReferenceRing | AnnotationRing> = [
 
     {   
+        id: 'drgaetyq346    3246    3',
         index: 0,
         visible: true,
         color: '#b4b87f',
@@ -27,6 +28,7 @@ let innerRingData: Array<ReferenceRing | AnnotationRing> = [
 
 let blastRingData: Array<BlastRing> = [
     {   
+        id: '346q345q5yq',
         index: 1,
         visible: true,
         color: '#6ea8ab',
@@ -44,6 +46,7 @@ let blastRingData: Array<BlastRing> = [
         ]
     },
     {   
+        id: 'wsetrweryt246t36',
         index: 2,
         visible: true,
         color: '#8f5715',
@@ -65,6 +68,7 @@ let blastRingData: Array<BlastRing> = [
 
 let outerRingData: Array<AnnotationRing | LabelRing> = [
     {   
+        id: '3dfgaerty25',
         index: 3,
         visible: true,
         color: '#d3d3d3',

@@ -2,11 +2,13 @@ from typing import List
 from pydantic import BaseModel
 from .schemas import SessionFile
 from .core.config import settings
+from ..rings import Ring
 
 class Session(BaseModel):
     id: str
     date: str
     files: List[SessionFile]
+    rings: List[Ring]
 
     def validate_file_paths(self):
         for file in self.files:

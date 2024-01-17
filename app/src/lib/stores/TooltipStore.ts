@@ -16,5 +16,10 @@ function setTooltip(ringSegment: RingSegment) {
 function removeTooltip() {
     tooltip.update(_ => undefined);
 }
+
+
+function clearTooltip() {
+    tooltip.update(_ => undefined)
+}
 // Export the store and functions
 export { tooltip, setTooltip, removeTooltip};

@@ -17,19 +17,19 @@ function addRing(newRing: Ring, newIndex?: number) {
 }
 
 // Function to remove a ring by index
-function removeRing(index: number) {
+function removeRing(id: string) {
     rings.update(currentRings => {
-        // Remove the ring and update indexes of remaining rings
-        const updatedRings = currentRings.filter(ring => ring.index !== index);
+        // Remove the ring and update ides of remaining rings
+        const updatedRings = currentRings.filter(ring => ring.id !== id);
         return updatedRings.map((ring, idx) => ({ ...ring, index: idx }));
     });
 }
 
 // Function to toggle visibility of a ring
-function toggleRingVisibility(index: number) {
+function toggleRingVisibility(id: string) {
     rings.update(currentRings => {
         return currentRings.map(ring => {
-            if (ring.index === index) {
+            if (ring.id === id) {
                 ring.visible = !ring.visible;
             }
             return ring;
@@ -38,10 +38,10 @@ function toggleRingVisibility(index: number) {
 }
 
 // Function to toggle visibility of a ring
-function changeRingColor(index: number, color: string) {
+function changeRingColor(id: string, color: string) {
     rings.update(currentRings => {
         return currentRings.map(ring => {
-            if (ring.index === index) {
+            if (ring.id === id) {
                 ring.color = color
             }
             return ring;
@@ -89,12 +89,17 @@ function moveRingOutside(currentIndex: number) {
     });
 }
 
-function changeRingTitle(index: number, title: string) {
+function changeRingTitle(id: string, title: string) {
     rings.update(currentRings => {
-        currentRings[index].title = title
-        return currentRings;
-    })
+        return currentRings.map(ring => {
+            if (ring.id === id) {
+                ring.title = title
+            }
+            return ring;
+        });
+    });
 }
+
 
 // Derived store
 
@@ -103,11 +108,12 @@ import type { RingReference } from '$lib/types'; // adjust the import path as ne
 // Function to create a derived store based on RingReference
 function createFilteredRingsStore(ringReference: RingReference) {
     return derived(rings, $rings => {
-        return $rings.filter(ring => 
+        let filteredRings = $rings.filter(ring => 
             ring.reference.reference_id === ringReference.reference_id && 
             ring.reference.session_id === ringReference.session_id &&
             ring.reference.sequence.id === ringReference.sequence.id
         );
+        return filteredRings.map((ring, index) => ({ ...ring, index }));
     });
 }
 

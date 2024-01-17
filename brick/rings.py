@@ -5,6 +5,7 @@ from typing import List
 from enum import StrEnum
 from Bio import SeqIO
 
+import uuid
 import csv
 
 from .utils import sanitize_input
@@ -31,6 +32,7 @@ class RingReference(BaseModel):
     sequence: RingReferenceSequence = RingReferenceSequence()
 
 class Ring(BaseModel):
+    id: str
     index: int = -1
     visible: bool = True
     color: str = "#d3d3d3"
@@ -59,7 +61,7 @@ class BlastnEntry(BaseModel):
     def to_segment(self):
         return RingSegment(
             start=self.subject_start, end=self.subject_end,
-            text=f"{self.perc_identity:.2}% nucleotide identity"
+            text=f"{self.perc_identity:.2f}% nucleotide identity"
         )
 
 
@@ -109,6 +111,7 @@ class BlastRing(Ring):
     @staticmethod
     def from_blast_output(file: Path, reference: RingReference | None = None) -> BlastRing:
         return BlastRing(
+            id=str(uuid.uuid4()), 
             data=[entry.to_segment() for entry in parse_blastn_output(file_path=file, reference=reference)],
             reference=reference
         )
@@ -186,6 +189,7 @@ class AnnotationRing(Ring):
     
     def from_genbank_file(file: Path, features: List[str], reference: RingReference | None = None, sanitize: bool = True) -> AnnotationRing:
         return AnnotationRing(
+            id=str(uuid.uuid4()), 
             data=[entry.to_segment(sanitize=sanitize) for entry in parse_genbank_features(
                 file_path=str(file), feature_types=features
             )],
@@ -194,6 +198,7 @@ class AnnotationRing(Ring):
     
     def from_tsv_file(file: Path, reference: RingReference | None = None, sanitize: bool = True) -> AnnotationRing:
         return AnnotationRing(
+            id=str(uuid.uuid4()), 
             data=[segment for segment in parse_tsv_segments(file_path=file, sanitize=sanitize)],
             reference=reference
         )
@@ -201,9 +206,11 @@ class AnnotationRing(Ring):
 class LabelRing(Ring):
     type: RingType = RingType.LABEL
     title: str = "Label Ring"
+
     
     def from_genbank_file(file: Path, features: List[str], reference: RingReference | None = None, sanitize: bool = True) -> LabelRing:
         return LabelRing(
+            id=str(uuid.uuid4()), 
             data=[entry.to_segment(sanitize=sanitize) for entry in parse_genbank_features(
                 file_path=str(file), feature_types=features
             )],
@@ -212,6 +219,7 @@ class LabelRing(Ring):
     
     def from_tsv_file(file: Path, reference: RingReference | None = None, sanitize: bool = True) -> LabelRing:
         return LabelRing(
+            id=str(uuid.uuid4()), 
             data=[segment for segment in parse_tsv_segments(file_path=file, sanitize=sanitize)],
             reference=reference
         )

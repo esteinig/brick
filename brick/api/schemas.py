@@ -4,10 +4,8 @@ from pathlib import Path
 from enum import StrEnum
 from uuid import UUID
 
-import uuid
-
 from .core.config import settings
-from ..rings import BlastRing, AnnotationRing, LabelRing, RingSegment, RingReference
+from ..rings import BlastRing, AnnotationRing, LabelRing, RingSegment, RingReference, Ring
 
 SessionID = Annotated[str, "Session UUID used as directory name of the session directory"]
 SessionFileID = Annotated[str, "Uploaded file assigned UUID used as filename in session directory"]
@@ -243,3 +241,36 @@ class LabelRingSchema(RingSchema):
 
 class LabelRingResponse(BaseModel):
     task_id: CeleryTaskID
+
+
+class RingUpdate(BaseModel):
+    id: str
+    index: int
+    visible: bool
+    color: str 
+    height: int
+    title: str
+
+
+class SessionUpdateSchema(BaseModel):
+    id: SessionID
+    files: List[SessionFile]
+    ring_updates: List[RingUpdate]
+
+
+def update_rings(rings: List[Ring], updates: List[RingUpdate]) -> List[Ring]:
+    # Create a mapping of id to Ring object for quick lookup
+    ring_map = {ring.id: ring for ring in rings}
+
+    for update in updates:
+        # Find the corresponding Ring
+        ring_to_update = ring_map.get(update.id)
+        if ring_to_update:
+            # Update Ring properties
+            ring_to_update.index = update.index
+            ring_to_update.visible = update.visible
+            ring_to_update.color = update.color
+            ring_to_update.height = update.height
+            ring_to_update.title = update.title
+
+    return list(ring_map.values())
