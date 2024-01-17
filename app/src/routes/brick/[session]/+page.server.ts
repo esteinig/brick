@@ -1,6 +1,6 @@
 import { fail, error} from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
-import type { FileUploadResponse, CreateRingResponse, SessionResponse } from '$lib/types';
+import type { FileUploadResponse, CreateRingResponse, SessionResponse, Session } from '$lib/types';
 import { RingType } from '$lib/types';
 import { checkCeleryResults, getErrorMessage } from '$lib/helpers';
 import { env } from '$env/dynamic/private';
@@ -10,13 +10,15 @@ function isValidUUIDv4(uuid: string): boolean {
     return regex.test(uuid);
 }
 
-export const load: PageServerLoad = async ({ url, params }) => {
+export const load: PageServerLoad = async ({ depends, params }) => {
+
+    depends("app:session")
 
     if (!params.session || !isValidUUIDv4(params.session)) {
         throw error(400, 'Invalid URL');
     }
 
-    const response = await fetch(`${env.PRIVATE_DOCKER_API_URL}/sessions/${params.session}?session_files_exist=true`);
+    const response = await fetch(`${env.PRIVATE_DOCKER_API_URL}/sessions/${params.session}`);
 
     try {
         const sessionResponseData: SessionResponse = await response.json();
@@ -24,7 +26,28 @@ export const load: PageServerLoad = async ({ url, params }) => {
         if (response.ok) {
             return { session: sessionResponseData, detail: undefined }
         } else {
-            return { session: undefined, detail: sessionResponseData.detail }
+            if (response.status === 404){
+
+                // Create a new session request
+
+                const newSessionResponse = await fetch(`${env.PRIVATE_DOCKER_API_URL}/sessions/${params.session}`, {method: 'POST'});
+
+                try {
+                    const sessionResponseData: SessionResponse = await newSessionResponse.json();
+                    if (response.ok) {
+                        return { session: sessionResponseData, detail: undefined }
+                    } else {
+                        fail(response.status, sessionResponseData)
+                    }
+                } catch(error){
+                    // Catch if something bad happens during validation with pydantic
+                    // there is no JSON object returned (error only)
+                    return fail(response.status, {detail: getErrorMessage(error)})
+                }
+            } else {
+                fail(response.status, { detail: response.statusText })
+            }
+            
         }
     } catch(error) {
         // Catch if something bad happens during validation with pydantic
@@ -107,6 +130,38 @@ export const actions: Actions = {
                 }
             } else {
                 return fail(response.status, createRingResponseData)
+            }
+        } catch(error) {
+            // Catch if something bad happens during validation with pydantic
+            // there is no JSON object returned (error only)
+            return fail(response.status, {
+                detail: getErrorMessage(error)
+            })
+        }
+        
+        
+    },
+    updateSession: async ({ request }) => {
+
+        const formData = await request.formData();
+
+        const sessionId = formData.get("session_id");
+        const sessionUpdate = formData.get("session_update");
+        
+
+        const response = await fetch(`${env.PRIVATE_DOCKER_API_URL}/sessions/${sessionId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: sessionUpdate
+        });
+        
+        try {
+            const sessionResponseData: SessionResponse = await response.json();
+    
+            if (response.ok) {
+                return { session: sessionResponseData, detail: undefined }
+            } else {
+                return { session: undefined, detail: sessionResponseData.detail }
             }
         } catch(error) {
             // Catch if something bad happens during validation with pydantic

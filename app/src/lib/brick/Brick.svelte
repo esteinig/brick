@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import * as d3 from 'd3';
 
-  import { downloadJSON, downloadSVG, getDefaultScaleFactor } from './helpers';
+  import { getDefaultScaleFactor } from './helpers';
 	import { RingType, type Ring, type RingSegment, TitleStyle } from '$lib/types';
 	import { plotConfigStore } from '$lib/stores/PlotConfigStore';
 	import { fade } from 'svelte/transition';
@@ -12,7 +12,8 @@
 	import { removeTooltip, setTooltip } from '$lib/stores/TooltipStore';
 	import Page from '../../routes/+page.svelte';
 
-  $: rings = createFilteredRingsStore($ringReferenceStore) // reactive so it updates on changes to reference sequence
+
+  $: rings = createFilteredRingsStore($ringReferenceStore)
 
   const dispatch = createEventDispatcher();
   let segmentClicked: boolean = false;
@@ -170,6 +171,7 @@
   function arcGenerator(d: RingSegment, index: number, height: number, radius: number, gap: number): string {
     
     const ringHeight = getRingHeight($rings, 0, index);
+
     return d3.arc()
       .innerRadius(radius+(index*gap)+ringHeight)
       .outerRadius(radius+(index*gap)+ringHeight+height)

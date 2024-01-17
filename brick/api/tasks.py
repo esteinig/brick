@@ -13,7 +13,7 @@ from .core.celery import celery_app
 from .core.db import get_session_collection_pymongo
 from .schemas import FileFormat, FileType, SessionFile, Selections, FileConfig, AnnotationRingSchema, LabelRingSchema, Sequence, BlastRingSchema
 from .models import Session
-from ..rings import BlastRing, AnnotationRing, LabelRing
+from ..rings import Ring, BlastRing, AnnotationRing, LabelRing
 
 # Uploaded file validation and session file storage
 @celery_app.task
@@ -43,7 +43,7 @@ def process_file(file_path: str, file_config: Annotated[dict, "Model dump of Fil
             selections=selections
         )
 
-        update_or_create_session(session_file=session_file)
+        update_files_or_create_session(session_file=session_file)
 
         return {
             "success": True, 
@@ -78,7 +78,8 @@ def process_blast_ring(
                 file=output_file, reference=ring_schema.reference
             )
 
-             
+        update_rings_or_create_session(session_id=ring_schema.reference.session_id, ring=ring)      
+
         return {
             "success": True, 
             "result": ring.model_dump()
@@ -115,6 +116,8 @@ def process_annotation_ring(
         else:
             raise ValueError("Something went wrong - no files provided")
 
+        update_rings_or_create_session(session_id=ring_schema.reference.session_id, ring=ring)  
+
         return {
             "success": True, 
             "result": ring.model_dump()
@@ -148,6 +151,8 @@ def process_label_ring(
                 labels=ring_schema.labels, 
                 sanitize=True
             )
+
+        update_rings_or_create_session(session_id=ring_schema.reference.session_id, ring=ring)  
 
         return {
             "success": True, 
@@ -299,7 +304,7 @@ def validate_genbank_file(file_path: Path):
 # No further error handling as any errors here will bubble
 # up to the general exception handling in the task
 
-def update_or_create_session(session_file: SessionFile) -> str:
+def update_files_or_create_session(session_file: SessionFile) -> str:
 
     sessions_collection = get_session_collection_pymongo()
 
@@ -315,13 +320,49 @@ def update_or_create_session(session_file: SessionFile) -> str:
         new_session = Session(
             id=session_file.session_id, 
             date=datetime.now().isoformat(), 
-            files=[session_file]
+            files=[session_file],
+            rings=[]
         )
         sessions_collection.insert_one(
             new_session.model_dump()
         )
 
     return session_file.session_id
+
+
+
+def update_rings_or_create_session(session_id: str, ring: Ring) -> str:
+
+    sessions_collection = get_session_collection_pymongo()
+
+    # Check if session exists and update or create
+    session = sessions_collection.find_one({"id": session_id})
+
+    # Get last index to adjust the ring index from default of 
+    # -1 (outermost position) to the last index of rings
+    # stored in the session model 
+
+    if session:
+        session_model = Session(**session)
+        ring.index = len(session_model.rings)
+
+        sessions_collection.update_one(
+            {"id": session_id}, 
+            {"$push": {"rings": ring.model_dump()}}
+        )
+    else:
+        new_session = Session(
+            id=session_id, 
+            date=datetime.now().isoformat(), 
+            files=[],
+            rings=[ring]
+        )
+        sessions_collection.insert_one(
+            new_session.model_dump()
+        )
+
+    return session_id
+
 
 
 # Working directory helpers

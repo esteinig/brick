@@ -4,6 +4,8 @@
  *  ===========
 */
 
+import { createUuid } from "./helpers"
+
 
 export enum RingType {
     GENERIC = "generic",
@@ -28,6 +30,7 @@ export type RingReference = {
 }
 
 export class Ring {
+    id: string;
     reference: RingReference;
     index: number;
     visible: boolean;
@@ -45,7 +48,8 @@ export class Ring {
         color: string = "#d3d3d3", 
         height: number = 20, 
         title: string = "Ring"
-    ) {
+    ) { 
+        this.id = createUuid()
         this.reference = reference
         this.index = index;
         this.visible = visible;
@@ -73,6 +77,7 @@ export class ReferenceRing extends Ring {
         title: string = "Reference Ring"
     ) {
         super(reference, index, visible, type, color, height, title)
+        this.id = createUuid()
         this.size = size;
         this.data = [
             {start: 0, end: size, color: color, text: title}
@@ -92,6 +97,7 @@ export class AnnotationRing extends Ring {
         title: string = "Annotation Ring"
     ) {
         super(reference, index, visible, type, color, height, title)
+        this.id = createUuid()
     }
 }
 
@@ -106,6 +112,7 @@ export class BlastRing extends Ring {
         title: string = "Blast Ring"
     ) {
         super(reference, index, visible, type, color, height, title)
+        this.id = createUuid()
     }
 }
 
@@ -120,6 +127,7 @@ export class LabelRing extends Ring {
         title: string = "Label Ring"
     ) {
         super(reference, index, visible, type, color, height, title)
+        this.id = createUuid()
     }
 }
 
@@ -222,6 +230,15 @@ export type LabelRingSchema = {
     labels: RingSegment[]
 } & RingSchema
 
+export type RingUpdateSchema = {
+    id: string
+    index: number
+    color: string
+    height: number, 
+    title: string
+    visible: boolean
+}
+
 /*  =============
  *  API RESPONSES
  *  =============
@@ -260,6 +277,13 @@ export type Session = {
     files: SessionFile[]
     rings: Ring[]
 }
+
+export type SessionUpdateSchema = {
+    id: string
+    files: SessionFile[]
+    ring_updates: RingUpdateSchema[]  
+}
+
 
 export type SessionResponse = Session & ErrorResponse;
 

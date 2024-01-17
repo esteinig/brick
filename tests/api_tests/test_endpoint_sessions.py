@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, patch
 
 # Mock session data
 mock_session_data = Session(
-    id="some_uuid", date="some_iso_date", files=[]
+    id="some_uuid", date="some_iso_date", files=[], rings=[]
 )
 
 @pytest.fixture

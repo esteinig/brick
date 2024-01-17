@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { sessionFiles } from "$lib/stores/SessionFileStore";
-    console.log($sessionFiles)
+    
 </script>
 
 {#if $sessionFiles.length}

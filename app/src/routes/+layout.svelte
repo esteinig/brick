@@ -4,7 +4,7 @@
 	// Highlight JS
 	import hljs from 'highlight.js/lib/core';
 	import 'highlight.js/styles/github-dark.css';
-	import { Modal, Toast, storeHighlightJs } from '@skeletonlabs/skeleton';
+	import { Modal, Toast, storeHighlightJs, type ModalComponent } from '@skeletonlabs/skeleton';
 	import xml from 'highlight.js/lib/languages/xml'; // for HTML
 	import css from 'highlight.js/lib/languages/css';
 	import javascript from 'highlight.js/lib/languages/javascript';
@@ -24,9 +24,15 @@
 	import { initializeStores } from '@skeletonlabs/skeleton';
 	initializeStores();
 
+	import SaveSessionModal from '$lib/session/modals/SaveSessionModal.svelte';
+
+	const modalRegistry: Record<string, ModalComponent> = {
+		saveSessionModal: { ref: SaveSessionModal }
+	};
+
 </script>
 
 
-<Modal />
+<Modal components={modalRegistry} />
 <Toast position="br"/>
 <slot />
