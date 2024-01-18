@@ -29,16 +29,15 @@ export const load: PageServerLoad = async ({ depends, params }) => {
             if (response.status === 404){
 
                 // Create a new session request
-
                 const newSessionResponse = await fetch(`${env.PRIVATE_DOCKER_API_URL}/sessions/${params.session}`, {method: 'POST'});
 
                 try {
                     const sessionResponseData: SessionResponse = await newSessionResponse.json();
 
-                    if (response.ok) {
+                    if (newSessionResponse.ok) {
                         return { session: sessionResponseData }
                     } else {
-                        return fail(response.status, sessionResponseData)
+                        return fail(newSessionResponse.status, sessionResponseData)
                     }
                 } catch(error){
                     // Catch if something bad happens during validation with pydantic
