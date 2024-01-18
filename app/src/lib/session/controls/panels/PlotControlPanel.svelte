@@ -65,7 +65,7 @@
         
     }
 
-    let selectedConfig: string = "";
+    let selectedConfig: string = "title";
 
 </script>
 
@@ -110,7 +110,7 @@
                 <div class="col-span-2">
                     <label class="text-sm flex items-center">
                         <input class="checkbox focus:ring-offset-surface-500 focus:checked:ring-offset-secondary-500" type="checkbox" bind:checked={$plotConfigStore.svg.zoomEnabled} />
-                        <div class="opacity-40 ml-2">Enable Zoom</div>
+                        <div class="opacity-40 ml-2">Enable zoom</div>
                     </label>
                     <p class="text-xs opacity-20 mt-4">Use the mousewheel or buttons below the plot</p>
                 </div>
@@ -129,7 +129,7 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-1 gap-8">
+    <div class="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 gap-8">
         <div id="brickPlotSettings">
             <p class="opacity-60 mb-4">Settings</p>
             <ListBox class="text-sm opacity-80" active="variant-outline-secondary">
