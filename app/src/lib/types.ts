@@ -232,11 +232,12 @@ export type LabelRingSchema = {
 
 export type RingUpdateSchema = {
     id: string
-    index: number
-    color: string
-    height: number, 
-    title: string
-    visible: boolean
+    index: number | null
+    color: string | null
+    height: number | null
+    title: string | null
+    visible: boolean | null
+    index_group: string[] | null
 }
 
 /*  =============
@@ -276,12 +277,6 @@ export type Session = {
     date: string
     files: SessionFile[]
     rings: Ring[]
-}
-
-export type SessionUpdateSchema = {
-    id: string
-    files: SessionFile[]
-    ring_updates: RingUpdateSchema[]  
 }
 
 
@@ -379,4 +374,10 @@ export enum PaletteName {
     NZ = "Manu New Zealand",
     NP = "National Parks Palettes",
     MOMA = "Museum of Modern Art"
+}
+
+
+export enum RingDirection {
+    IN = "in",
+    OUT = "out"
 }

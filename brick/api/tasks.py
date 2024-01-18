@@ -77,6 +77,9 @@ def process_blast_ring(
             ring: BlastRing = BlastRing.from_blast_output(
                 file=output_file, reference=ring_schema.reference
             )
+        
+        if not ring.data:
+            raise ValueError("BLAST executed correctly but no alignments were found")
 
         update_rings_or_create_session(session_id=ring_schema.reference.session_id, ring=ring)      
 
