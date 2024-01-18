@@ -16,14 +16,31 @@ function addRing(newRing: Ring, newIndex?: number) {
     });
 }
 
-// Function to remove a ring by index
-function removeRing(id: string) {
+// Function to remove a ring by id and reindex rings in the specified index group
+function removeRing(id: string, indexGroup: string[]) {
     rings.update(currentRings => {
-        // Remove the ring and update ides of remaining rings
-        const updatedRings = currentRings.filter(ring => ring.id !== id);
-        return updatedRings.map((ring, idx) => ({ ...ring, index: idx }));
+        // Remove the specified ring
+        const ringsAfterRemoval = currentRings.filter(ring => ring.id !== id);
+
+        // Filter the remaining rings to include only those in the index group
+        const indexGroupRings = ringsAfterRemoval.filter(ring => indexGroup.includes(ring.id));
+
+        // Sort these rings based on their current index
+        indexGroupRings.sort((a, b) => a.index - b.index);
+
+        // Update the indices to be continuous, starting from 0
+        for (let i = 0; i < indexGroupRings.length; i++) {
+            indexGroupRings[i].index = i;
+        }
+
+        // Create a map of updated index group rings for easy lookup
+        const updatedIndexGroupRingsMap = new Map(indexGroupRings.map(ring => [ring.id, ring]));
+
+        // Merge the updated index group rings back into the full list
+        return ringsAfterRemoval.map(ring => updatedIndexGroupRingsMap.get(ring.id) || ring);
     });
 }
+
 
 // Function to toggle visibility of a ring
 function toggleRingVisibility(id: string) {
@@ -61,33 +78,6 @@ function clearRings() {
     rings.update(_ => [])
 }
 
-// Function to move a ring up (decrease its index)
-function moveRingInside(currentIndex: number) {
-    rings.update(currentRings => {
-        if (currentIndex > 0 && currentIndex < currentRings.length) {
-            [currentRings[currentIndex - 1], currentRings[currentIndex]] = 
-            [currentRings[currentIndex], currentRings[currentIndex - 1]];
-
-            // Update indexes
-            return currentRings.map((ring, idx) => ({ ...ring, index: idx }));
-        }
-        return currentRings;
-    });
-}
-
-// Function to move a ring down (increase its index)
-function moveRingOutside(currentIndex: number) {
-    rings.update(currentRings => {
-        if (currentIndex >= 0 && currentIndex < currentRings.length - 1) {
-            [currentRings[currentIndex], currentRings[currentIndex + 1]] = 
-            [currentRings[currentIndex + 1], currentRings[currentIndex]];
-
-            // Update indexes
-            return currentRings.map((ring, idx) => ({ ...ring, index: idx }));
-        }
-        return currentRings;
-    });
-}
 
 function changeRingTitle(id: string, title: string) {
     rings.update(currentRings => {
@@ -100,10 +90,60 @@ function changeRingTitle(id: string, title: string) {
     });
 }
 
+// Function to move a ring inside and adjust the indices
+function moveRingInside(id: string) {
+    rings.update(currentRings => {
+        // Find the ring to move and its current index
+        const ringToMove = currentRings.find(ring => ring.id === id);
+        if (!ringToMove) return currentRings; // Ring not found
+
+        const currentIndex = ringToMove.index;
+        // Check if the ring is already at the innermost position
+        if (currentIndex === 0) return currentRings;
+
+        // Find the ring currently inside the position we want to move to
+        const innerRing = currentRings.find(ring => ring.index === currentIndex - 1);
+        if (!innerRing) return currentRings; // Inner ring not found
+
+        // Swap indices of the two rings
+        ringToMove.index = currentIndex - 1;
+        innerRing.index = currentIndex;
+
+        // Return the updated list of rings
+        return [...currentRings];
+    });
+}
+
+// Function to move a ring outside and adjust the indices
+function moveRingOutside(id: string, maxIndex: number) {
+    rings.update(currentRings => {
+        // Find the ring to move and its current index
+        const ringToMove = currentRings.find(ring => ring.id === id);
+        if (!ringToMove) return currentRings; // Ring not found
+
+        const currentIndex = ringToMove.index;
+        // Check if the ring is already at the outermost position
+        if (currentIndex === maxIndex) return currentRings;
+
+        // Find the ring currently outside the position we want to move to
+        const outerRing = currentRings.find(ring => ring.index === currentIndex + 1);
+        if (!outerRing) return currentRings; // Outer ring not found
+
+        // Swap indices of the two rings
+        ringToMove.index = currentIndex + 1;
+        outerRing.index = currentIndex;
+
+        // Return the updated list of rings
+        return [...currentRings];
+    });
+}
+
+
+
 
 // Derived store
 
-import type { RingReference } from '$lib/types'; // adjust the import path as needed
+import type { RingReference } from '$lib/types'; 
 
 // Function to create a derived store based on RingReference
 function createFilteredRingsStore(ringReference: RingReference) {
@@ -113,7 +153,10 @@ function createFilteredRingsStore(ringReference: RingReference) {
             ring.reference.session_id === ringReference.session_id &&
             ring.reference.sequence.id === ringReference.sequence.id
         );
-        return filteredRings.map((ring, index) => ({ ...ring, index }));
+        
+        filteredRings.sort((a, b) => a.index - b.index);
+
+        return filteredRings // .map((ring, index) => ({ ...ring, index })); updates the indices by the order of the filtered rings 
     });
 }
 
@@ -137,3 +180,5 @@ function addNewRing(rings: Ring[], newRing: Ring, newIndex: number = rings.lengt
     newRings.splice(newIndex, 0, newRing);
     return newRings.map((ring, idx) => ({ ...ring, index: idx }));
 }
+
+

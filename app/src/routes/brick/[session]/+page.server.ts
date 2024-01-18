@@ -24,7 +24,7 @@ export const load: PageServerLoad = async ({ depends, params }) => {
         const sessionResponseData: SessionResponse = await response.json();
 
         if (response.ok) {
-            return { session: sessionResponseData, detail: undefined }
+            return { session: sessionResponseData }
         } else {
             if (response.status === 404){
 
@@ -34,18 +34,19 @@ export const load: PageServerLoad = async ({ depends, params }) => {
 
                 try {
                     const sessionResponseData: SessionResponse = await newSessionResponse.json();
+
                     if (response.ok) {
-                        return { session: sessionResponseData, detail: undefined }
+                        return { session: sessionResponseData }
                     } else {
-                        fail(response.status, sessionResponseData)
+                        return fail(response.status, sessionResponseData)
                     }
                 } catch(error){
                     // Catch if something bad happens during validation with pydantic
                     // there is no JSON object returned (error only)
-                    return fail(response.status, {detail: getErrorMessage(error)})
+                    return fail(response.status, { detail: getErrorMessage(error) })
                 }
             } else {
-                fail(response.status, { detail: response.statusText })
+                return fail(response.status, { detail: response.statusText })
             }
             
         }
@@ -141,27 +142,28 @@ export const actions: Actions = {
         
         
     },
-    updateSession: async ({ request }) => {
+    // Atomic updates to rings in database from user style selection
+    updateSessionRing: async ({ request }) => {
 
         const formData = await request.formData();
 
-        const sessionId = formData.get("session_id");
-        const sessionUpdate = formData.get("session_update");
+        const sessionId = formData.get("session_id") as string;
+        const ringUpdate = formData.get("ring_update");
         
 
-        const response = await fetch(`${env.PRIVATE_DOCKER_API_URL}/sessions/${sessionId}`, {
+        const response = await fetch(`${env.PRIVATE_DOCKER_API_URL}/sessions/${sessionId}/ring`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: sessionUpdate
+            body: ringUpdate
         });
         
         try {
             const sessionResponseData: SessionResponse = await response.json();
     
             if (response.ok) {
-                return { session: sessionResponseData, detail: undefined }
+                return { session: sessionResponseData }
             } else {
-                return { session: undefined, detail: sessionResponseData.detail }
+                return fail(response.status, sessionResponseData)
             }
         } catch(error) {
             // Catch if something bad happens during validation with pydantic
@@ -170,7 +172,34 @@ export const actions: Actions = {
                 detail: getErrorMessage(error)
             })
         }
+    },
+    deleteSessionRing: async ({ request }) => {
+
+        const formData = await request.formData();
+
+        const sessionId = formData.get("session_id") as string;
+        const ringUpdate = formData.get("ring_update");
         
+        const response = await fetch(`${env.PRIVATE_DOCKER_API_URL}/sessions/${sessionId}/ring`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: ringUpdate
+        });
         
+        try {
+            const sessionResponseData: SessionResponse = await response.json();
+    
+            if (response.ok) {
+                return { session: sessionResponseData }
+            } else {
+                return fail(response.status, sessionResponseData)
+            }
+        } catch(error) {
+            // Catch if something bad happens during validation with pydantic
+            // there is no JSON object returned (error only)
+            return fail(response.status, {
+                detail: getErrorMessage(error)
+            })
+        }
     }
 };

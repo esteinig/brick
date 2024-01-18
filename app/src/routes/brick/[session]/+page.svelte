@@ -32,8 +32,6 @@
 		}
 	}
 
-	$: console.log($page.data.session)
-	
 </script>	
 
 

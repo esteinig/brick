@@ -11,7 +11,6 @@
     import { startRequestState, completeRequestState } from '$lib/stores/RequestInProgressStore';
     
     const toastStore = getToastStore();
-
     
     let ringConfig: AnnotationRingSchema = {
         reference: $ringReferenceStore,
