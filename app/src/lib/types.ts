@@ -156,7 +156,7 @@ export type SessionFile = {
     format: string
     records: number
     total_length: number
-    name_original: string,
+    name_original: string
     selections: Selections
 }
 
@@ -174,19 +174,22 @@ export type UploadConfig = {
     single: boolean
     format: FileFormat
     type: FileType
+    info: string
 }
 
 export enum FileFormat {
     FASTA = "fasta",
     GENBANK = "genbank",
-    TSV = "tsv"
+    TSV = "tsv",
+    JSON = "json"
 }
 
 export enum FileType {
     REFERENCE = "reference",
     GENOME = "genome",
     ANNOTATION_GENBANK = "annotation_genbank",
-    ANNOTATION_CUSTOM = "annotation_custom"
+    ANNOTATION_CUSTOM = "annotation_custom",
+    SESSION = "session"
 }
 
 export enum TaskStatus {
@@ -207,7 +210,7 @@ export enum BlastMethod {
 }
 
 export type RingSchema = {
-    reference: RingReference
+    reference: RingReference | null
 }
 
 export type BlastRingSchema = {
@@ -257,10 +260,19 @@ export type CreateRingResponse = {
     task_id: string
 } & ErrorResponse
 
+export enum TaskResultType {
+    SESSION = 'SESSION',
+    SESSION_FILE = 'SESSION_FILE',
+    BLAST_RING = 'BLAST_RING',
+    ANNOTATION_RING = 'ANNOTATION_RING',
+    LABEL_RING = 'LABEL_RING'
+}
+
 export type TaskStatusResponse = {
     status: TaskStatus
     task_id: string
-    result: SessionFile
+    result: Session | SessionFile | BlastRing | AnnotationRing | LabelRing
+    result_type: TaskResultType 
 } & ErrorResponse
 
 export type PydanticValidationError = {

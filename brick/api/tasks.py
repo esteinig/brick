@@ -1,7 +1,10 @@
 import pandas
+import json 
+import shutil
 import subprocess
 import tempfile
 import contextlib
+
 
 from Bio import SeqIO
 from typing import Tuple, Annotated, Optional
@@ -11,8 +14,7 @@ from datetime import datetime
 from .core.config import settings
 from .core.celery import celery_app
 from .core.db import get_session_collection_pymongo
-from .schemas import FileFormat, FileType, SessionFile, Selections, FileConfig, AnnotationRingSchema, LabelRingSchema, Sequence, BlastRingSchema
-from .models import Session
+from .schemas import Session, FileFormat, FileType, SessionFile, Selections, FileConfig, AnnotationRingSchema, LabelRingSchema, Sequence, BlastRingSchema
 from ..rings import Ring, BlastRing, AnnotationRing, LabelRing
 
 # Uploaded file validation and session file storage
@@ -54,6 +56,64 @@ def process_file(file_path: str, file_config: Annotated[dict, "Model dump of Fil
         Path(file_path).unlink() # delete for disk space
         return {"success": False, "error": str(e)}
     
+# Uploaded file validation and session file storage
+@celery_app.task
+def rehydrate_session(file_path: str, file_config: Annotated[dict, "Model dump of FileConfig for JSON session file"]):
+
+    try:
+        file = Path(file_path)
+        config = FileConfig(**file_config)
+
+        with file.open("r") as session_file:
+            data = json.load(session_file)
+        
+        session = Session(**data)
+
+        # Check if files still exist on disk and copy everything to new
+        # session directory if they do, otherwise let user know the files
+        # have expired and do not exist anymore
+
+        old_session_id = session.id
+        new_session_id = config.session_id
+
+        old_session_directory = settings.WORK_DIRECTORY / old_session_id
+        new_session_directory = settings.WORK_DIRECTORY / new_session_id
+
+        print(f"""
+        Old session ID: {old_session_id}
+        New session ID: {new_session_id}
+        """)
+
+        if old_session_directory.exists() and old_session_directory != new_session_directory:
+            # Session data and files have not expired, and the rehydration is not running on 
+            # the same session as before, here we copy the data over into a new directory
+            # and delete the old one:
+            shutil.copytree(old_session_directory, new_session_directory, dirs_exist_ok=True)
+            shutil.rmtree(old_session_directory)
+        
+        
+        # Replace session identifiers 
+        session_update = session.replace_session_id(new_session_id=new_session_id)
+
+        # Add a re-hydration tag to the original filename to set expectation that
+        # any operation on the file may fail (in frontend)
+        session_update = session_update.add_rehydration_tag()
+
+        # Assign a new date to session
+        session_update.date = datetime.now().isoformat()
+
+        # Update session in database
+        update_session_or_create_session(session_update=session_update)
+
+        return {
+            "success": True, 
+            "result": session_update.model_dump()
+        }
+
+    except Exception as e:
+        Path(file_path).unlink() # delete for disk space
+        return {"success": False, "error": str(e)}
+
 
 
 # Nucleotide BLAST subprocess execution and parsing
@@ -367,6 +427,24 @@ def update_rings_or_create_session(session_id: str, ring: Ring) -> str:
     return session_id
 
 
+def update_session_or_create_session(session_update: Session):
+
+    sessions_collection = get_session_collection_pymongo()
+
+    # Check if session exists and update or create
+    session = sessions_collection.find_one({"id": session_update.id})
+
+    if session:
+        sessions_collection.update_one(
+            {"id": session_update.id}, 
+            {"$set": session_update.model_dump()}
+        )
+    else:
+        sessions_collection.insert_one(
+            session_update.model_dump()
+        )
+
+    return session_update.id  # new id
 
 # Working directory helpers
 

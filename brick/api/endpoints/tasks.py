@@ -4,7 +4,7 @@ from fastapi import APIRouter, HTTPException
 
 from ..schemas import TaskStatus, TaskStatusResponse, TaskResultResponse
 from ..core.celery import celery_app
-from ..schemas import SessionFile
+from ..schemas import Session, SessionFile, FileType, TaskResultType
 from ...rings import BlastRing, AnnotationRing, LabelRing, RingType
 
 router = APIRouter(
@@ -36,34 +36,46 @@ def get_task_result(task_id: str):
             content=TaskResultResponse(
                 task_id=task_id, 
                 status=TaskStatus.PROCESSING, 
-                result=None
+                result=None,
+                result_type=None,
             ).model_dump()
         )
     
     result = task_result.get()
 
     if result["success"]:
+        
+        # Task result outputs are always dictionaries
         if isinstance(result["result"], dict):
             result_data = result["result"]
+        else:
+            raise TypeError("Output of the requested task was not a dictionary")
 
-            if 'session_id' in result_data:
-                result_model = SessionFile(**result_data)
-            elif 'type' in result_data and result_data["type"] == RingType.BLAST:
-                result_model = BlastRing(**result_data)
-            elif 'type' in result_data and result_data["type"] == RingType.ANNOTATION:
-                result_model = AnnotationRing(**result_data)
-            elif 'type' in result_data and result_data["type"] == RingType.LABEL:
-                result_model = LabelRing(**result_data)
-            else: 
-                raise HTTPException(status_code=500, detail="Task result did not have a known type")
+        result_model = get_result_model(result_data=result_data)
 
         return JSONResponse(
             status_code=200, 
             content=TaskResultResponse(
                 task_id=task_id, 
                 status=TaskStatus.SUCCESS, 
-                result=result_model
+                result=result_model,
+                result_type=TaskResultType.from_model(model=result_model)
             ).model_dump()
         )
     else:
         raise HTTPException(status_code=500, detail=result["error"])
+    
+def get_result_model(result_data: dict) -> Session | SessionFile | BlastRing | AnnotationRing | LabelRing:
+
+    if 'type' in result_data and any(result_data['type'] == item.value for item in FileType):
+        return SessionFile(**result_data)
+    elif 'type' in result_data and result_data["type"] == RingType.BLAST:
+        return BlastRing(**result_data)
+    elif 'type' in result_data and result_data["type"] == RingType.ANNOTATION:
+        return AnnotationRing(**result_data)
+    elif 'type' in result_data and result_data["type"] == RingType.LABEL:
+        return LabelRing(**result_data)
+    elif 'date' in result_data:
+        return Session(**result_data)
+    else: 
+        raise TypeError("Task result did not match a known model")

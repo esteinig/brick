@@ -2,7 +2,7 @@ from unittest.mock import patch, MagicMock
 from fastapi.testclient import TestClient
 from brick.api.main import app
 from brick.api.schemas import TaskStatus, FileType, FileFormat, Selections
-from brick.api.models import SessionFile
+from brick.api.schemas import SessionFile
 
 client = TestClient(app)
 

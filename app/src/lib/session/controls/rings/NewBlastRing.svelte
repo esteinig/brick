@@ -14,14 +14,14 @@
     const toastStore = getToastStore();
     
     let ringConfig: BlastRingSchema = {
-        reference: $ringReferenceStore,
+        reference: null,
         genome_id: "",
         blast_method: BlastMethod.BLASTN,
         min_alignment: 0,
         min_identity: 0
     }
 
-    let loading: boolean = false;
+    let loading: boolean = false
 
 </script>
 
@@ -31,84 +31,92 @@
         
     </p>
     <p class="opacity-20 mb-2 text-xs w-full">BLAST rings consist of segments representing the alignment of a genome
-        against the selected reference. Computation of alignments may take a second depending on server load</p>
+        against the selected reference.</p>
     
     {#if $ringReferenceStore}
-    <form id="createBlastRingForm" action="?/createRing" method="POST" use:enhance={({ formData }) => {
-                
-        loading = true;
-        formData.append('ring_config', JSON.stringify(ringConfig))
-        formData.append('ring_type', RingType.BLAST)
+        <form id="createBlastRingForm" action="?/createRing" method="POST" use:enhance={({ formData }) => {
+            
+            // Important to do here, otherwise not set
+            // correctly on re-hydration because the
+            // selection of the reference is not done
+            ringConfig.reference = $ringReferenceStore;
 
-        // Reset data for the component
-        ringConfig = {
-            reference: $ringReferenceStore,
-            genome_id: "",
-            blast_method: BlastMethod.BLASTN,
-            min_alignment: 0,
-            min_identity: 0
-        }
+            loading = true;
+            formData.append('ring_config', JSON.stringify(ringConfig))
+            formData.append('ring_type', RingType.BLAST)
 
-        // Tracks the common request state from multiple components 
-        startRequestState();
-    
-        return async ({ result }) => {
-            await applyAction(result);
-            loading = false;
-            completeRequestState();
-                
-            if (result.type === "success"){
-                addRing($page.form.result)
-                triggerToast("Ring created sucessfully", ToastType.SUCCESS, toastStore);
-            } else {
-                // Validation errors from pydantic schemes are an array of validation objects:
-                if ($page.form.detail instanceof Array){
-                    for (const error of $page.form.detail) {
-                        triggerToast(
-                            error.msg ?? `Error ${result.status}: an unknown error occurred`, 
-                            ToastType.ERROR, 
-                            toastStore
-                        );
-                    }
-                } else {
-                    triggerToast($page.form.detail ?? `Error ${result.status}: an unknown error occurred`, ToastType.ERROR, toastStore);
-                }
+
+            // Reset data for the component
+            ringConfig = {
+                reference: $ringReferenceStore,
+                genome_id: "",
+                blast_method: BlastMethod.BLASTN,
+                min_alignment: 0,
+                min_identity: 0
             }
-        };
-    }}>
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 my-3 items-center">
-            <div>
-                <label class="label text-xs">
-                    <p class="opacity-40">Reference</p>
-                    <input id="blastReferenceFileName" class="input text-xs" disabled value={getSessionFileById($ringReferenceStore.reference_id)?.name_original}/>
-                </label>
-            </div>
-            <div>
-                {#if sessionFileTypeAvailable(FileType.GENOME)}
-                    <label class="label text-xs">
-                        <p class="opacity-40">Genome for comparison</p>
-                        <select class="select text-xs" bind:value={ringConfig.genome_id}>
-                            {#each $sessionFiles as file}
-                                {#if file.type === FileType.GENOME}
-                                    <option value={file.id}>{file.name_original}</option>
-                                {/if}
-                            {/each}
-                        </select>
-                    </label>
-                {:else}
-                    <div class="text-xs text-tertiary-500 text-center mt-4">Please upload a genome sequence file</div>
-                {/if}
-            </div>
-        </div>
-        
 
-        <div class="flex justify-right mt-12">
-            <button class="btn variant-outline-surface" type="submit" disabled={loading || !ringConfig.genome_id}>
-                <div class="flex items-center align-center">
-                    <span>Construct</span>
+
+            // Tracks the common request state from multiple components 
+            startRequestState();
+        
+            return async ({ result }) => {
+                await applyAction(result);
+                loading = false;
+                completeRequestState();
+                    
+                if (result.type === "success"){
+                    // invalidate("app:session")
+                    addRing($page.form.result)
+                    triggerToast("Ring created sucessfully", ToastType.SUCCESS, toastStore);
+                } else {
+                    // Validation errors from pydantic schemes are an array of validation objects:
+                    if ($page.form.detail instanceof Array){
+                        for (const error of $page.form.detail) {
+                            triggerToast(
+                                error.msg ?? `Error ${result.status}: an unknown error occurred`, 
+                                ToastType.ERROR, 
+                                toastStore
+                            );
+                        }
+                    } else {
+                        triggerToast($page.form.detail ?? `Error ${result.status}: an unknown error occurred`, ToastType.ERROR, toastStore);
+                    }
+                }
+            };
+        }}>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 my-3 items-center">
+                <div>
+                    <label class="label text-xs">
+                        <p class="opacity-40">Reference</p>
+                        <input id="blastReferenceFileName" class="input text-xs" disabled value={getSessionFileById($ringReferenceStore.reference_id)?.name_original}/>
+                    </label>
                 </div>
-            </button>
-        </div>
-    </form>
+                <div>
+                    {#if sessionFileTypeAvailable(FileType.GENOME)}
+                        <label class="label text-xs">
+                            <p class="opacity-40">Comparison</p>
+                            <select class="select text-xs" bind:value={ringConfig.genome_id}>
+                                {#each $sessionFiles as file}
+                                    {#if file.type === FileType.GENOME}
+                                        <option value={file.id}>{file.name_original}</option>
+                                    {/if}
+                                {/each}
+                            </select>
+                        </label>
+                    {:else}
+                        <div class="text-xs text-tertiary-500 text-center mt-4">Please upload a genome sequence file</div>
+                    {/if}
+                </div>
+            </div>
+            
+
+            <div class="flex justify-right mt-12">
+                <button class="btn variant-outline-surface" type="submit" disabled={loading || !ringConfig.genome_id}>
+                    <div class="flex items-center align-center">
+                        <span>Construct</span>
+                    </div>
+                </button>
+            </div>
+        </form>
     {/if}
 </div>

@@ -1,5 +1,4 @@
 import shutil
-import os
 import uuid
 
 from pathlib import Path
@@ -9,14 +8,13 @@ from pydantic import ValidationError
 from fastapi.responses import JSONResponse
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException
 
-from ..schemas import FileConfig, UploadFileResponse
-from ..models import Session, SessionFile
+from ..schemas import FileConfig, UploadFileResponse, FileFormat, FileType, Session, SessionFile
 
 from ..core.config import settings
 
 from ..core.db import get_session_collection_motor
 from ...utils import sanitize_input
-from ..tasks import process_file
+from ..tasks import process_file, rehydrate_session
 
 router = APIRouter(
     prefix="/files",
@@ -33,8 +31,6 @@ async def get_files(session_id: str):
     if not session_data:
         raise HTTPException(status_code=404, detail="Session not found")
 
-    del session_data["_id"]
-
     return Session(**session_data).files
 
 
@@ -44,7 +40,7 @@ async def upload_file(file: UploadFile = File(...), config: str = Form(...)):
     Upload a file for initial validation and processing
     """
 
-    # File configuration provided as form data
+    # Upload validations
     try:
         config_data = FileConfig.model_validate_json(config)
     except ValidationError as e:
@@ -69,8 +65,8 @@ async def upload_file(file: UploadFile = File(...), config: str = Form(...)):
     except NotADirectoryError as e:
         raise HTTPException(status_code=500, detail=f"Error uploading file: {str(e)}")
 
-    # Sanitize filename
 
+    # Sanitize filename
     sanitized_filename = sanitize_input(
         input_string=file.filename,
         is_for_db=True,
@@ -84,10 +80,15 @@ async def upload_file(file: UploadFile = File(...), config: str = Form(...)):
         with file_path.open("wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error saving file: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Error saving file: {str(e)}")
+
+    # JSON re-hydration of session or processing of files
 
     try:
-        task = process_file.delay(str(file_path), config_data.model_dump(), sanitized_filename)
+        if config_data.file_format == FileFormat.JSON and config_data.file_type == FileType.SESSION:
+            task = rehydrate_session.delay(str(file_path), config_data.model_dump())
+        else:
+            task = process_file.delay(str(file_path), config_data.model_dump(), sanitized_filename)
     except Exception as e:
         file_path.unlink() # delete the file since the task failed to initiate
         raise HTTPException(status_code=500, detail=f"Error initiating task: {str(e)}")
@@ -98,6 +99,65 @@ async def upload_file(file: UploadFile = File(...), config: str = Form(...)):
             task_id=task.id
         ).model_dump()
     )
+
+
+@router.delete("/{session_id}/{file_id}")
+async def delete_file(session_id: str, file_id: str):
+
+    try:
+        uuid.UUID(session_id, version=4)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid session identifier format - expected UUID4")
+
+    try:
+        uuid.UUID(file_id, version=4)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid file identifier format - expected UUID4")
+
+    # Get the collection from the database
+    collection = await get_session_collection_motor()
+
+    # Retrieve the session data
+    session_data = await collection.find_one({"id": session_id})
+    if not session_data:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    # Convert to Session model for ease of handling
+    session = Session(**session_data)
+
+    # Find the file in the session
+    file_to_delete = next((file for file in session.files if file.id == file_id), None)
+    if not file_to_delete:
+        raise HTTPException(status_code=404, detail="File not found in session")
+
+    # Delete from database first - no consequences  
+    # on file path in case of failure
+
+    await collection.update_one(
+        {"id": session_id},
+        {"$pull": {"files": {"id": file_id}}}
+    )
+
+    # Define the file path
+    file_path: Path = settings.WORK_DIRECTORY / session_id / file_to_delete.id
+
+    # Delete the file from the filesystem
+    if file_path.exists():
+        file_path.unlink()
+    else:
+        raise HTTPException(status_code=404, detail="File not found on disk")
+
+    return JSONResponse(
+        status_code=200, 
+        content={
+            "message": "File deleted sucessfully",
+            "session_id": session_id,
+            "file_id": file_id
+        }
+    )
+    
+
+
 
 # Helpers
 

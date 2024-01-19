@@ -1,23 +1,19 @@
 <script lang="ts">
     import ColorPalette from "$lib/session/palette/ColorPalette.svelte";
-	import { paletteStore, type Palette as PaletteStorePalette } from "$lib/stores/PaletteStore";
+	import { paletteStore } from "$lib/stores/PaletteStore";
 	import { AccordionItem } from "@skeletonlabs/skeleton";
-	import type { PaletteItem } from "$lib/types";
+	import type { Palette, PaletteItem } from "$lib/types";
 
     export let palette: PaletteItem;
 
-    function handlePaletteClick(colors: string[], name: string) {
+    function handlePaletteClick(palette: Palette) {
         
-        let paletteInStore: boolean = $paletteStore.some(p => p.name === name);
+        let paletteInStore: boolean = $paletteStore.some(p => p.name === palette.name);
 
         if (paletteInStore){
-            paletteStore.removePalette(name)
+            paletteStore.removePalette(palette.name)
         } else {
-            const samplePalette: PaletteStorePalette = {
-                name: name,
-                colors: colors
-            };
-            paletteStore.addPalette(samplePalette);
+            paletteStore.addPalette(palette);
         }
     }
 
@@ -38,7 +34,7 @@
     <svelte:fragment slot="content">
         <div class="my-6">
             {#each palette.palettes as subpalette, i }
-                <div role="button" tabindex="{i}" class="flex items-center justify-between my-4 rounded-token hover:variant-soft hover:cursor-pointer p-4"  on:click={() => handlePaletteClick(subpalette.colors, subpalette.name)} on:keydown={() => handlePaletteClick(subpalette.colors, subpalette.name) }>   
+                <div role="button" tabindex="{i}" class="flex items-center justify-between my-4 rounded-token hover:variant-soft hover:cursor-pointer p-4"  on:click={() => handlePaletteClick(subpalette)} on:keydown={() => handlePaletteClick(subpalette) }>   
                    
                     <ColorPalette title={subpalette.name} subtitle={subpalette.subtitle} colors={subpalette.colors} subtitleClass="opacity-80 ml-2 text-sm truncate"></ColorPalette>
                     

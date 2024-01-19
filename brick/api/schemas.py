@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ValidationInfo, field_validator
+from pydantic import BaseModel, ValidationInfo, field_validator, model_validator
 from typing import Optional, Annotated, Tuple, List
 from pathlib import Path
 from enum import StrEnum
@@ -15,20 +15,22 @@ CeleryTaskID =  Annotated[str, "Celery task UUID"]
 # Schemas inherit from this class to provide a method to create a temporary sessions directory
 # for testing endpoint validators on the schema models
 
+
 class RingSchema(BaseModel):
     
     reference: RingReference
 
     @field_validator('reference')
+    @classmethod
     def check_uuid_v4(cls, v: RingReference):
-        if v is not None:
-            try:
-                UUID(v.session_id, version=4)
-            except ValueError:
-                raise ValueError(f"value '{v.session_id}' is not a valid UUID version 4")
+        try:
+            UUID(v.session_id, version=4)
+        except ValueError:
+            raise ValueError(f"value '{v.session_id}' is not a valid UUID version 4")
         return v
     
     @field_validator('reference')
+    @classmethod
     def check_session_directory(cls, v: RingReference):
         if not (settings.WORK_DIRECTORY / v.session_id).exists():
             raise ValueError(f"session directory '{v}' does not exist")
@@ -41,12 +43,14 @@ class FileFormat(StrEnum):
     FASTA = 'fasta'
     GENBANK = 'genbank'
     TSV = 'tsv'
+    JSON = 'json'
 
 class FileType(StrEnum):
     REFERENCE = 'reference'
     GENOME = 'genome'
     ANNOTATION_GENBANK = 'annotation_genbank'
     ANNOTATION_CUSTOM = 'annotation_custom'
+    SESSION = 'session'
 
 class FileConfig(BaseModel):
     session_id: SessionFileID
@@ -78,6 +82,31 @@ class SessionFile(BaseModel):
 class UploadFileResponse(BaseModel):
     task_id: CeleryTaskID
 
+class Session(BaseModel):
+    id: str
+    date: str
+    files: List[SessionFile]
+    rings: List[Ring]
+
+    def validate_file_paths(self):
+        for file in self.files:
+            file_path = settings.WORK_DIRECTORY / file.session_id / file.id
+            if not file_path.exists():
+                raise FileNotFoundError(f"Could not find file `{file.name_original}` in session directory path: {file_path}")
+
+    def replace_session_id(self, new_session_id: str) -> 'Session':
+        self.id = new_session_id
+        for file in self.files:
+            file.session_id = new_session_id
+        for ring in self.rings:
+            ring.reference.session_id = new_session_id
+        return self
+    
+    def add_rehydration_tag(self) -> 'Session':
+        for file in self.files:
+            if not '(re-hydrated)' in file.name_original:
+                file.name_original = f"{file.name_original} (re-hydrated)"
+        return self
 
 # Celery tasks
     
@@ -88,14 +117,35 @@ class TaskStatus(StrEnum):
     FAILURE = 'FAILURE'
     PROCESSING = 'PROCESSING'
 
+class TaskResultType(StrEnum):
+    SESSION = 'SESSION'
+    SESSION_FILE = 'SESSION_FILE'
+    BLAST_RING = 'BLAST_RING'
+    ANNOTATION_RING = 'ANNOTATION_RING'
+    LABEL_RING = 'LABEL_RING'
 
+    def from_model(model: Session | SessionFile | BlastRing | AnnotationRing | LabelRing):
+        if isinstance(model, Session):
+            return TaskResultType.SESSION
+        elif isinstance(model, SessionFile):
+            return TaskResultType.SESSION_FILE
+        elif isinstance(model, BlastRing):
+            return TaskResultType.BLAST_RING
+        elif isinstance(model, AnnotationRing):
+            return TaskResultType.ANNOTATION_RING
+        elif isinstance(model, LabelRing):
+            return TaskResultType.LABEL_RING
+        else:
+            raise TypeError("Could not determine task result type from input model")
+         
 class TaskStatusResponse(BaseModel):
     task_id: CeleryTaskID
     status: TaskStatus
 
 
 class TaskResultResponse(TaskStatusResponse):
-    result: Optional[SessionFile | BlastRing | AnnotationRing | LabelRing]
+    result: Optional[Session | SessionFile | BlastRing | AnnotationRing | LabelRing]
+    result_type: Optional[TaskResultType]
 
 
 # Ring schemas
@@ -108,39 +158,44 @@ class BlastRingSchema(RingSchema):
     min_alignment: int = 0
     min_identity: float = 0
 
-
     @field_validator('genome_id')
+    @classmethod
     def check_uuid_v4(cls, v: SessionFileID):
         try:
             UUID(v, version=4)
         except ValueError:
-            raise ValueError(f"value '{v}' is not a valid UUID version 4")
-        return v
-    
-    @field_validator('reference')
-    def check_reference_id_input_file(cls, v: RingReference):
-        if v is not None and not (settings.WORK_DIRECTORY / v.session_id / v.reference_id).exists():
-            raise ValueError(f"reference input file '{v.reference_id}' does not exist")
+            raise ValueError(f"'{v}' is not a valid UUID4")
+                
         return v
 
-    @field_validator('genome_id')
-    def check_genome_id_input_file(cls, v: SessionFileID, info: ValidationInfo):
-        ref: RingReference = info.data.get('reference')
-        if v is not None and not (settings.WORK_DIRECTORY / ref.session_id / v).exists():
-            raise ValueError(f"genome input file '{v}' does not exist")
+    @field_validator('reference')
+    @classmethod
+    def check_reference_file(cls, v: RingReference):
+        if v is not None and not (settings.WORK_DIRECTORY / v.session_id / v.reference_id).exists():
+            raise ValueError(f"reference file could not be found. It may have been deleted or expired in session storage :(")
         return v
 
     @field_validator('min_alignment')
+    @classmethod
     def check_min_alignment(cls, v: int):
         if not v >= 0:
             raise ValueError('minimum alignment length must be greater or equal to 0')
         return v
     
     @field_validator('min_identity')
+    @classmethod
     def check_min_identity(cls, v: int):
         if not 0 <= v <= 100:
             raise ValueError('minimum identity must be between 0 and 100')
         return v
+    
+    # Do not use ValidationInfo - use model validator instead!
+        
+    @model_validator(mode="after")
+    def check_genome_file(self) -> 'BlastRingSchema':
+        if not (settings.WORK_DIRECTORY / self.reference.session_id / self.genome_id).exists():
+            raise ValueError(f"genome comparison file could not be found. It may have been deleted or expired in session storage :(")
+        return self
     
     def get_file_paths(self) -> Tuple[Path, Path, Path]:
 
@@ -164,29 +219,31 @@ class AnnotationRingSchema(RingSchema):
     genbank_qualifiers: List[str] = []
 
 
-    @field_validator('genbank_id')
-    def check_fields(cls, v: SessionFileID, info: ValidationInfo):
-        tsv_id = info.data.get('tsv_id')
-        if tsv_id is None and v is None:
-            ValueError("one of 'genbank_id' (genbank file) or 'tsv_id' (ring segment file) identifiers must be provided")
-        return v
-    
     @field_validator('genbank_id', 'tsv_id')
+    @classmethod
     def check_uuid_v4(cls, v: SessionFileID):
         if v is not None:
             try:
                 UUID(v, version=4)
             except ValueError:
-                raise ValueError(f"value '{v}' is not a valid UUID version 4")
+                raise ValueError(f"'{v}' is not a valid UUIDv4")
         return v
     
-    @field_validator('genbank_id', 'tsv_id')
-    def check_input_files(cls, v: SessionFileID, info: ValidationInfo):
-        ref: RingReference = info.data.get('reference')
-        if v is not None:
-            if not (settings.WORK_DIRECTORY / ref.session_id / v).exists():
-                raise ValueError(f"input file '{v}' does not exist")
-        return v
+    @model_validator(mode="after")
+    def check_fields_and_files(self) -> 'AnnotationRingSchema':
+
+        if self.genbank_id is None and self.tsv_id is None:
+            raise ValueError("one of 'genbank_id' or 'tsv_id' fields must be provided")
+        
+        if self.genbank_id:
+            if not (settings.WORK_DIRECTORY / self.reference.session_id / self.genbank_id).exists():
+                raise ValueError(f"genbank annotation file could not be found. It may have been deleted or expired in session storage :(")
+        
+        if self.tsv_id:
+            if not (settings.WORK_DIRECTORY / self.reference.session_id / self.tsv_id).exists():
+                raise ValueError(f"custom annotation file could not be found. It may have been deleted or expired in session storage :(")
+        
+        return self
     
     def get_file_paths(self) -> Tuple[Path, Path | None, Path | None]:
 
@@ -199,8 +256,6 @@ class AnnotationRingSchema(RingSchema):
 class AnnotationRingResponse(BaseModel):
     task_id: CeleryTaskID
 
-
-
 # Label ring
 
 class LabelRingSchema(RingSchema):
@@ -208,28 +263,26 @@ class LabelRingSchema(RingSchema):
     labels: List[RingSegment] = []
 
     @field_validator('tsv_id')
+    @classmethod
     def check_uuid_v4(cls, v: SessionFileID):
         if v is not None:
             try:
                 UUID(v, version=4)
             except ValueError:
-                raise ValueError(f"value '{v}' is not a valid UUID version 4")
+                raise ValueError(f"'{v}' is not a valid UUIDv4")
         return v
     
-    @field_validator('tsv_id')
-    def check_input_files(cls, v: SessionFileID, info: ValidationInfo):
-        ref: RingReference = info.data.get('reference')
-        if v is not None:
-            if not (settings.WORK_DIRECTORY / ref.session_id / v).exists():
-                raise ValueError(f"input file '{v}' does not exist")
-        return v
-    
-    @field_validator('labels')
-    def check_labels_input(cls, v: List[RingSegment], info: ValidationInfo):
-        tsv_id = info.data.get('tsv_id')
-        if not v and tsv_id is None:
-            raise ValueError(f"one of 'tsv_id' (file identifier) or 'labels' (list of ring segments) must be provided")
-        return v
+    @model_validator(mode="after")
+    def check_fields_and_files(self) -> 'AnnotationRingSchema':
+
+        if self.tsv_id is None and self.labels is None:
+            raise ValueError("one of 'tsv_id' or 'labels' must be provided")
+        
+        if self.tsv_id:
+            if not (settings.WORK_DIRECTORY / self.reference.session_id / self.tsv_id).exists():
+                raise ValueError(f"custom annotation file could not be found. It may have been deleted or expired in session storage :(")
+        
+        return self 
     
     def get_file_paths(self) -> Tuple[Path, Path | None]:
 

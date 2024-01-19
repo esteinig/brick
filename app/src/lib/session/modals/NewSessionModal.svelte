@@ -2,24 +2,36 @@
 	import type { SvelteComponent } from 'svelte';
 	import { getModalStore } from '@skeletonlabs/skeleton';
 	import { page } from '$app/stores';
-	import { rings } from '$lib/stores/RingStore';
-	import { downloadJSON } from '$lib/brick/helpers';
-	import type { Session } from '$lib/types';
-	import { sessionFiles } from '$lib/stores/SessionFileStore';
+    import { tick } from 'svelte';
+
+	import { goto } from '$app/navigation';
+	import { createSessionId } from '$lib/helpers';
+	import { clearSessionFiles } from '$lib/stores/SessionFileStore';
+	import { clearRings } from '$lib/stores/RingStore';
+	import { clearRingReference } from '$lib/stores/RingReferenceStore';
+	import { resetTabs } from '$lib/stores/TabIndexStore';
 
 	/** Exposes parent props to this component. */
 	export let parent: SvelteComponent;
 
 	const modalStore = getModalStore();
-    const defaultTitle: string = `Save session`
+    const defaultTitle: string = `New session`
 
-	/** Recreate the session model data from stores. */
-	const modelData: Session = {
-		id: $page.params.session,
-		date: $page.data.session.date,
-		files: $sessionFiles,
-		rings: $rings
-	}
+    async function handleNewSession() {
+
+        clearSessionFiles();
+        clearRings();
+        clearRingReference();
+        resetTabs();
+
+        // Important to ensure that all
+        // stores have been cleared 
+        await tick();
+
+        modalStore.close()
+
+        goto(`/session/${createSessionId()}`)
+    }
 
 </script>
 
@@ -32,12 +44,12 @@
                 <span id="saveSessionLink" class="code"><a href="{$page.url.href}">{$page.params.session}</a></span> <br><br> 
                 If you want to revisit your session after its expiration, you can download the model data and upload the file into a new session (re-hydration). <br><br>
                 Please note that uploaded files that have expired will not be available in restored sessions.
-			<p>
+                </p>
         </article>
 		
         <footer class="modal-footer {parent.regionFooter}">
 			<button class="btn {parent.buttonNeutral}" on:click={parent.onClose}>{parent.buttonTextCancel}</button>
-			<button class="btn {parent.buttonPositive}" type="button" on:click={() => {downloadJSON(modelData); modalStore.close() }}>Download</button>
+			<button class="btn {parent.buttonPositive}" type="button" on:click={handleNewSession}>New Session</button>
 		</footer>
 	</div>
 {/if}

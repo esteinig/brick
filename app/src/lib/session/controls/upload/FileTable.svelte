@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { sessionFiles } from "$lib/stores/SessionFileStore";
-    
+	import { removeSessionFile, sessionFiles } from "$lib/stores/SessionFileStore";
+    import DeleteFile from "../helpers/DeleteFile.svelte";
 </script>
 
 {#if $sessionFiles.length}
@@ -13,6 +13,7 @@
                     <th>Format</th>
                     <th>Records</th>
                     <th>Length</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -23,6 +24,7 @@
                         <td>{sessionFile.format}</td>
                         <td>{sessionFile.records}</td>
                         <td>{sessionFile.total_length}</td>
+                        <td><DeleteFile id={sessionFile.id} updateVerbose on:delete={() => removeSessionFile(sessionFile.id)}></DeleteFile></td>
                     </tr>
                 {/each}
             </tbody>
@@ -30,6 +32,6 @@
     </div>
 {:else}
     <div class="p-4 text-center">
-        <p class="text-primary-500">No files have been uploaded</p>
+        <p class="text-secondary-500">No files have been uploaded to this session</p>
     </div>
 {/if}

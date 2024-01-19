@@ -146,8 +146,11 @@ function moveRingOutside(id: string, maxIndex: number) {
 import type { RingReference } from '$lib/types'; 
 
 // Function to create a derived store based on RingReference
-function createFilteredRingsStore(ringReference: RingReference) {
+function createFilteredRingsStore(ringReference: RingReference | null) {
     return derived(rings, $rings => {
+        
+        if (ringReference === null) return $rings;
+
         let filteredRings = $rings.filter(ring => 
             ring.reference.reference_id === ringReference.reference_id && 
             ring.reference.session_id === ringReference.session_id &&
@@ -165,17 +168,19 @@ export { rings, addRing, removeRing, clearRings, toggleRingVisibility, moveRingI
 
 // Add new ring helper function
 function addNewRing(rings: Ring[], newRing: Ring, newIndex: number = rings.length): Ring[] {
+
+    // If rings exist and the outer ring is a LabelRing....
     if (rings.length > 0 && newIndex === rings.length && rings[rings.length - 1].type === RingType.LABEL) {
        
         if (newRing.type === RingType.LABEL) { 
             rings[rings.length - 1].data = [
                 ...rings[rings.length - 1].data, ...newRing.data
-            ] // add labels to outer label ring
+            ] // ...add labels to outer label ring
             return rings
         }
         newIndex = rings.length - 1;
     }
-
+    
     let newRings = [...rings];
     newRings.splice(newIndex, 0, newRing);
     return newRings.map((ring, idx) => ({ ...ring, index: idx }));

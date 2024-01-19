@@ -75,10 +75,16 @@
                 <dt><a href="https://www.nature.com/articles/s41587-023-01953-y">Camargo et al. (2023) - Identification of mobile genetic elements with geNomad</a></dt>
             </span>
         </div>
+        <div>
+            <span class="badge text-lg">📑</span>
+            <span class="flex-auto opacity-60">
+                <dt><a href="https://www.nature.com/articles/s41467-022-35713-4">Sherry et al. (2023) - An ISO-certified genomics workflow for identification and surveillance of antimicrobial resistance (abritAMR)</a></dt>
+            </span>
+        </div>
     </dl>
 
     <p class="opacity-80 mt-8 mb-4">
-        If you also want to acknowledge the authors of the original visualization, please cite:
+        If you would like to acknowledge the authors of the original visualization, please cite:
     </p>
 
     <dl class="list-dl">

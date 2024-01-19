@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { addSessionFile } from '$lib/stores/SessionFileStore';
-  import { FileFormat, FileType } from '$lib/types';
+  import { addSessionFile, sessionFiles } from '$lib/stores/SessionFileStore';
+  import { FileFormat, FileType, TaskResultType, type Session } from '$lib/types';
   import { ToastType, createUuid, triggerToast } from '$lib/helpers';
 
   import { FileDropzone, ProgressBar } from '@skeletonlabs/skeleton';    
@@ -9,6 +9,8 @@
 	import { applyAction, enhance } from '$app/forms';
 	import { completeUploadState, startUploadState } from '$lib/stores/UploadInProgressStore';
 	import { createEventDispatcher } from 'svelte';
+	import { rings } from '$lib/stores/RingStore';
+	import { ringReferenceStore } from '$lib/stores/RingReferenceStore';
 
   const toastStore = getToastStore();
   
@@ -36,6 +38,20 @@
   function handleMouseout() {
       dispatch('mouseout', information);
   }
+  function handleSessionHydration() {
+
+    // Update the entire session data manually - would prefer invalidation
+    // and running the reload function but there are issues for this kind of
+    // visualiztion, for more details see comments in: /brick/+layout.svelte
+
+    let hydratedSession: Session = $page.form.result;
+    
+    $sessionFiles = hydratedSession.files;
+    $rings = hydratedSession.rings;
+
+    if ($rings.length) $ringReferenceStore = $rings[0].reference;
+
+  }
   
 </script>
   
@@ -59,7 +75,8 @@
   // dropzone identifiers and replacing it with a
   // simple `file` entry
   
-  formData.delete(id); formData.append('file', files[0]);
+  formData.delete(id); 
+  formData.append('file', files[0]);
   formData.append('config', config);
 
   // Upload state for this component instance
@@ -76,8 +93,16 @@
     completeUploadState();
 
     if (result.type === "success"){
-      triggerToast("File uploaded sucessfully", ToastType.SUCCESS, toastStore);
-      addSessionFile($page.form.result)
+      if ($page.form.result_type === TaskResultType.SESSION_FILE) {
+        triggerToast("File uploaded sucessfully", ToastType.SUCCESS, toastStore);
+        addSessionFile($page.form.result)
+      } else if ($page.form.result_type === TaskResultType.SESSION) {
+        triggerToast("Session rehydrated sucessfully", ToastType.SUCCESS, toastStore);
+        handleSessionHydration();
+      } else {  
+        triggerToast("An unknown type was returned from file upload", ToastType.ERROR, toastStore);
+      }
+      
     } else {
       triggerToast($page.form.detail ?? `Error ${result.status}: an unknown error occurred`, ToastType.ERROR, toastStore);
     }

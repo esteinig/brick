@@ -1,5 +1,5 @@
 import { browser } from "$app/environment";
-import type { Ring } from "$lib/types";
+import type { Ring, Session } from "$lib/types";
 
 export function downloadSVG(id: string) {
     const svg = document.querySelector(`#${id} svg`);
@@ -19,7 +19,11 @@ export function downloadSVG(id: string) {
 
 }
 
-export function downloadPNG(id: String) {
+
+/** Currently not working because of opacity animation!
+ *  Move to plotConfig and disable animation temporarily before downloading PNG. 
+ */
+export function downloadPNG(id: string) {
     const svg = document.querySelector(`#${id} svg`);
 
     if (!svg) {
@@ -58,9 +62,10 @@ export function downloadPNG(id: String) {
     img.src = url;
 }
 
-export function downloadJSON(ringData: Ring[]) {
+export function downloadJSON(data: Ring[] | Session) {
+
     // Convert data to JSON string with 2-space indent
-    const jsonString = JSON.stringify(ringData, null, 2);
+    const jsonString = JSON.stringify(data, null, 2);
 
     // Create a Blob from the JSON string
     const blob = new Blob([jsonString], { type: 'application/json' });
