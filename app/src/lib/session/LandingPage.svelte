@@ -20,7 +20,7 @@
         <div class="flex justify-center space-x-2 mb-10">
             <a
                 class="btn border border-primary-500"
-                href="/brick/{createSessionId()}"
+                href="/session/{createSessionId()}"
                 on:click={() => clearRings()}
             >
                 Create Figure

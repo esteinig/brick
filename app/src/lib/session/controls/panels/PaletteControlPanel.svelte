@@ -36,8 +36,4 @@
             <PaletteDisplay palette={paletteItem}></PaletteDisplay>
         {/each}
     </Accordion>
-      
-
-
-    
 </div>

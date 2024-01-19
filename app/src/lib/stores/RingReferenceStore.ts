@@ -1,14 +1,13 @@
 import { writable } from 'svelte/store';
 import type { RingReference } from '$lib/types';
-import { DEFAULT_RING_REFERENCE } from '$lib/data';
 
 // Define the type for the store
-type RingReferenceStore = RingReference;
+type RingReferenceStore = RingReference | null;
 
 export function clearRingReference() {
-    ringReferenceStore.update(_ => DEFAULT_RING_REFERENCE)
+    ringReferenceStore.update(_ => null)
 }
 
 
 // Create the store
-export const ringReferenceStore = writable<RingReferenceStore>(DEFAULT_RING_REFERENCE);
+export const ringReferenceStore = writable<RingReferenceStore>(null);

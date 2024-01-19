@@ -13,7 +13,7 @@ export const shortenSessionId = (sessionId: string): string => { return sessionI
 // Celery results checking
 
 export async function checkCeleryResults(
-    url: string, timeout: number = 30000, pollingInterval: number = 2000
+    url: string, timeout: number = 30000, pollingInterval: number = 1000
 ): Promise<TaskStatusResponse> {
 
     const startTime = new Date().getTime();
@@ -114,4 +114,25 @@ export function triggerToast(message: string, toastType: ToastType, toastStore: 
       timeout: timeoutDefault,
     })
   }
+}
+
+
+export const parseEnvInt = (envVar: string | undefined, defaultValue: number, varName: string): number => {
+  if (envVar === undefined) {
+      console.warn(`Environment variable ${varName} is undefined. Using default value: ${defaultValue}`);
+      return defaultValue;
+  }
+
+  const parsedValue = parseInt(envVar);
+  if (isNaN(parsedValue)) {
+      console.warn(`Failed to parse environment variable ${varName}. Using default value: ${defaultValue}`);
+      return defaultValue;
+  }
+
+  return parsedValue;
+};
+
+export function isValidUUIDv4(uuid: string): boolean {
+  const regex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  return regex.test(uuid);
 }

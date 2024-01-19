@@ -76,7 +76,7 @@
         </svg>
     </button>
 
-    <div class="card p-4 shadow-xl border border-opacity-80 border-surface-500 bg-surface-300 z-50" data-popup={`popupPalette-${id}`}>
+    <div class="card p-4  shadow-xl border border-opacity-80 border-surface-500 bg-surface-300 z-50" data-popup={`popupPalette-${id}`}>
 
         <form id="updateRingColorPaletteForm" bind:this={formElement} action="?/updateSessionRing" method="POST" use:enhance={({ formData }) => {
             
@@ -116,7 +116,7 @@
 
         }}>
             <div class="head mb-4 flex justify-between items-center align-middle">
-                <p class="opacity-80">Palette selections</p>
+                <p class="opacity-80 text-lg">Palette selections</p>
                 
                 <button id="will-close" class="btn" type="button">
                     <svg class="w-6 h-6" data-slot="icon" aria-hidden="true" fill="none" stroke-width="1.5" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -128,7 +128,7 @@
             <div class="body">
                 {#each $paletteStore as palette}
                     <div class="my-4">
-                        <ColorPalette colors={palette.colors} title={palette.name} on:selectColor={selectColor}/>
+                        <ColorPalette colors={palette.colors} title={palette.name} subtitle={palette.subtitle} hoverDisplay={false} on:selectColor={selectColor}/>
                     </div>
                 {/each}
             </div>

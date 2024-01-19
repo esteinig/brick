@@ -11,6 +11,7 @@
     import { ringReferenceStore } from "$lib/stores/RingReferenceStore";
 
     import { startRequestState, completeRequestState } from '$lib/stores/RequestInProgressStore';
+	import { invalidate } from "$app/navigation";
     
     const toastStore = getToastStore();
 
@@ -57,6 +58,7 @@
                 completeRequestState();
                     
                 if (result.type === "success"){
+                    // invalidate("app:session")
                     addRing($page.form.result)
                     if ($page.form.result.data.length) {
                         triggerToast("Ring created sucessfully", ToastType.SUCCESS, toastStore);

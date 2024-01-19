@@ -1,27 +1,18 @@
-import { MOMA_PALETTES, NZ_PALETTES } from '$lib/data';
+import { MOMA_PALETTES, NZ_PALETTES, NATIONAL_PARK_PALETTES } from '$lib/data';
+import type { Palette } from '$lib/types';
 import { writable } from 'svelte/store';
 
-export interface Palette {
-    name: string;
-    colors: string[]; // Array of hex color strings
-}
 
 function createPaletteStore() {
     const { subscribe, set, update } = writable<Palette[]>([
-        {name: NZ_PALETTES[1].name, colors: NZ_PALETTES[1].colors},
-        {name: MOMA_PALETTES[11].name, colors: MOMA_PALETTES[11].colors},
-        {name: MOMA_PALETTES[2].name, colors: MOMA_PALETTES[2].colors},
-
+        NZ_PALETTES[1], MOMA_PALETTES[11], MOMA_PALETTES[2], MOMA_PALETTES[3],
+        NATIONAL_PARK_PALETTES[0], NATIONAL_PARK_PALETTES[4], NATIONAL_PARK_PALETTES[10], NATIONAL_PARK_PALETTES[11]
     ]);
 
     return {
         subscribe,
         addPalette: (newPalette: Palette) => {
             update(palettes => {
-                // Add new palette, if more than 3 palettes, remove the first
-                if (palettes.length >= 5) {
-                    palettes.shift(); // Remove the first palette
-                }
                 return [...palettes, newPalette];
             });
         },

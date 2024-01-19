@@ -25,9 +25,11 @@
 	initializeStores();
 
 	import SaveSessionModal from '$lib/session/modals/SaveSessionModal.svelte';
+	import NewSessionModal from '$lib/session/modals/NewSessionModal.svelte';
 
 	const modalRegistry: Record<string, ModalComponent> = {
-		saveSessionModal: { ref: SaveSessionModal }
+		saveSessionModal: { ref: SaveSessionModal },
+		newSessionModal: { ref: NewSessionModal }
 	};
 
 </script>

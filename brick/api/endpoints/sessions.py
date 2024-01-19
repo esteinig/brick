@@ -5,8 +5,7 @@ from datetime import datetime
 from typing import List
 
 from ...rings import Ring
-from ..models import Session
-from ..schemas import RingUpdate
+from ..schemas import Session, RingUpdate
 from ..core.db import get_session_collection_motor
 
 router = APIRouter(
@@ -33,10 +32,8 @@ async def get_session(session_id: str, session_files_exist: bool = False):
 
 @router.put("/{session_id}/ring")
 async def update_session_ring(session_id: str, ring_update: RingUpdate):
+    
     collection = await get_session_collection_motor()
-
-    print(ring_update)
-
     existing_session: dict = await collection.find_one({"id": session_id})
 
     if not existing_session:

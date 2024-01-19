@@ -22,6 +22,10 @@ services:
       BODY_SIZE_LIMIT: 20000000
       PUBLIC_BRICK_VERSION: 0.1.0
       PRIVATE_DOCKER_API_URL: http://api:8080
+      PRIVATE_CELERY_TASK_CHECK_TIMEOUT: 30000
+      PRIVATE_CELERY_TASK_CHECK_INTERVAL: 1000
+    depends_on:
+      - api
   
   app-dev:
     profiles:
@@ -46,6 +50,10 @@ services:
       BODY_SIZE_LIMIT: 20000000
       PUBLIC_BRICK_VERSION: 0.1.0
       PRIVATE_DOCKER_API_URL: http://api-dev:8080
+      PRIVATE_CELERY_TASK_CHECK_TIMEOUT: 30000
+      PRIVATE_CELERY_TASK_CHECK_INTERVAL: 1000
+    depends_on:
+      - api-dev
 
   api:
     profiles:

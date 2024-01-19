@@ -10,8 +10,6 @@
   import { ringReferenceStore } from '$lib/stores/RingReferenceStore';
   import { createEventDispatcher } from 'svelte';
 	import { removeTooltip, setTooltip } from '$lib/stores/TooltipStore';
-	import Page from '../../routes/+page.svelte';
-
 
   $: rings = createFilteredRingsStore($ringReferenceStore)
 
@@ -95,7 +93,7 @@
 
   // Circular data scaling
   $: degreeScale = d3.scaleLinear(
-    [0, $ringReferenceStore.sequence.length], [0,360] // TODO: What if you just go linear or implement the ST93 paper again with a couple changes ah 0 to 1; apply this to each of multiple input sequences to align in circle as e.g. Genome 1 0-10, Genome2 10-20
+    [0, $ringReferenceStore === null ? 0 : $ringReferenceStore.sequence.length], [0,360] // TODO: What if you just go linear or implement the ST93 paper again with a couple changes ah 0 to 1; apply this to each of multiple input sequences to align in circle as e.g. Genome 1 0-10, Genome2 10-20
   );
 
   

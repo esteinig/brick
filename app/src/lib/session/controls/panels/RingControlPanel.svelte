@@ -1,9 +1,9 @@
 <script lang="ts">
-    import { RingType, type Sequence, RingDirection } from "$lib/types";
+    import { RingType, type Sequence, RingDirection, Ring, FileFormat } from "$lib/types";
 	import { FileType, type SessionFile } from "$lib/types";
     import { sessionFiles } from "$lib/stores/SessionFileStore";
     import { ringReferenceStore } from "$lib/stores/RingReferenceStore";
-    import { changeRingTitle, moveRingInside, moveRingOutside, removeRing, isRingTypePresent, toggleRingVisibility, changeRingColor} from "$lib/stores/RingStore";
+    import { changeRingTitle, moveRingInside, moveRingOutside, removeRing, isRingTypePresent, toggleRingVisibility, changeRingColor, rings} from "$lib/stores/RingStore";
 
 	import NewReferenceRing from "$lib/session/controls/rings/NewReferenceRing.svelte";
 	import NewBlastRing from "$lib/session/controls/rings/NewBlastRing.svelte";
@@ -20,16 +20,20 @@
 	import RingVisibility from "$lib/session/controls/helpers/RingVisibility.svelte";
 	import DeleteRing from "../helpers/DeleteRing.svelte";
 	import RingIndex from "../helpers/RingIndex.svelte";
+    import { page } from "$app/stores";
 
     $: ringData = createFilteredRingsStore($ringReferenceStore) // reactive so it updates on changes to reference sequence
 
-
     let newRing: RingType;
+    let showNewRingMenu: boolean = false;
 
     let selectedReference: SessionFile | null;
     let selectedSequence: Sequence | null;
 
-    let previousReference: SessionFile | null = null; // Variable to track the previous selected reference
+    let previousReference: SessionFile | null = null;
+    
+    
+    // let references: SessionFile[];
 
     $: if (selectedReference !== previousReference) {
         previousReference = selectedReference; // Update the previous reference
@@ -42,12 +46,16 @@
         }
     }
 
-    let showNewRingMenu: boolean = false;
 
     $: if (selectedSequence) {
 
         $ringReferenceStore = {
-            session_id: selectedReference?.session_id ?? "", reference_id: selectedReference?.id ?? "", sequence: { id: selectedSequence?.id ?? "", length: selectedSequence?.length ?? 0 }
+            session_id: selectedReference?.session_id ?? "", 
+            reference_id: selectedReference?.id ?? "", 
+            sequence: { 
+                id: selectedSequence?.id ?? "", 
+                length: selectedSequence?.length ?? 0 
+            }
         }
     }
 
@@ -57,7 +65,7 @@
     // ring is changed
     $: indexGroup = $ringData.map(ring => ring.id);
 
-    $: console.log($ringData)
+
 
 </script>
 

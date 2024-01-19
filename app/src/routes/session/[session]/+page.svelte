@@ -5,32 +5,20 @@
 	import { page } from "$app/stores";
 	import { sessionFiles } from "$lib/stores/SessionFileStore";
 	import { rings } from "$lib/stores/RingStore";
-	import { invalidate } from "$app/navigation";
-	import { browser } from "$app/environment";
+	import { onMount } from "svelte";
+	import { ringReferenceStore } from "$lib/stores/RingReferenceStore";
 
 	// Events from the figure to display in control interface
 	function handleClick(event: any)  {
         console.log(`Clicked: ${ event.detail}`);
     }
 
-	// Update session files store when data has changed
-	$: if (!$page.data.session) {
-		if (browser) invalidate('app:session')
-	} else {
-		// Without the length guards the stores are overwritten
-		// with not-updated data (e.g. after adding a ring) since
-		// we are not invalidating session data after each creation
-		// but add rings to the store directly in the form action return
 
-		// Maybe it's better to invalidate, since this is quite fucky
-
-		if (!$rings.length){
-			$rings = $page.data.session.rings
-		}
-		if (!$sessionFiles.length){
-			$sessionFiles = $page.data.session.files
-		}
-	}
+	onMount(() => {
+		$rings = $page.data.session.rings;
+		if ($rings.length) $ringReferenceStore = $rings[0].reference;
+		$sessionFiles = $page.data.session.files;
+	})
 
 </script>	
 

@@ -2,7 +2,7 @@ import pytest
 
 from httpx import AsyncClient
 from brick.api.main import app
-from brick.api.models import Session
+from brick.api.schemas import Session
 from unittest.mock import AsyncMock, patch
 
 

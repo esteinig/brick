@@ -1,14 +1,13 @@
 import { fail, error} from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
-import type { FileUploadResponse, CreateRingResponse, SessionResponse, Session } from '$lib/types';
+import type { FileUploadResponse, CreateRingResponse, SessionResponse } from '$lib/types';
 import { RingType } from '$lib/types';
-import { checkCeleryResults, getErrorMessage } from '$lib/helpers';
+import { checkCeleryResults, getErrorMessage, isValidUUIDv4, parseEnvInt } from '$lib/helpers';
 import { env } from '$env/dynamic/private';
 
-function isValidUUIDv4(uuid: string): boolean {
-    const regex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    return regex.test(uuid);
-}
+
+const CELERY_TIMEOUT = parseEnvInt(env.PRIVATE_CELERY_TASK_CHECK_TIMEOUT, 30000, 'PRIVATE_CELERY_TASK_CHECK_TIMEOUT');
+const CELERY_INTERVAL = parseEnvInt(env.PRIVATE_CELERY_TASK_CHECK_INTERVAL, 1000, 'PRIVATE_CELERY_TASK_CHECK_INTERVAL');
 
 export const load: PageServerLoad = async ({ depends, params }) => {
 
@@ -27,7 +26,6 @@ export const load: PageServerLoad = async ({ depends, params }) => {
             return { session: sessionResponseData }
         } else {
             if (response.status === 404){
-
                 // Create a new session request
                 const newSessionResponse = await fetch(`${env.PRIVATE_DOCKER_API_URL}/sessions/${params.session}`, {method: 'POST'});
 
@@ -47,7 +45,6 @@ export const load: PageServerLoad = async ({ depends, params }) => {
             } else {
                 return fail(response.status, { detail: response.statusText })
             }
-            
         }
     } catch(error) {
         // Catch if something bad happens during validation with pydantic
@@ -75,7 +72,8 @@ export const actions: Actions = {
             if (response.ok) {
                 try {
                     return await checkCeleryResults(
-                        `${env.PRIVATE_DOCKER_API_URL}/tasks/result/${fileUploadResponseData.task_id}` 
+                        `${env.PRIVATE_DOCKER_API_URL}/tasks/result/${fileUploadResponseData.task_id}`, 
+                        CELERY_TIMEOUT, CELERY_INTERVAL
                     );
                 } catch (error) {
                     return fail(500, { 
@@ -106,21 +104,20 @@ export const actions: Actions = {
             return fail(400, {detail: "Request did not contain the required `ring_type` value"})
         }
         
-
         const response = await fetch(`${env.PRIVATE_DOCKER_API_URL}/rings/${ringType}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: ringConfig,
+            body: ringConfig
         });
-        
-        
+
         try {
             const createRingResponseData: CreateRingResponse = await response.json();
 
             if (response.ok) {
                 try {
                     return await checkCeleryResults(
-                        `${env.PRIVATE_DOCKER_API_URL}/tasks/result/${createRingResponseData.task_id}` 
+                        `${env.PRIVATE_DOCKER_API_URL}/tasks/result/${createRingResponseData.task_id}`, 
+                        CELERY_TIMEOUT, CELERY_INTERVAL
                     );
                 } catch (error) {
                     return fail(500, { 
@@ -183,6 +180,33 @@ export const actions: Actions = {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
             body: ringUpdate
+        });
+        
+        try {
+            const sessionResponseData: SessionResponse = await response.json();
+    
+            if (response.ok) {
+                return { session: sessionResponseData }
+            } else {
+                return fail(response.status, sessionResponseData)
+            }
+        } catch(error) {
+            // Catch if something bad happens during validation with pydantic
+            // there is no JSON object returned (error only)
+            return fail(response.status, {
+                detail: getErrorMessage(error)
+            })
+        }
+    },
+    deleteSessionFile: async ({ request }) => {
+
+        const formData = await request.formData();
+
+        const sessionId = formData.get("session_id") as string;
+        const fileId = formData.get("file_id") as string;
+        
+        const response = await fetch(`${env.PRIVATE_DOCKER_API_URL}/files/${sessionId}/${fileId}`, {
+            method: 'DELETE'
         });
         
         try {

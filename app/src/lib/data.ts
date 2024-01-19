@@ -1,7 +1,9 @@
 import { type BlastRing, type AnnotationRing, type ReferenceRing, RingType, LabelRing, type Palette, type RingReference } from "$lib/types";
 
 export const DEFAULT_RING_REFERENCE: RingReference = {
-    session_id: "DEFAULT", reference_id: "DEFAULT", sequence: { id: "SOLO", length: 5983947 }
+    session_id: "DEFAULT", 
+    reference_id: "DEFAULT", 
+    sequence: { id: "SOLO", length: 5983947 }
 }
 
 let innerRingData: Array<ReferenceRing | AnnotationRing> = [
@@ -284,31 +286,31 @@ const Yosemite = [
 export const NATIONAL_PARK_PALETTES: Palette[] = [
         { name: 'Acadia', subtitle: "Acadia National Park", colors: Acadia, link: "https://github.com/kevinsblake/NatParksPalettes/blob/main/photos/Acadia.png" },
         { name: 'Arches', subtitle: "Arches National Park", colors: Arches, link: "https://github.com/kevinsblake/NatParksPalettes/blob/main/photos/Arches.png" },
-        { name: 'Arches2', subtitle: "Arches National Park (Variant)", colors: Arches2, link: "https://github.com/kevinsblake/NatParksPalettes/blob/main/photos/Arches2.png" },
+        { name: 'Arches #2', subtitle: "Arches National Park (Variant)", colors: Arches2, link: "https://github.com/kevinsblake/NatParksPalettes/blob/main/photos/Arches2.png" },
         { name: 'Banff', subtitle: "Banff National Park", colors: Banff, link: "https://github.com/kevinsblake/NatParksPalettes/blob/main/photos/Banff.png" },
-        { name: 'BryceCanyon', subtitle: "Bryce Canyon National Park", colors: BryceCanyon, link: "https://github.com/kevinsblake/NatParksPalettes/blob/main/photos/BryceCanyon.png" },
-        { name: 'CapitolReef', subtitle: "Capitol Reef National Park", colors: CapitolReef, link: "https://github.com/kevinsblake/NatParksPalettes/blob/main/photos/CapitolReef.png" },
+        { name: 'Bryce Canyon', subtitle: "Bryce Canyon National Park", colors: BryceCanyon, link: "https://github.com/kevinsblake/NatParksPalettes/blob/main/photos/BryceCanyon.png" },
+        { name: 'Capitol Reef', subtitle: "Capitol Reef National Park", colors: CapitolReef, link: "https://github.com/kevinsblake/NatParksPalettes/blob/main/photos/CapitolReef.png" },
         { name: 'Charmonix', subtitle: "Charmonix", colors: Charmonix, link: "https://github.com/kevinsblake/NatParksPalettes/blob/main/photos/Charmonix.png" },
-        { name: 'CraterLake', subtitle: "Crater Lake National Park", colors: CraterLake, link: "https://github.com/kevinsblake/NatParksPalettes/blob/main/photos/CraterLake.png" },
+        { name: 'Crater Lake', subtitle: "Crater Lake National Park", colors: CraterLake, link: "https://github.com/kevinsblake/NatParksPalettes/blob/main/photos/CraterLake.png" },
         { name: 'Cuyahoga', subtitle: "Cuyahoga Valley National Park", colors: Cuyahoga, link: "https://github.com/kevinsblake/NatParksPalettes/blob/main/photos/Cuyahoga.png" },
-        { name: 'DeathValley', subtitle: "Death Valley National Park", colors: DeathValley, link: "https://github.com/kevinsblake/NatParksPalettes/blob/main/photos/DeathValley.png" },
+        { name: 'Death Valley', subtitle: "Death Valley National Park", colors: DeathValley, link: "https://github.com/kevinsblake/NatParksPalettes/blob/main/photos/DeathValley.png" },
         { name: 'Denali', subtitle: "Denali National Park", colors: Denali, link: "https://github.com/kevinsblake/NatParksPalettes/blob/main/photos/Denali.png" },
         { name: 'Everglades', subtitle: "Everglades National Park", colors: Everglades, link: "https://github.com/kevinsblake/NatParksPalettes/blob/main/photos/Everglades.png" },
         { name: 'Glacier', subtitle: "Glacier National Park", colors: Glacier, link: "https://github.com/kevinsblake/NatParksPalettes/blob/main/photos/Glacier.png" },
-        { name: 'GrandCanyon', subtitle: "Grand Canyon National Park", colors: GrandCanyon, link: "https://github.com/kevinsblake/NatParksPalettes/blob/main/photos/GrandCanyon.png" },
+        { name: 'Grand Canyon', subtitle: "Grand Canyon National Park", colors: GrandCanyon, link: "https://github.com/kevinsblake/NatParksPalettes/blob/main/photos/GrandCanyon.png" },
         { name: 'Halekala', subtitle: "Haleakalā National Park", colors: Halekala, link: "https://github.com/kevinsblake/NatParksPalettes/blob/main/photos/Halekala.png" },
-        { name: 'IguazuFalls', subtitle: "Iguazu Falls", colors: IguazuFalls, link: "https://github.com/kevinsblake/NatParksPalettes/blob/main/photos/IguazuFalls.png" },
-        { name: 'KingsCanyon', subtitle: "Kings Canyon National Park", colors: KingsCanyon, link: "https://github.com/kevinsblake/NatParksPalettes/blob/main/photos/KingsCanyon.png" },
-        { name: 'LakeNakuru', subtitle: "Lake Nakuru", colors: LakeNakuru, link: "https://github.com/kevinsblake/NatParksPalettes/blob/main/photos/LakeNakuru.png" },
+        { name: 'Iguazu Falls', subtitle: "Iguazu Falls", colors: IguazuFalls, link: "https://github.com/kevinsblake/NatParksPalettes/blob/main/photos/IguazuFalls.png" },
+        { name: 'Kings Canyon', subtitle: "Kings Canyon National Park", colors: KingsCanyon, link: "https://github.com/kevinsblake/NatParksPalettes/blob/main/photos/KingsCanyon.png" },
+        { name: 'Lake Nakuru', subtitle: "Lake Nakuru", colors: LakeNakuru, link: "https://github.com/kevinsblake/NatParksPalettes/blob/main/photos/LakeNakuru.png" },
         { name: 'Olympic', subtitle: "Olympic National Park", colors: Olympic, link: "https://github.com/kevinsblake/NatParksPalettes/blob/main/photos/Olympic.png" },
         { name: 'Redwood', subtitle: "Redwood National and State Parks", colors: Redwood, link: "https://github.com/kevinsblake/NatParksPalettes/blob/main/photos/Redwood.png" },
-        { name: 'RockyMtn', subtitle: "Rocky Mountain National Park", colors: RockyMtn, link: "https://github.com/kevinsblake/NatParksPalettes/blob/main/photos/RockyMtn.png" },
+        { name: 'Rocky Mountains', subtitle: "Rocky Mountains National Park", colors: RockyMtn, link: "https://github.com/kevinsblake/NatParksPalettes/blob/main/photos/RockyMtn.png" },
         { name: 'Saguaro', subtitle: "Saguaro National Park", colors: Saguaro, link: "https://github.com/kevinsblake/NatParksPalettes/blob/main/photos/Saguaro.png" },
-        { name: 'SmokyMtns', subtitle: "Great Smoky Mountains National Park", colors: SmokyMtns, link: "https://github.com/kevinsblake/NatParksPalettes/blob/main/photos/SmokyMtns.png" },
-        { name: 'SouthDowns', subtitle: "South Downs", colors: SouthDowns, link: "https://github.com/kevinsblake/NatParksPalettes/blob/main/photos/SouthDowns.png" },
+        { name: 'Smoky Mountains', subtitle: "Great Smoky Mountains National Park", colors: SmokyMtns, link: "https://github.com/kevinsblake/NatParksPalettes/blob/main/photos/SmokyMtns.png" },
+        { name: 'South Downs', subtitle: "South Downs", colors: SouthDowns, link: "https://github.com/kevinsblake/NatParksPalettes/blob/main/photos/SouthDowns.png" },
         { name: 'Torres', subtitle: "Torres del Paine National Park", colors: Torres, link: "https://github.com/kevinsblake/NatParksPalettes/blob/main/photos/Torres.png" },
         { name: 'Triglav', subtitle: "Triglav National Park", colors: Triglav, link: "https://github.com/kevinsblake/NatParksPalettes/blob/main/photos/Triglav.png" },
-        { name: 'WindCave', subtitle: "Wind Cave National Park", colors: WindCave, link: "https://github.com/kevinsblake/NatParksPalettes/blob/main/photos/WindCave.png" },
+        { name: 'Wind Cave', subtitle: "Wind Cave National Park", colors: WindCave, link: "https://github.com/kevinsblake/NatParksPalettes/blob/main/photos/WindCave.png" },
         { name: 'Volcanoes', subtitle: "Hawaiʻi Volcanoes National Park", colors: Volcanoes, link: "https://github.com/kevinsblake/NatParksPalettes/blob/main/photos/Volcanoes.png" },
         { name: 'Yellowstone', subtitle: "Yellowstone National Park", colors: Yellowstone, link: "https://github.com/kevinsblake/NatParksPalettes/blob/main/photos/Yellowstone.png" },
         { name: 'Yosemite', subtitle: "Yosemite National Park", colors: Yosemite, link: "https://github.com/kevinsblake/NatParksPalettes/blob/main/photos/Yosemite.png" }
