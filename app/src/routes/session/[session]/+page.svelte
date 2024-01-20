@@ -9,17 +9,21 @@
 	import { ringReferenceStore } from "$lib/stores/RingReferenceStore";
 
 	// Events from the figure to display in control interface
-	function handleClick(event: any)  {
-        console.log(`Clicked: ${ event.detail}`);
-    }
+	// function handleClick(event: any)  {
+    //     console.log(`Clicked: ${ event.detail}`);
+    // }  // on:click={handleClick}
 
 
 	onMount(() => {
+
+		// Load the data from the server load function,
+		// must include setting the `ringReferenceStore`
+		// with the first available reference to display
 		$rings = $page.data.session.rings;
 		if ($rings.length) $ringReferenceStore = $rings[0].reference;
-		$sessionFiles = $page.data.session.files;
 
-		console.log($page.data.session)
+		// Set the session files
+		$sessionFiles = $page.data.session.files;
 	})
 
 </script>	
@@ -30,7 +34,7 @@
 
     <div class="grid sm:grid-cols-1 md:grid-cols-8 gap-8 h-screen overflow-hidden">
 		<div class="col-span-5 w-full max-h-[85%]">
-            <Brick id="brickPlotSession" scaleFactor={getDefaultScaleFactor() + 0.4} on:click={handleClick} border></Brick>
+            <Brick id="brickPlotSession" scaleFactor={getDefaultScaleFactor() + 0.15} border></Brick>
 		</div>
 		<div class="col-span-3 h-full w-full overflow-auto">
             <BrickInterface></BrickInterface>

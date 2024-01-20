@@ -8,7 +8,8 @@ const initialPlotConfig: PlotConfig = {
         backgroundColor: "#d3d3d3",
         zoomEnabled: false,
         zoomLowerLimit: 0.5,
-        zoomUpperLimit: 10
+        zoomUpperLimit: 10,
+        positionEnabled: true
     },
     transition: {
       enabled: true,

@@ -95,12 +95,13 @@
   // Center and scale figure
   let scaledTransform: string;
 
+
+
   // Circular data scaling
   $: degreeScale = d3.scaleLinear(
     [0, $ringReferenceStore === null ? 0 : $ringReferenceStore.sequence.length], [0,360] // TODO: What if you just go linear or implement the ST93 paper again with a couple changes ah 0 to 1; apply this to each of multiple input sequences to align in circle as e.g. Genome 1 0-10, Genome2 10-20
   );
 
-  
   // Reactive for controls to change `scaleFactor`
   $: scaledTransform = `translate(${width / 2},${height / 2}) scale(${scaleFactor})`;
 
@@ -166,6 +167,37 @@
     
   }
 
+  function calculateAngleFromCursor(event: MouseEvent, sequenceLength: number | undefined): number | undefined {
+      // Get cursor position relative to the SVG container
+      if (svg && g && typeof sequenceLength !== 'undefined') {
+        const rect = svg.getBoundingClientRect();
+        const cursorX = event.clientX - rect.left;
+        const cursorY = event.clientY - rect.top;
+
+        // Calculate the cursor's position relative to the center of the ring
+        const relativeX = cursorX - centerX;
+        const relativeY = cursorY - centerY;
+
+        // Calculate the angle in radians and convert it to degrees
+        let angle = Math.atan2(relativeY, relativeX) * (180 / Math.PI);
+
+        // Adjust the angle for a standard coordinate system (0 degrees at 3 o'clock -> 12 o'clock)
+        angle -= annotationSegmentRotation;
+
+        let adjustedAngle = (angle + 180)/360;
+        let position = adjustedAngle * sequenceLength
+
+        // Not sure exactly why but there is some effect of the rotation adjustment
+        if (position < 0){
+          position = sequenceLength + position
+        }
+        return Math.floor(position)
+      }
+
+      return undefined
+
+  }
+
   // All ring data is fed through this generator which will calculate the start
   // and end angles on the circle for each segment and adjust inner and outer
   // heights based on radius, ring height and gap size
@@ -186,7 +218,7 @@
   }
 
   function getOuterRingHeight(rings: Ring[], gap: number): number {
-    return rings.map(ring => ring.height+gap).reduce((a, b) => a+b)+$plotConfigStore.rings.radius
+    return rings.map(ring => ring.height+gap).reduce((a, b) => a+b)+$plotConfigStore.rings.radius-gap-(gap/1.5)
   }
 
   // Function to calculate the midpoint of an arc segment
@@ -218,16 +250,75 @@
     return hex + alpha;
   }
 
+  // Adjust label annotation alignments to lines when placed
+  // at specific angle zones along the circle.
+
+  const labelZoneAngleLimitTopRight: number = 20;
+  const labelZoneAngleLimitTopLeft: number = 340;
+  const labelZoneAngleLimitBottomRight: number = 160;
+  const labelZoneAngleLimitBottomLeft: number = 200;
+
+  function getTextAnchor(angle: number) {
+    if ((angle > labelZoneAngleLimitBottomRight && angle < labelZoneAngleLimitBottomLeft) || (angle > labelZoneAngleLimitTopLeft || angle < labelZoneAngleLimitTopRight)) {
+      return 'middle';
+    }
+    return angle > labelZoneAngleLimitBottomLeft && angle < labelZoneAngleLimitTopLeft ? 'end' : 'start';
+  }
+
+  function getDominantBaseline(angle: number) {
+    if (angle > labelZoneAngleLimitBottomRight && angle < labelZoneAngleLimitBottomLeft) {
+      return 'hanging';
+    } else if (angle > labelZoneAngleLimitTopLeft || angle < labelZoneAngleLimitTopRight) {
+      return 'text-top';
+    }
+    return 'middle';
+  }
+
+  function calculateTspanX(ringAnnotation: RingSegment, lineLength: number, gap: number, textGap: number) {
+    const angle = degreeScale(ringAnnotation.start);
+    const x = calculateOuterArcPointX2(ringAnnotation, lineLength, gap);
+    if ((angle > labelZoneAngleLimitBottomRight && angle < labelZoneAngleLimitBottomLeft) || (angle > labelZoneAngleLimitTopLeft || angle < labelZoneAngleLimitTopRight)) {
+      return x; 
+    }
+    return angle > labelZoneAngleLimitBottomLeft && angle < labelZoneAngleLimitTopLeft ? x - textGap : x + textGap;
+  }
+
+  function calculateTspanY(ringAnnotation: RingSegment, lineLength: number, gap: number, textGap: number) {
+    const angle = degreeScale(ringAnnotation.start);
+    const baseY = calculateOuterArcPointY2(ringAnnotation, lineLength, gap);
+
+    if (angle > labelZoneAngleLimitBottomRight && angle < labelZoneAngleLimitBottomLeft) {
+      return baseY + textGap; // not sure why the multiplier here but it works but interferes with changes 
+    } else if (angle > labelZoneAngleLimitTopLeft || angle < labelZoneAngleLimitTopRight) {
+      return baseY - textGap;
+    }
+    return baseY;
+  }
+
+  let referencePosition: number | undefined = undefined;
+
 </script>
 
 <div id="{id}" bind:this={container} class="w-full h-full {border ? borderClass : ''}">
   
     {#if visible}
-      <svg bind:this={svg} class="w-full h-full {$plotConfigStore.svg.zoomEnabled ? 'cursor-grab': ''}" style={`background-color: ${addAlphaToHexColor($plotConfigStore.svg.backgroundColor, $plotConfigStore.svg.backgroundOpacity/100)}`} transition:animationWrapper={{duration: $plotConfigStore.transition.fadeDuration, delay: $plotConfigStore.transition.fadeDelay}}>
+      <svg 
+        role="presentation"
+        bind:this={svg} 
+        class="w-full h-full {$plotConfigStore.svg.zoomEnabled ? 'cursor-grab': ''}" 
+        style={`background-color: ${addAlphaToHexColor($plotConfigStore.svg.backgroundColor, $plotConfigStore.svg.backgroundOpacity/100)}`} 
+        transition:animationWrapper={{duration: $plotConfigStore.transition.fadeDuration, delay: $plotConfigStore.transition.fadeDelay}}
+        on:mousemove={(event) => referencePosition = calculateAngleFromCursor(event, $ringReferenceStore?.sequence.length)}
+        on:mouseout={(_) => referencePosition = $ringReferenceStore?.sequence.length}
+        on:blur={(_) => referencePosition = $ringReferenceStore?.sequence.length}
+      >
         <g bind:this={g} transform={scaledTransform}>
             <g text-anchor="middle">
               <text class="title {$plotConfigStore.title.style.code ? 'code': ''}" style="font-weight: {$plotConfigStore.title.style.bold ? 'bold': 'normal'}; fill: {$plotConfigStore.title.color}; opacity: {$plotConfigStore.title.opacity / 100}; {$plotConfigStore.title.style.italic ? 'font-style: italic': ''}; transform: scale({$plotConfigStore.title.size / 100})">{$plotConfigStore.title.text}</text>
               <text class="subtitle {$plotConfigStore.subtitle.style.code ? 'code': ''}" dy="{1.35*$plotConfigStore.subtitle.height/100}em" style="font-weight: {$plotConfigStore.subtitle.style.bold ? 'bold': 'normal'}; fill: {$plotConfigStore.subtitle.color}; opacity: {$plotConfigStore.subtitle.opacity/100}; {$plotConfigStore.subtitle.style.italic ? 'font-style: italic': ''}; transform: scale({$plotConfigStore.subtitle.size / 135})">{$plotConfigStore.subtitle.text}</text>
+              {#if $plotConfigStore.svg.positionEnabled && typeof referencePosition !== 'undefined'}
+                <text class="position {$plotConfigStore.subtitle.style.code ? 'code': ''}" dy="{(1.35*$plotConfigStore.subtitle.height/100)+1.5}em" style="font-weight: {$plotConfigStore.subtitle.style.bold ? 'bold': 'normal'}; fill: {$plotConfigStore.subtitle.color}; opacity: {$plotConfigStore.subtitle.opacity/100}; {$plotConfigStore.subtitle.style.italic ? 'font-style: italic': ''}; transform: scale({$plotConfigStore.subtitle.size / 135})">{referencePosition.toLocaleString()} bp</text>
+              {/if}
           </g>
 
           {#each $rings as ring}
@@ -248,18 +339,17 @@
                 x={calculateOuterArcPointX2(ringAnnotation, $plotConfigStore.labels.lineLength, $plotConfigStore.rings.gap)} 
                 y={calculateOuterArcPointY2(ringAnnotation, $plotConfigStore.labels.lineLength, $plotConfigStore.rings.gap)}
                 style="fill: {$plotConfigStore.labels.textColor}; opacity: {$plotConfigStore.labels.textOpacity/100}; font-size: {$plotConfigStore.labels.textSize}%"
-                text-anchor={degreeScale(ringAnnotation.start) > 180 ? 'end' : 'start' }
-                dominant-baseline={degreeScale(ringAnnotation.start) > 180 ? 'middle': 'middle'}
+                text-anchor={getTextAnchor(degreeScale(ringAnnotation.start))}
+                dominant-baseline={getDominantBaseline(degreeScale(ringAnnotation.start))}
                 class="brickAnnotationText"
                 visibility={ring.visible ? 'visible': 'hidden'}
               >
-              <tspan x={
-              degreeScale(ringAnnotation.start) > 180 ? calculateOuterArcPointX2(
-                  ringAnnotation, $plotConfigStore.labels.lineLength, $plotConfigStore.rings.gap
-                )-$plotConfigStore.labels.textGap : calculateOuterArcPointX2(
-                  ringAnnotation, $plotConfigStore.labels.lineLength, $plotConfigStore.rings.gap
-                )+$plotConfigStore.labels.textGap
-              }>{ringAnnotation.text}</tspan>
+              <tspan
+              x={calculateTspanX(ringAnnotation, $plotConfigStore.labels.lineLength, $plotConfigStore.rings.gap, $plotConfigStore.labels.textGap)} 
+              y={calculateTspanY(ringAnnotation, $plotConfigStore.labels.lineLength, $plotConfigStore.rings.gap, $plotConfigStore.labels.textGap)}
+              >
+                {ringAnnotation.text}
+              </tspan>
               </text>
             {/each}
           {:else}

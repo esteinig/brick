@@ -52,7 +52,12 @@
                     <input class="checkbox focus:ring-offset-surface-500 focus:checked:ring-offset-secondary-500" type="checkbox" bind:checked={$plotConfigStore.svg.zoomEnabled} />
                     <div class="opacity-40 ml-2">Enable zoom</div>
                 </label>
-                <p class="text-xs opacity-20 mt-4">Use the mousewheel or buttons below the plot</p>
+                <p class="text-xs opacity-20 mt-4">Use mousewheel or buttons below plot</p>
+                <label class="text-sm flex items-center mt-4">
+                    <input class="checkbox focus:ring-offset-surface-500 focus:checked:ring-offset-secondary-500" type="checkbox" bind:checked={$plotConfigStore.svg.positionEnabled} />
+                    <div class="opacity-40 ml-2">Enable position</div>
+                </label>
+                <p class="text-xs opacity-20 mt-4">Use mouse to display position on reference</p>
             </div>
                 
                 <div class="flex-1 col-span-3">
@@ -96,11 +101,11 @@
                         <div class="flex-1 col-span-3">
                             <label class="label text-xs mb-4">
                                 <p class="opacity-40">Opacity (%)</p>
-                                <input type="range" bind:value={$plotConfigStore.subtitle.opacity} min="0" max="100" />
+                                <input type="range" bind:value={$plotConfigStore.title.opacity} min="0" max="500" />
                             </label>
                             <label class="label text-xs mb-4">
                                 <p class="opacity-40">Size (%)</p>
-                                <input type="range" bind:value={$plotConfigStore.subtitle.size} min="0" max="200" />
+                                <input type="range" bind:value={$plotConfigStore.title.size} min="0" max="500" />
                             </label>
                         </div>
 
@@ -209,7 +214,7 @@
                         <div class="flex-1 col-span-3">
                             <label class="label text-xs mb-4">
                                 <p class="opacity-40">Text gap</p>
-                                <input type="range" bind:value={$plotConfigStore.labels.textGap} min="0" max="100" />
+                                <input type="range" bind:value={$plotConfigStore.labels.textGap} min="0" max="25" />
                             </label>
                 
                             <label class="label text-xs mb-4">
