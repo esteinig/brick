@@ -4,7 +4,8 @@ from fastapi import APIRouter,  HTTPException
 from ..schemas import BlastRingSchema, BlastRingResponse
 from ..schemas import AnnotationRingSchema, AnnotationRingResponse
 from ..schemas import LabelRingSchema, LabelRingResponse
-from ..tasks import process_blast_ring, process_annotation_ring, process_label_ring
+from ..schemas import ReferenceRingSchema, ReferenceRingResponse
+from ..tasks import process_blast_ring, process_annotation_ring, process_label_ring, process_reference_ring
 
 
 router = APIRouter(
@@ -13,7 +14,25 @@ router = APIRouter(
 )
 
 
-@router.post("/blast")
+
+@router.post("/reference", response_model=ReferenceRingResponse)
+def create_reference_ring(ring_config: ReferenceRingSchema):
+        
+    try:
+        task = process_reference_ring.delay(
+            ring_config.model_dump()
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error initiating task: {str(e)}")
+
+    return JSONResponse(
+        status_code=202, 
+        content=BlastRingResponse(
+            task_id=task.id
+        ).model_dump()
+    )
+
+@router.post("/blast", response_model=BlastRingResponse)
 def create_blast_ring(ring_config: BlastRingSchema):
     
     _, reference_file, genome_file = ring_config.get_file_paths()
@@ -34,7 +53,7 @@ def create_blast_ring(ring_config: BlastRingSchema):
         ).model_dump()
     )
 
-@router.post("/annotation")
+@router.post("/annotation", response_model=AnnotationRingResponse)
 def create_annotation_ring(ring_config: AnnotationRingSchema):
     
     _, genbank_file, tsv_file = ring_config.get_file_paths()
@@ -56,7 +75,7 @@ def create_annotation_ring(ring_config: AnnotationRingSchema):
     )
 
 
-@router.post("/label")
+@router.post("/label", response_model=LabelRingResponse)
 def create_label_ring(ring_config: LabelRingSchema):
     
     _, tsv_file = ring_config.get_file_paths()

@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 from datetime import datetime
 from typing import List
 
-from ...rings import Ring
+from ...rings import Ring, RingType
 from ..schemas import Session, RingUpdate
 from ..core.db import get_session_collection_motor
 
@@ -160,7 +160,6 @@ async def create_session(session_id: str):
 
 # Helper
 
-
 def update_ring_indices(session: Session, ring_update: RingUpdate) -> List[Ring]:
     # Extract the subset of rings to be reindexed
     subset_rings = [ring for ring in session.rings if ring.id in ring_update.index_group]
@@ -168,17 +167,20 @@ def update_ring_indices(session: Session, ring_update: RingUpdate) -> List[Ring]
     # Sort the subset based on their current index
     subset_rings.sort(key=lambda ring: ring.index)
 
+    # Check if there's a RingType.LABEL ring in the subset
+    label_ring_exists = any(ring.type == RingType.LABEL for ring in subset_rings)
+
     # Find the current index of the ring to be updated
     current_index = next((ring.index for ring in subset_rings if ring.id == ring_update.id), None)
     new_index = ring_update.index
 
+    # Adjust the new_index if necessary
+    if label_ring_exists and new_index >= len(subset_rings) - 1:
+        new_index = len(subset_rings) - 2  # Move to second-last position
+
     # Only proceed with reindexing if the ring is found and the index is changing
     if current_index is not None and current_index != new_index:
-        # Return if the ring is not found or the index is not changing
-        if current_index is None or current_index == new_index:
-            return
-
-        # Moving a ring outside: increase the index of rings between the current and new index
+        # Moving a ring outside: decrease the index of rings between the current and new index
         if new_index > current_index:
             for ring in subset_rings:
                 if current_index < ring.index <= new_index:
@@ -201,3 +203,4 @@ def update_ring_indices(session: Session, ring_update: RingUpdate) -> List[Ring]
             ring.index = i
 
     return subset_rings
+

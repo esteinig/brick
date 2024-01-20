@@ -17,6 +17,8 @@
     export let currentIndex: number;
     export let indexGroup: RingId[];
 
+    export let placeholder: boolean = false;
+
     // Whether to update the color in the database session
     export let updateDatabase: boolean = true;
     // Show status of request loading and success toasts
@@ -47,7 +49,7 @@
 
 </script>
 
-<div id="updateRingIndex-{id}">
+<div id="updateRingIndex-{id}" class="{placeholder ? 'invisible' : ''}">
     <div class="flex items-center align-center w-full pr-4 truncate">
         <form id="updateRingIndexForm-{id}" bind:this={formElement} action="?/updateSessionRing" method="POST" use:enhance={({ formData }) => {
                 
@@ -89,13 +91,13 @@
 
         }}>
            {#if direction === RingDirection.IN}
-                <button class="btn btn-icon h-4 w-4" type="button" on:click={updateIndex}>
+                <button class="btn btn-icon h-4 w-4" type="button" on:click={updateIndex} disabled={placeholder}>
                     <svg data-slot="icon" aria-hidden="true" fill="none" stroke-width="1.5" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path d="M4.5 10.5 12 3m0 0 7.5 7.5M12 3v18" stroke-linecap="round" stroke-linejoin="round"></path>
                     </svg>
                 </button>
             {:else}
-                <button class="btn btn-icon h-4 w-4" type="button" on:click={updateIndex}>
+                <button class="btn btn-icon h-4 w-4" type="button" on:click={updateIndex} disabled={placeholder}>
                     <svg data-slot="icon" aria-hidden="true" fill="none" stroke-width="1.5" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path d="M19.5 13.5 12 21m0 0-7.5-7.5M12 21V3" stroke-linecap="round" stroke-linejoin="round"></path>
                     </svg>

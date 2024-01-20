@@ -65,8 +65,6 @@
     // ring is changed
     $: indexGroup = $ringData.map(ring => ring.id);
 
-
-
 </script>
 
 
@@ -74,6 +72,22 @@
     
 
 <div id="brickRingControlPanel" class="p-2 text-base">
+
+    {#if showNewRingMenu}
+        <div class="text-sm opacity-90 mb-12">
+            <button class="btn p-0" on:click={() => showNewRingMenu = false}>
+                <div class="flex items-center align-center">
+                    <div class="w-7 h-7">
+                        <svg data-slot="icon" aria-hidden="true" fill="none" stroke-width="1.5" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="m11.25 9-3 3m0 0 3 3m-3-3h7.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                    </div>
+                    <span class="ml-2 text-base">Rings</span>
+                </div>
+            </button>
+        </div>
+    {/if}
+
     <div class="mb-8">
         <p class="opacity-60 mb-2">Reference</p>
 
@@ -192,9 +206,13 @@
                                 {#if ring.type !== RingType.LABEL}
                                     {#if ring.index !== 0}
                                         <RingIndex id={ring.id} direction={RingDirection.IN} currentIndex={ring.index} on:update={(_) => moveRingInside(ring.id)} indexGroup={indexGroup}></RingIndex>
+                                    {:else}
+                                        <RingIndex placeholder id={ring.id} direction={RingDirection.IN} currentIndex={ring.index} indexGroup={indexGroup}></RingIndex>
                                     {/if}
                                     {#if !((isRingTypePresent(RingType.LABEL) && ring.index === $ringData.length-2) || ring.index === $ringData.length-1)}
                                         <RingIndex id={ring.id} direction={RingDirection.OUT} currentIndex={ring.index} on:update={(_) => moveRingOutside(ring.id, $ringData.length-1)} indexGroup={indexGroup}></RingIndex>
+                                    {:else}
+                                        <RingIndex placeholder id={ring.id} direction={RingDirection.OUT} currentIndex={ring.index} indexGroup={indexGroup}></RingIndex>
                                     {/if}
                                 {/if}
                                 <DeleteRing id={ring.id} indexGroup={indexGroup} on:delete={() => removeRing(ring.id, indexGroup)}></DeleteRing>

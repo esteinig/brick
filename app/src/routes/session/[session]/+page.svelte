@@ -18,6 +18,8 @@
 		$rings = $page.data.session.rings;
 		if ($rings.length) $ringReferenceStore = $rings[0].reference;
 		$sessionFiles = $page.data.session.files;
+
+		console.log($page.data.session)
 	})
 
 </script>	

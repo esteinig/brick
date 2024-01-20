@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { ringReferenceStore } from '$lib/stores/RingReferenceStore';
 	import type { RingSegment } from '$lib/types';
 
     export let index: number;
@@ -13,6 +14,17 @@
     }
 
     $: segment.end = segment.start;
+
+
+
+    function isNumberValid(value: string | number): boolean {
+        const num = typeof value === 'string' ? parseFloat(value) : value;
+        const maxPosition = $ringReferenceStore?.sequence?.length ?? Number.MAX_SAFE_INTEGER; // fallback to a large number if undefined
+        return !isNaN(num) && num >= 0 && num <= maxPosition;
+    }
+
+    $: labelPositionValidationClass = isNumberValid(segment.start) ? segment.start === 0 ? '' : 'input-success' : 'input-error';
+
     
 </script>
 
@@ -20,7 +32,7 @@
     <div class="col-span-1">
         <label class="label text-xs">
             <p class="opacity-40">Position</p>
-            <input class="input p-1 pl-2 w-full truncate" type="number" bind:value={segment.start}/>
+            <input class="input p-1 pl-2 w-full truncate {labelPositionValidationClass}" type="text" bind:value={segment.start}/>
         </label>
     </div>
     <div class="col-span-2">

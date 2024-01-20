@@ -229,3 +229,33 @@ def sanitize_input(input_string: str, is_for_db: bool = False, is_for_svg: bool 
 
     return sanitized
 
+
+# =================
+# Other utilities
+# =================
+
+
+def parse_str_to_float(value):
+    """
+    Converts a string or float to a float. If the input is already a float, it is returned as is.
+    If it is a string, the function attempts to parse it as a float.
+
+    Args:
+    value (str or float): The value to be converted to float.
+
+    Returns:
+    float: The input value converted to a float, or the original float value.
+
+    Raises:
+    ValueError: If the input is a string that cannot be converted to a float.
+    TypeError: If the input is neither a string nor a float.
+    """
+    if isinstance(value, float):
+        return value
+    elif isinstance(value, str):
+        try:
+            return float(value)
+        except ValueError:
+            raise ValueError(f"Cannot convert string '{value}' to float.")
+    else:
+        raise TypeError("Input must be a string or a float.")
