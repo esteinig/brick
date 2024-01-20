@@ -7,12 +7,9 @@ type RingStore = Ring[];
 // Create the store
 const rings = writable<RingStore>([]);
 
-// Function to add a new ring using the addNewRing logic
-function addRing(newRing: Ring, newIndex?: number) {
-
+function addRing(newRing: Ring) {
     rings.update(currentRings => {
-        // Use the provided addNewRing function to add the ring
-        return addNewRing(currentRings, newRing, newIndex);
+        return addNewRing([...currentRings], newRing);
     });
 }
 
@@ -166,24 +163,42 @@ function createFilteredRingsStore(ringReference: RingReference | null) {
 // Export the store and functions
 export { rings, addRing, removeRing, clearRings, toggleRingVisibility, moveRingInside, moveRingOutside, changeRingTitle, isRingTypePresent, createFilteredRingsStore, changeRingColor};
 
-// Add new ring helper function
-function addNewRing(rings: Ring[], newRing: Ring, newIndex: number = rings.length): Ring[] {
+// Helper to compute index for insertion and add/merge the new ring
+function addNewRing(rings: Ring[], newRing: Ring): Ring[] {
+    // Filter rings with the same reference
+    let sameRefRings = rings.filter(ring =>
+        ring.reference.reference_id === newRing.reference.reference_id &&
+        ring.reference.sequence.id === newRing.reference.sequence.id
+    );
 
-    // If rings exist and the outer ring is a LabelRing....
-    if (rings.length > 0 && newIndex === rings.length && rings[rings.length - 1].type === RingType.LABEL) {
-       
-        if (newRing.type === RingType.LABEL) { 
-            rings[rings.length - 1].data = [
-                ...rings[rings.length - 1].data, ...newRing.data
-            ] // ...add labels to outer label ring
-            return rings
+    // Sort these rings by their index
+    sameRefRings.sort((a, b) => a.index - b.index);
+
+    // Check for the existence of a LABEL ring
+    const labelRingIndex = sameRefRings.findIndex(ring => ring.type === RingType.LABEL);
+    const isLabelRingLast = labelRingIndex !== -1 && labelRingIndex === sameRefRings.length - 1;
+
+    if (newRing.type === RingType.LABEL) {
+        // If the new ring is a LABEL ring and a LABEL ring already exists, merge their data
+        if (isLabelRingLast) {
+            sameRefRings[labelRingIndex].data = [...sameRefRings[labelRingIndex].data, ...newRing.data];
+            return [...rings];
+        } else {
+            // If no LABEL ring exists, add the new LABEL ring to the last position
+            newRing.index = sameRefRings.length > 0 ? sameRefRings[sameRefRings.length - 1].index + 1 : 0;
+            rings.push(newRing);
         }
-        newIndex = rings.length - 1;
-    }
-    
-    let newRings = [...rings];
-    newRings.splice(newIndex, 0, newRing);
-    return newRings.map((ring, idx) => ({ ...ring, index: idx }));
-}
+    } else {
+        // For non-LABEL rings, assign the appropriate index
+        newRing.index = isLabelRingLast ? sameRefRings.length - 1 : sameRefRings.length;
+        rings.splice(newRing.index, 0, newRing);
 
+        // Adjust indices if necessary
+        if (isLabelRingLast) {
+            sameRefRings[labelRingIndex].index += 1;
+        }
+    }
+    console.log(rings)
+    return rings
+}
 

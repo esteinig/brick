@@ -4,8 +4,9 @@ from pathlib import Path
 from enum import StrEnum
 from uuid import UUID
 
+from ..utils import parse_str_to_float
 from .core.config import settings
-from ..rings import BlastRing, AnnotationRing, LabelRing, RingSegment, RingReference, Ring
+from ..rings import BlastRing, AnnotationRing, LabelRing, RingSegment, RingReference, Ring, ReferenceRing
 
 SessionID = Annotated[str, "Session UUID used as directory name of the session directory"]
 SessionFileID = Annotated[str, "Uploaded file assigned UUID used as filename in session directory"]
@@ -123,6 +124,7 @@ class TaskResultType(StrEnum):
     BLAST_RING = 'BLAST_RING'
     ANNOTATION_RING = 'ANNOTATION_RING'
     LABEL_RING = 'LABEL_RING'
+    REFERENCE_RING = 'REFERENCE_RING'
 
     def from_model(model: Session | SessionFile | BlastRing | AnnotationRing | LabelRing):
         if isinstance(model, Session):
@@ -135,8 +137,10 @@ class TaskResultType(StrEnum):
             return TaskResultType.ANNOTATION_RING
         elif isinstance(model, LabelRing):
             return TaskResultType.LABEL_RING
+        elif isinstance(model, ReferenceRing):
+            return TaskResultType.REFERENCE_RING
         else:
-            raise TypeError("Could not determine task result type from input model")
+            raise TypeError("Could not determine task result return type from model")
          
 class TaskStatusResponse(BaseModel):
     task_id: CeleryTaskID
@@ -144,7 +148,7 @@ class TaskStatusResponse(BaseModel):
 
 
 class TaskResultResponse(TaskStatusResponse):
-    result: Optional[Session | SessionFile | BlastRing | AnnotationRing | LabelRing]
+    result: Optional[Session | SessionFile | BlastRing | AnnotationRing | LabelRing | ReferenceRing]
     result_type: Optional[TaskResultType]
 
 
@@ -156,7 +160,8 @@ class BlastRingSchema(RingSchema):
     genome_id: SessionFileID
     blast_method: BlastMethod = BlastMethod.BLASTN
     min_alignment: int = 0
-    min_identity: float = 0
+    min_identity: float = 0.
+    min_evalue: float = 10.
 
     @field_validator('genome_id')
     @classmethod
@@ -175,18 +180,28 @@ class BlastRingSchema(RingSchema):
             raise ValueError(f"reference file could not be found. It may have been deleted or expired in session storage :(")
         return v
 
-    @field_validator('min_alignment')
+    @field_validator('min_alignment', mode="after")
     @classmethod
     def check_min_alignment(cls, v: int):
-        if not v >= 0:
-            raise ValueError('minimum alignment length must be greater or equal to 0')
+        if v < 0:
+            raise ValueError('minimum alignment length must not be negative')
+        
         return v
     
-    @field_validator('min_identity')
+    @field_validator('min_identity', mode="after")
     @classmethod
-    def check_min_identity(cls, v: int):
-        if not 0 <= v <= 100:
-            raise ValueError('minimum identity must be between 0 and 100')
+    def check_min_identity(cls, v: float):
+        if not 0. <= v <= 100.:
+            raise ValueError('minimum percent identity must be between 0 and 100')
+        
+        return v
+    
+
+    @field_validator('min_evalue', mode="after")
+    @classmethod
+    def check_min_evalue(cls, v: float):
+        if v < 0:
+            raise ValueError('minimum evalue must not be negative')
         return v
     
     # Do not use ValidationInfo - use model validator instead!
@@ -292,6 +307,14 @@ class LabelRingSchema(RingSchema):
         )
 
 class LabelRingResponse(BaseModel):
+    task_id: CeleryTaskID
+
+
+class ReferenceRingSchema(RingSchema):
+    pass
+
+
+class ReferenceRingResponse(BaseModel):
     task_id: CeleryTaskID
 
 # Ring identifiers to update other indices for the 

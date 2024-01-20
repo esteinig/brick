@@ -22,6 +22,8 @@
     // dispatches color as event accessible `on:selectColor`
     export let color: string = "#d3d3d3";
 
+    export let size: number = 4;
+
     // Whether to update the color in the database session
     export let updateDatabase: boolean = true;
     // Show status of request loading and success toasts
@@ -70,7 +72,7 @@
 
 <div id="palettePopup-{id}">
     
-    <button class="btn btn-icon h-4 w-4" style="color: {color};" use:popup={popupPalette} type="button">
+    <button class="btn btn-icon h-{size} w-{size}" style="color: {color};" use:popup={popupPalette} type="button">
         <svg data-slot="icon" aria-hidden="true" fill="none" stroke-width="1.5" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path d="M9.53 16.122a3 3 0 0 0-5.78 1.128 2.25 2.25 0 0 1-2.4 2.245 4.5 4.5 0 0 0 8.4-2.245c0-.399-.078-.78-.22-1.128Zm0 0a15.998 15.998 0 0 0 3.388-1.62m-5.043-.025a15.994 15.994 0 0 1 1.622-3.395m3.42 3.42a15.995 15.995 0 0 0 4.764-4.648l3.876-5.814a1.151 1.151 0 0 0-1.597-1.597L14.146 6.32a15.996 15.996 0 0 0-4.649 4.763m3.42 3.42a6.776 6.776 0 0 0-3.42-3.42" stroke-linecap="round" stroke-linejoin="round"></path>
         </svg>

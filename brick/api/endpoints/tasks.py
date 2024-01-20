@@ -4,8 +4,8 @@ from fastapi import APIRouter, HTTPException
 
 from ..schemas import TaskStatus, TaskStatusResponse, TaskResultResponse
 from ..core.celery import celery_app
-from ..schemas import Session, SessionFile, FileType, TaskResultType
-from ...rings import BlastRing, AnnotationRing, LabelRing, RingType
+from ..schemas import Session, SessionFile, FileFormat, TaskResultType
+from ...rings import ReferenceRing, BlastRing, AnnotationRing, LabelRing, RingType
 
 router = APIRouter(
     prefix="/tasks",
@@ -37,7 +37,7 @@ def get_task_result(task_id: str):
                 task_id=task_id, 
                 status=TaskStatus.PROCESSING, 
                 result=None,
-                result_type=None,
+                result_type=None
             ).model_dump()
         )
     
@@ -59,15 +59,18 @@ def get_task_result(task_id: str):
                 task_id=task_id, 
                 status=TaskStatus.SUCCESS, 
                 result=result_model,
-                result_type=TaskResultType.from_model(model=result_model)
+                result_type=TaskResultType.from_model(model=result_model)  # add types here if adding new tasks
             ).model_dump()
         )
     else:
         raise HTTPException(status_code=500, detail=result["error"])
     
-def get_result_model(result_data: dict) -> Session | SessionFile | BlastRing | AnnotationRing | LabelRing:
+def get_result_model(result_data: dict) -> Session | SessionFile | BlastRing | AnnotationRing | ReferenceRing:
+    """
+    Identification of result models from a common result endpoint for tasks exceuted with Celery
+    """
 
-    if 'type' in result_data and any(result_data['type'] == item.value for item in FileType):
+    if 'format' in result_data and any(result_data['format'] == item.value for item in FileFormat):
         return SessionFile(**result_data)
     elif 'type' in result_data and result_data["type"] == RingType.BLAST:
         return BlastRing(**result_data)
@@ -75,6 +78,8 @@ def get_result_model(result_data: dict) -> Session | SessionFile | BlastRing | A
         return AnnotationRing(**result_data)
     elif 'type' in result_data and result_data["type"] == RingType.LABEL:
         return LabelRing(**result_data)
+    elif 'type' in result_data and result_data["type"] == RingType.REFERENCE:
+        return ReferenceRing(**result_data)
     elif 'date' in result_data:
         return Session(**result_data)
     else: 

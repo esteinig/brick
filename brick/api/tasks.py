@@ -4,7 +4,9 @@ import shutil
 import subprocess
 import tempfile
 import contextlib
+import uuid 
 
+from typing import List
 
 from Bio import SeqIO
 from typing import Tuple, Annotated, Optional
@@ -14,8 +16,9 @@ from datetime import datetime
 from .core.config import settings
 from .core.celery import celery_app
 from .core.db import get_session_collection_pymongo
-from .schemas import Session, FileFormat, FileType, SessionFile, Selections, FileConfig, AnnotationRingSchema, LabelRingSchema, Sequence, BlastRingSchema
-from ..rings import Ring, BlastRing, AnnotationRing, LabelRing
+from .schemas import Session, FileFormat, FileType, SessionFile, Sequence, Selections, FileConfig
+from .schemas import AnnotationRingSchema, LabelRingSchema, BlastRingSchema, ReferenceRingSchema, RingReference
+from ..rings import Ring, RingSegment, RingType, BlastRing, AnnotationRing, LabelRing, ReferenceRing
 
 # Uploaded file validation and session file storage
 @celery_app.task
@@ -79,11 +82,6 @@ def rehydrate_session(file_path: str, file_config: Annotated[dict, "Model dump o
         old_session_directory = settings.WORK_DIRECTORY / old_session_id
         new_session_directory = settings.WORK_DIRECTORY / new_session_id
 
-        print(f"""
-        Old session ID: {old_session_id}
-        New session ID: {new_session_id}
-        """)
-
         if old_session_directory.exists() and old_session_directory != new_session_directory:
             # Session data and files have not expired, and the rehydration is not running on 
             # the same session as before, here we copy the data over into a new directory
@@ -115,6 +113,28 @@ def rehydrate_session(file_path: str, file_config: Annotated[dict, "Model dump o
         return {"success": False, "error": str(e)}
 
 
+# Reference ring, is simple but fits the format for the application
+    
+@celery_app.task
+def process_reference_ring(
+    reference_ring_schema: Annotated[dict, "Model dump of ReferenceRingSchema"]
+):
+
+    try:
+        ring_schema = ReferenceRingSchema(**reference_ring_schema)
+
+        ring: ReferenceRing = ReferenceRing.from_reference(reference=ring_schema.reference)
+        
+        # Ring index is modified for database in this function
+        ring = update_rings_or_create_session(session_id=ring_schema.reference.session_id, ring=ring)      
+
+        return {
+            "success": True, 
+            "result": ring.model_dump()
+        }
+
+    except Exception as e:
+        return {"success": False, "error": str(e)}
 
 # Nucleotide BLAST subprocess execution and parsing
     
@@ -135,13 +155,13 @@ def process_blast_ring(
                 working_directory=working_directory
             )
             ring: BlastRing = BlastRing.from_blast_output(
-                file=output_file, reference=ring_schema.reference
+                file=output_file, reference=ring_schema.reference, min_identity=ring_schema.min_identity, min_alignment=ring_schema.min_alignment, min_evalue=ring_schema.min_evalue
             )
         
         if not ring.data:
             raise ValueError("BLAST executed correctly but no alignments were found")
-
-        update_rings_or_create_session(session_id=ring_schema.reference.session_id, ring=ring)      
+        # Ring index is modified for database in this function
+        ring = update_rings_or_create_session(session_id=ring_schema.reference.session_id, ring=ring)      
 
         return {
             "success": True, 
@@ -179,7 +199,8 @@ def process_annotation_ring(
         else:
             raise ValueError("Something went wrong - no files provided")
 
-        update_rings_or_create_session(session_id=ring_schema.reference.session_id, ring=ring)  
+        # Ring index is modified for database in this function
+        ring = update_rings_or_create_session(session_id=ring_schema.reference.session_id, ring=ring)  
 
         return {
             "success": True, 
@@ -196,7 +217,13 @@ def process_label_ring(
 ):
 
     try:
-        ring_schema = LabelRingSchema(**label_ring_schema)
+        ring_schema: LabelRingSchema = LabelRingSchema(**label_ring_schema)
+
+        # For label rings we first check if one already exists matching the same 
+        # reference and sequence identifiers. If so, add the ring segments to the
+        # existing ring in the database and return the updated ring, otherwise
+        # use the new one and insert:
+    
 
         if tsv_file_path:
             ring: LabelRing = LabelRing.from_tsv_file(
@@ -206,6 +233,7 @@ def process_label_ring(
             )
         else:
             ring: LabelRing = LabelRing(
+                id=str(uuid.uuid4()),
                 reference=ring_schema.reference
             )
 
@@ -215,7 +243,13 @@ def process_label_ring(
                 sanitize=True
             )
 
-        update_rings_or_create_session(session_id=ring_schema.reference.session_id, ring=ring)  
+        result = check_or_update_label_ring(reference=ring_schema.reference, new_segments=ring.data)
+
+        if result is None:
+            print("No existing label ring found, adding label ring to session")
+            update_rings_or_create_session(session_id=ring_schema.reference.session_id, ring=ring)  
+        else:
+            ring = result
 
         return {
             "success": True, 
@@ -401,17 +435,40 @@ def update_rings_or_create_session(session_id: str, ring: Ring) -> str:
     # Check if session exists and update or create
     session = sessions_collection.find_one({"id": session_id})
 
-    # Get last index to adjust the ring index from default of 
-    # -1 (outermost position) to the last index of rings
-    # stored in the session model 
-
     if session:
         session_model = Session(**session)
-        ring.index = len(session_model.rings)
 
+        # Filter rings with the same reference sequence
+        same_ref_rings = [
+            r for r in session_model.rings 
+            if r.reference.reference_id == ring.reference.reference_id and
+                r.reference.sequence.id == ring.reference.sequence.id
+        ]
+
+        # Sort these rings by their index
+        same_ref_rings.sort(key=lambda r: r.index)
+
+        # Check if a RingType.LABEL ring with the same reference exists
+        label_ring = next((r for r in same_ref_rings if r.type == RingType.LABEL), None)
+
+        # Assign the index for the new Ring
+        if label_ring and ring.type != RingType.LABEL:
+            # Set to the second-last position
+            ring.index = len(same_ref_rings) - 1
+            # Move the label ring to the last index if it's not already
+            if label_ring.index != len(same_ref_rings):
+                label_ring.index = len(same_ref_rings)
+        else:
+            # Otherwise, assign the last index
+            ring.index = len(same_ref_rings)
+
+        # Add the new ring to the session rings
+        session_model.rings.append(ring)
+
+        # Update the session in the database
         sessions_collection.update_one(
             {"id": session_id}, 
-            {"$push": {"rings": ring.model_dump()}}
+            {"$set": {"rings": [r.model_dump() for r in session_model.rings]}} 
         )
     else:
         new_session = Session(
@@ -424,7 +481,9 @@ def update_rings_or_create_session(session_id: str, ring: Ring) -> str:
             new_session.model_dump()
         )
 
-    return session_id
+    # Return ring because we modify its index and the 
+    # ring itself is returned in response
+    return ring
 
 
 def update_session_or_create_session(session_update: Session):
@@ -445,6 +504,55 @@ def update_session_or_create_session(session_update: Session):
         )
 
     return session_update.id  # new id
+
+
+def check_or_update_label_ring(reference: RingReference, new_segments: List[RingSegment]) -> LabelRing | None:
+
+    sessions_collection = get_session_collection_pymongo()
+
+    result = sessions_collection.find_one({
+        "id": reference.session_id,
+        "rings": {
+            "$elemMatch": {
+                "type": "label",  # Replace with the actual value used for RingType.LABEL
+                "reference.reference_id": reference.reference_id,
+                "reference.sequence.id": reference.sequence.id,
+            }
+        }
+    })
+
+    if result:
+
+        ring_id = None
+        for ring in result.get("rings", []):
+            if ring.get("type") == RingType.LABEL and \
+               ring.get("reference", {}).get("reference_id") == reference.reference_id and \
+               ring.get("reference", {}).get("sequence", {}).get("id") == reference.sequence.id:
+                ring_id = ring.get("id")
+                break
+
+        if ring_id is not None:
+
+            # Update the ring with new ring segments
+            update_result = sessions_collection.update_one(
+                {"id": reference.session_id, "rings.id": ring_id},
+                {"$push": {"rings.$.data": {"$each": [segment.model_dump() for segment in new_segments]}}}
+            )
+
+            if update_result.modified_count > 0:
+                # Retrieve and return the updated ring
+                updated_session = sessions_collection.find_one({"id": reference.session_id})
+                updated_ring = next((ring for ring in updated_session["rings"] if ring["id"] == ring_id), None)
+                return LabelRing(**updated_ring)
+            else:
+                return None
+        else:
+            return None
+    else:
+        return None
+
+
+
 
 # Working directory helpers
 

@@ -209,15 +209,23 @@ export enum BlastMethod {
     BLASTN = "blastn"
 }
 
+// Ring reference can be null in this schema
+// but is required at endpoint, this is so
+// that the $ringReferenceStore can be null
+// when no reference or sequence is available
+// or selected by user in application
 export type RingSchema = {
-    reference: RingReference | null
+    reference: RingReference | null  
 }
+
+export type ReferenceRingSchema = {} & RingSchema
 
 export type BlastRingSchema = {
     genome_id: string
-    blast_method: BlastMethod,
+    blast_method: BlastMethod
     min_identity: number
     min_alignment: number
+    min_evalue: number
 } & RingSchema
 
 export type AnnotationRingSchema = {
@@ -265,7 +273,8 @@ export enum TaskResultType {
     SESSION_FILE = 'SESSION_FILE',
     BLAST_RING = 'BLAST_RING',
     ANNOTATION_RING = 'ANNOTATION_RING',
-    LABEL_RING = 'LABEL_RING'
+    LABEL_RING = 'LABEL_RING',
+    REFERENCE_RING = 'REFERENCE_RING'
 }
 
 export type TaskStatusResponse = {
@@ -300,19 +309,26 @@ export type SessionResponse = Session & ErrorResponse;
  *  ==================
 */
 
-export enum TitleStyle {
-    ITALIC = "italic",
-    BOLD = "bold",
-    CODE = "code",
-    NORMAL = "normal"
+
+export type TitleStyle = {
+    italic: boolean
+    bold: boolean
+    code: boolean
 }
 
 export type PlotConfig = {
     title: TitleConfig
+    transition: TransitionConfig
     subtitle: SubtitleConfig
     rings: RingConfig
     svg: SvgConfig
-    annotation: AnnotationConfig
+    labels: LabelConfig
+}
+
+export type TransitionConfig = {
+    enabled: boolean
+    fadeDuration: number
+    fadeDelay: number
 }
 
 export type SvgConfig = {
@@ -327,7 +343,7 @@ export type TitleConfig = {
     text: string
     color: string
     opacity: number
-    styles: TitleStyle[]
+    style: TitleStyle
     size: number
 }
 
@@ -336,16 +352,20 @@ export type SubtitleConfig = {
     text: string
     color: string
     opacity: number
-    styles: TitleStyle[]
+    style: TitleStyle
     size: number
     height: number
 }
 
-export type AnnotationConfig = {
+export type LabelConfig = {
+    lineColor: string
+    lineWidth: number
+    lineOpacity: number
     lineLength: number
-    lineStyle: string
+    textColor: string
+    textSize: number
+    textOpacity: number
     textGap: number
-    textStyle: string
 }
 
 export type RingConfig = {

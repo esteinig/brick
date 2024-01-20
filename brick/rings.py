@@ -15,6 +15,7 @@ class RingType(StrEnum):
     BLAST = 'blast'
     ANNOTATION = 'annotation'
     LABEL = 'label'
+    REFERENCE = 'reference'
 
 class RingSegment(BaseModel):
     start: int = 0
@@ -42,6 +43,19 @@ class Ring(BaseModel):
     reference: RingReference | None = None
     data: List[RingSegment] = Field(default_factory=list)
 
+# Reference Ring
+    
+class ReferenceRing(Ring):
+    type: RingType = RingType.REFERENCE
+    title: str = "Reference Ring"
+
+    @staticmethod
+    def from_reference(reference: RingReference) -> BlastRing:
+        return BlastRing(
+            id=str(uuid.uuid4()), 
+            data=[RingSegment(start=0, end=reference.sequence.length, text=reference.sequence.id)],
+            reference=reference
+        ) 
 # Blast Ring
         
 class BlastnEntry(BaseModel):
@@ -65,7 +79,7 @@ class BlastnEntry(BaseModel):
         )
 
 
-def parse_blastn_output(file_path: Path, reference: RingReference = None) -> List[BlastnEntry]:
+def parse_blastn_output(file_path: Path, reference: RingReference | None = None, min_identity: int = 0, min_alignment: int = 0, min_evalue: float = 0) -> List[BlastnEntry]:
     """
     Parses a BLASTn output file with `-outfmt 6` format.
     
@@ -94,6 +108,13 @@ def parse_blastn_output(file_path: Path, reference: RingReference = None) -> Lis
                 e_value=float(fields[10]),
                 bit_score=float(fields[11])
             )
+            if entry.perc_identity < min_identity:
+                continue
+            if entry.alignment_length < min_alignment:
+                continue
+            if entry.e_value > min_evalue:
+                continue 
+
             if reference:
                 if entry.subject_id == reference.sequence.id:
                     result.append(entry)
@@ -109,10 +130,16 @@ class BlastRing(Ring):
     title: str = "BLAST Ring"
     
     @staticmethod
-    def from_blast_output(file: Path, reference: RingReference | None = None) -> BlastRing:
+    def from_blast_output(file: Path, reference: RingReference | None = None, min_identity: int = 0, min_alignment: int = 0, min_evalue: float = 0) -> BlastRing:
         return BlastRing(
             id=str(uuid.uuid4()), 
-            data=[entry.to_segment() for entry in parse_blastn_output(file_path=file, reference=reference)],
+            data=[entry.to_segment() for entry in parse_blastn_output(
+                file_path=file, 
+                reference=reference,
+                min_identity=min_identity,
+                min_alignment=min_alignment,
+                min_evalue=min_evalue
+            )],
             reference=reference
         )
     

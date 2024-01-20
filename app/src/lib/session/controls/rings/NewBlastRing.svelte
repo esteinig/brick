@@ -18,10 +18,29 @@
         genome_id: "",
         blast_method: BlastMethod.BLASTN,
         min_alignment: 0,
-        min_identity: 0
+        min_identity: 0,
+        min_evalue: 0.000001
     }
 
     let loading: boolean = false
+
+    function isNumberInRange(value: string | number): boolean {
+        const num = typeof value === 'string' ? parseFloat(value) : value;
+        return !isNaN(num) && num >= 0 && num <= 100;
+    }
+
+    function isNumberValid(value: string | number): boolean {
+        const num = typeof value === 'string' ? parseFloat(value) : value;
+        return !isNaN(num) && num >= 0;
+    }
+
+    let identityInputValidationClass: string = "";
+    let alignmentInputValidationClass: string = "";
+    let evalueInputValidationClass: string = "";
+
+    $: identityInputValidationClass = isNumberInRange(ringConfig.min_identity) ? ringConfig.min_identity === 0 ? '' : 'input-success' : 'input-error';
+    $: alignmentInputValidationClass = isNumberValid(ringConfig.min_alignment) ? ringConfig.min_alignment === 0 ? '' : 'input-success' : 'input-error';
+    $: evalueInputValidationClass = isNumberValid(ringConfig.min_evalue) ? ringConfig.min_evalue === 0.000001 ? '' : 'input-success' : 'input-error';
 
 </script>
 
@@ -36,55 +55,39 @@
     {#if $ringReferenceStore}
         <form id="createBlastRingForm" action="?/createRing" method="POST" use:enhance={({ formData }) => {
             
-            // Important to do here, otherwise not set
-            // correctly on re-hydration because the
-            // selection of the reference is not done
             ringConfig.reference = $ringReferenceStore;
 
-            loading = true;
             formData.append('ring_config', JSON.stringify(ringConfig))
             formData.append('ring_type', RingType.BLAST)
 
-
-            // Reset data for the component
             ringConfig = {
-                reference: $ringReferenceStore,
+                reference: null,
                 genome_id: "",
                 blast_method: BlastMethod.BLASTN,
                 min_alignment: 0,
-                min_identity: 0
+                min_identity: 0,
+                min_evalue:  0.000001
             }
 
-
-            // Tracks the common request state from multiple components 
+            loading = true;
             startRequestState();
         
             return async ({ result }) => {
                 await applyAction(result);
+
                 loading = false;
                 completeRequestState();
                     
                 if (result.type === "success"){
-                    // invalidate("app:session")
+                    console.log($page.form.result.index)
                     addRing($page.form.result)
                     triggerToast("Ring created sucessfully", ToastType.SUCCESS, toastStore);
                 } else {
-                    // Validation errors from pydantic schemes are an array of validation objects:
-                    if ($page.form.detail instanceof Array){
-                        for (const error of $page.form.detail) {
-                            triggerToast(
-                                error.msg ?? `Error ${result.status}: an unknown error occurred`, 
-                                ToastType.ERROR, 
-                                toastStore
-                            );
-                        }
-                    } else {
-                        triggerToast($page.form.detail ?? `Error ${result.status}: an unknown error occurred`, ToastType.ERROR, toastStore);
-                    }
+                    triggerToast($page.form.detail ?? `Error ${result.status}: an unknown error occurred`, ToastType.ERROR, toastStore);
                 }
             };
         }}>
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 my-3 items-center">
+            <div class="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 gap-4 my-3 items-center">
                 <div>
                     <label class="label text-xs">
                         <p class="opacity-40">Reference</p>
@@ -95,7 +98,7 @@
                     {#if sessionFileTypeAvailable(FileType.GENOME)}
                         <label class="label text-xs">
                             <p class="opacity-40">Comparison</p>
-                            <select class="select text-xs" bind:value={ringConfig.genome_id}>
+                            <select class="select text-xs" bind:value={ringConfig.genome_id} disabled={loading}>
                                 {#each $sessionFiles as file}
                                     {#if file.type === FileType.GENOME}
                                         <option value={file.id}>{file.name_original}</option>
@@ -108,9 +111,23 @@
                     {/if}
                 </div>
             </div>
+            <div class="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-3 gap-4 my-3 items-center">
+                <label class="label text-xs">
+                    <p class="opacity-40">Minimum identity (%)</p>
+                    <input id="blastMinIdentity" class="input text-xs {identityInputValidationClass}" type="text" bind:value={ringConfig.min_identity} />
+                </label>
+                <label class="label text-xs">
+                    <p class="opacity-40">Minimum alignment length</p>
+                    <input id="blastMinIdentity" class="input text-xs {alignmentInputValidationClass}" type="text" bind:value={ringConfig.min_alignment} />
+                </label>
+                <label class="label text-xs">
+                    <p class="opacity-40">Minimum e-value</p>
+                    <input id="blastMinIdentity" class="input text-xs {evalueInputValidationClass}" type="text" bind:value={ringConfig.min_evalue} />
+                </label>
+            </div>
             
 
-            <div class="flex justify-right mt-12">
+            <div class="flex justify-right mt-6">
                 <button class="btn variant-outline-surface" type="submit" disabled={loading || !ringConfig.genome_id}>
                     <div class="flex items-center align-center">
                         <span>Construct</span>

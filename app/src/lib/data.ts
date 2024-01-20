@@ -1,6 +1,6 @@
 import { type BlastRing, type AnnotationRing, type ReferenceRing, RingType, LabelRing, type Palette, type RingReference } from "$lib/types";
 
-export const DEFAULT_RING_REFERENCE: RingReference = {
+export const DEFAULT_REFERENCE: RingReference = {
     session_id: "DEFAULT", 
     reference_id: "DEFAULT", 
     sequence: { id: "SOLO", length: 5983947 }
@@ -16,7 +16,7 @@ let innerRingData: Array<ReferenceRing | AnnotationRing> = [
         height: 20,
         type: RingType.ANNOTATION,
         title: "Open reading frames from Bakta v1.9.3",
-        reference: DEFAULT_RING_REFERENCE,
+        reference: DEFAULT_REFERENCE,
         data: [
             {
                 "color": "#b4b87f",
@@ -37,7 +37,7 @@ let blastRingData: Array<BlastRing> = [
         height: 20,
         type: RingType.BLAST,
         title: "Mycobacterium sp. SMC-2",
-        reference: DEFAULT_RING_REFERENCE,
+        reference: DEFAULT_REFERENCE,
         data: [
             {
                 "color": "#6ea8ab",
@@ -55,7 +55,7 @@ let blastRingData: Array<BlastRing> = [
         height: 20,
         type: RingType.BLAST,
         title: "Mycobacterium nebraskense",
-        reference: DEFAULT_RING_REFERENCE,
+        reference: DEFAULT_REFERENCE,
         data: [
             {
                 "color": "#8f5715",
@@ -77,7 +77,7 @@ let outerRingData: Array<AnnotationRing | LabelRing> = [
         height: 20,
         type: RingType.LABEL,
         title: "Custom feature labels",
-        reference: DEFAULT_RING_REFERENCE,
+        reference: DEFAULT_REFERENCE,
         data: [
             {
                 "color": "#8f5715",

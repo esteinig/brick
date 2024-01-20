@@ -9,12 +9,11 @@
 	import { applyAction, enhance } from "$app/forms";
     import { ringReferenceStore } from "$lib/stores/RingReferenceStore";
     import { startRequestState, completeRequestState } from '$lib/stores/RequestInProgressStore';
-	import { invalidate } from "$app/navigation";
     
     const toastStore = getToastStore();
     
     let ringConfig: AnnotationRingSchema = {
-        reference: $ringReferenceStore,
+        reference: null,
         genbank_id: null,
         tsv_id: null,
         genbank_features: [],
@@ -38,31 +37,32 @@
     
     {#if $ringReferenceStore}
         <form id="createAnnotationRingForm" action="?/createRing" method="POST" use:enhance={({ formData }) => {
-                    
-            loading = true;
+            
+            ringConfig.reference = $ringReferenceStore
+
             formData.append('ring_config', JSON.stringify(ringConfig))
             formData.append('ring_type', RingType.ANNOTATION)
 
             // Clear data in this component
             ringConfig = {
-                reference: $ringReferenceStore,
+                reference: null,
                 genbank_id: null,
                 tsv_id: null,
                 genbank_features: [],
                 genbank_qualifiers: []
             }
 
-            // Tracks the common request state from multiple components 
+            loading = true;
             startRequestState();
 
         
             return async ({ result }) => {
                 await applyAction(result);
+
                 loading = false;
                 completeRequestState();
                     
                 if (result.type === "success"){
-                    // invalidate("app:session")
                     addRing($page.form.result)
                     if ($page.form.result.data.length) {
                         triggerToast("Ring created sucessfully", ToastType.SUCCESS, toastStore);
@@ -71,18 +71,7 @@
                     }
                     
                 } else {
-                    // Validation errors from pydantic schemes are an array of validation objects:
-                    if ($page.form.detail instanceof Array){
-                        for (const error of $page.form.detail) {
-                            triggerToast(
-                                error.msg ?? `Error ${result.status}: an unknown error occurred`, 
-                                ToastType.ERROR, 
-                                toastStore
-                            );
-                        }
-                    } else {
-                        triggerToast($page.form.detail ?? `Error ${result.status}: an unknown error occurred`, ToastType.ERROR, toastStore);
-                    }
+                    triggerToast($page.form.detail ?? `Error ${result.status}: an unknown error occurred`, ToastType.ERROR, toastStore);
                 }
             };
         }}>

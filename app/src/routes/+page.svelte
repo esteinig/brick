@@ -6,11 +6,13 @@
 	import { onMount } from 'svelte';
 	import { rings } from "$lib/stores/RingStore";
 	import { getDefaultScaleFactor } from "$lib/brick/helpers";	
-	import { DEFAULT_RINGS } from "$lib/data";
+	import { DEFAULT_RINGS, DEFAULT_REFERENCE } from "$lib/data";
+	import { ringReferenceStore } from "$lib/stores/RingReferenceStore";
 
 	
 	onMount(() => {
 		$rings = DEFAULT_RINGS;
+		$ringReferenceStore = DEFAULT_REFERENCE;
 	});
 	
 

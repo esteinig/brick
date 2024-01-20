@@ -30,7 +30,7 @@
     <div class="grid grid-cols-12 gap-1">
         {#each colors as color}
             <div 
-            class="p-4 rounded shadow-lg" 
+            class="p-4 rounded shadow-lg cursor-pointer" 
             style="background-color: {color};" 
             on:mouseover={() => displayValue = color} 
             on:mouseout={() => displayValue = ""}

@@ -1,4 +1,5 @@
 import { browser } from "$app/environment";
+import { getTransitionDurationTotal } from "$lib/stores/PlotConfigStore";
 import type { Ring, Session } from "$lib/types";
 
 export function downloadSVG(id: string) {
@@ -19,47 +20,60 @@ export function downloadSVG(id: string) {
 
 }
 
+export async function downloadPNG(id: string) {
+    
+    // await waitForTransition();
 
-/** Currently not working because of opacity animation!
- *  Move to plotConfig and disable animation temporarily before downloading PNG. 
- */
-export function downloadPNG(id: string) {
-    const svg = document.querySelector(`#${id} svg`);
-
-    if (!svg) {
-        console.error(`SVG element not found: ${id} svg`);
+    const svgElement = document.getElementById(id)?.querySelector('svg');
+    if (!svgElement) {
+        console.error(`SVG element not found: ${id} > svg`);
         return;
     }
 
+    const viewBox = svgElement.getAttribute('viewBox');
+    const [x, y, width, height] = viewBox ? viewBox.split(' ').map(Number) : [0, 0, svgElement.clientWidth, svgElement.clientHeight];
+
     const serializer = new XMLSerializer();
-    const source = serializer.serializeToString(svg);
+    const svgString = serializer.serializeToString(svgElement);
 
     const img = new Image();
-    const svgBlob = new Blob([source], {type: 'image/svg+xml;charset=utf-8'});
+    const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
     const url = URL.createObjectURL(svgBlob);
 
     img.onload = () => {
         const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const context = canvas.getContext('2d');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
 
-        if (!context) {
-            console.error('2D context element not found');
+        if (!ctx) {
+            console.error('2D context not found for canvas');
             return;
         }
 
-        context.drawImage(img, 0, 0);
+        ctx.drawImage(img, -x, -y, width, height);
         URL.revokeObjectURL(url);
 
-        const canvasData = canvas.toDataURL('image/png');
-        const a = document.createElement('a');
-        a.href = canvasData;
-        a.download = 'brick.png';
-        a.click();
+        const pngData = canvas.toDataURL('image/png');
+        const downloadLink = document.createElement('a');
+        downloadLink.href = pngData;
+        downloadLink.download = 'brick.png';
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
     };
 
     img.src = url;
+}
+
+
+// Helper function to wait for transitions to complete - might not be needed 
+function waitForTransition() {
+    return new Promise(resolve => {
+        // Assuming a fixed duration for the transition
+        const transitionDuration = getTransitionDurationTotal(); // Adjust as needed
+        setTimeout(resolve, transitionDuration);
+    });
 }
 
 export function downloadJSON(data: Ring[] | Session) {
