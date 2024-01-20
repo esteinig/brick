@@ -39,8 +39,6 @@
             
             ringConfig.reference = $ringReferenceStore;
 
-            console.log(ringConfig)
-
             formData.append('ring_config', JSON.stringify(ringConfig))
             formData.append('ring_type', RingType.LABEL)
 

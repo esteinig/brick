@@ -179,9 +179,14 @@ function addNewRing(rings: Ring[], newRing: Ring): Ring[] {
     const isLabelRingLast = labelRingIndex !== -1 && labelRingIndex === sameRefRings.length - 1;
 
     if (newRing.type === RingType.LABEL) {
-        // If the new ring is a LABEL ring and a LABEL ring already exists, merge their data
+        // If the new ring is a LABEL ring and a LABEL ring already exists, merge their data (labels)
+        // only do this if they do not exist already - stringify is perhaps costly, but should not 
+        // matter too much since we have a small number of labels in general
         if (isLabelRingLast) {
-            sameRefRings[labelRingIndex].data = [...sameRefRings[labelRingIndex].data, ...newRing.data];
+            const existingData = new Set(sameRefRings[labelRingIndex].data.map(item => JSON.stringify(item)));
+            const uniqueNewData = newRing.data.filter(item => !existingData.has(JSON.stringify(item)));
+
+            sameRefRings[labelRingIndex].data = [...sameRefRings[labelRingIndex].data, ...uniqueNewData];
             return [...rings];
         } else {
             // If no LABEL ring exists, add the new LABEL ring to the last position
@@ -198,7 +203,6 @@ function addNewRing(rings: Ring[], newRing: Ring): Ring[] {
             sameRefRings[labelRingIndex].index += 1;
         }
     }
-    console.log(rings)
     return rings
 }
 

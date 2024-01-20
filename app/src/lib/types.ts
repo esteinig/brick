@@ -337,6 +337,7 @@ export type SvgConfig = {
     zoomEnabled: boolean
     zoomLowerLimit: number
     zoomUpperLimit: number
+    positionEnabled: boolean
 }
 
 export type TitleConfig = {
