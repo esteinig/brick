@@ -2,6 +2,11 @@ version: '3.8'
 
 services:
 
+
+  # =================
+  # BRICK APPLICATION
+  # =================
+
   app:
     profiles:
       - prod
@@ -19,11 +24,8 @@ services:
     environment:
       NODE_ENV: production
       ORIGIN: http://localhost:5173
-      BODY_SIZE_LIMIT: 20000000
       PUBLIC_BRICK_VERSION: 0.1.0
       PRIVATE_DOCKER_API_URL: http://api:8080
-      PRIVATE_CELERY_TASK_CHECK_TIMEOUT: 30000
-      PRIVATE_CELERY_TASK_CHECK_INTERVAL: 1000
     depends_on:
       - api
   
@@ -47,13 +49,15 @@ services:
     environment:
       NODE_ENV: development
       ORIGIN: http://localhost:5174
-      BODY_SIZE_LIMIT: 20000000
       PUBLIC_BRICK_VERSION: 0.1.0
       PRIVATE_DOCKER_API_URL: http://api-dev:8080
-      PRIVATE_CELERY_TASK_CHECK_TIMEOUT: 30000
-      PRIVATE_CELERY_TASK_CHECK_INTERVAL: 1000
     depends_on:
       - api-dev
+
+
+  # ========================
+  # BRICK API SERVER AND CLI
+  # ========================
 
   api:
     profiles:
@@ -69,6 +73,7 @@ services:
     env_file: docker/brick.env
     environment:
       CORS_ORIGINS: http://app:5173
+      MONGODB_DATABASE: brick
       MONGODB_USERNAME: /run/secrets/brick_db_user
       MONGODB_PASSWORD: /run/secrets/brick_db_pwd
     expose:
@@ -110,6 +115,11 @@ services:
       - brick_db_user
       - brick_db_pwd
 
+
+  # ==================
+  # TASK QUEUE WORKERS
+  # ==================
+
   # Celery workers have access to some API settings
   # and update the session model in the database and therefore
   # need access to the API config and secrets
@@ -133,6 +143,7 @@ services:
     security_opt:
       - no-new-privileges:true
     depends_on:
+      - api
       - redis
       - mongodb
     secrets:
@@ -158,14 +169,21 @@ services:
     security_opt:
       - no-new-privileges:true
     depends_on:
+      - api-dev
       - redis
       - mongodb
     secrets:
       - brick_db_user
       - brick_db_pwd      
 
-  # Currently using Redis (Celery) and MongoDB for
-  # dev, test and prod (different collections)
+
+  # ========= 
+  # DATABASES 
+  # ========= 
+
+  # Currently using the same Redis (Celery) and MongoDB for
+  # dev and and prod (different collections) should probably
+  # have their own database stack to ensure non-interference
 
   redis:
     profiles:
@@ -209,30 +227,32 @@ services:
       - brick_db_pwd
 
 
-  # ===================================
-  # DELETES UPLOADED FILES PERIODICALLY
-  # ===================================
-
-  # Defaults to `/tmp` directory if the environment 
-  # variable `PROD_BRICK_WORK_DIRECTORY` is not set
-
-  # Careful use of this one, make sure things 
-  # are working and BRICK_WORK_DIRECTORY is 
-  # properly configured. 
-
-  # Operates only with the `production` profile
-  # to run for the web service
+  # ================================================
+  # DELETES SESSIONS AND UPLOADED FILES PERIODICALLY
+  # ================================================
 
   data-cleaner:
-    restart: always
+    restart: unless-stopped
     profiles:
-      - production
-    build:
+      - server
+    build: 
       context: .
-      dockerfile: docker/Dockerfile.cleaner
-    env_file: docker/brick.env
+      dockerfile: docker/Dockerfile.server
+    command: brick utils clean --expire-days 1 --time-of-day '04:00' --log /tmp/brick-cleaner.log
     volumes:
-      - work:/data:rw
+      - api:/data
+      - work:/tmp
+      # Set the container timezone by sharing the read-only localtime
+      - /etc/localtime:/etc/localtime:ro 
+    env_file: docker/brick.env
+    environment:
+      BRICK_API_BASE_URL: http://api:8080
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      - api
+      - redis
+      - mongodb
 
   # ============
   # UNIT TESTING

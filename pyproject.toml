@@ -16,7 +16,7 @@ dependencies = [
   "requests==2.31.0",
   "pre-commit==3.6.0",
   "fastapi==0.109.0",
-  "redis-py==5.0.1",
+  "redis==5.0.1",
   "celery[redis]==5.3.6",
   "uvicorn==0.25.0",
   "pydantic-settings==2.1.0",
@@ -26,6 +26,7 @@ dependencies = [
   "pytest-asyncio==0.23.3",
   "httpx==0.26.0",
   "asgi-lifespan==2.1.0",
+  "apscheduler",
 ]
 
 [tool.setuptools.packages.find]

@@ -1,10 +1,10 @@
-from pydantic import BaseModel, ValidationInfo, field_validator, model_validator
+from pydantic import BaseModel, field_validator, model_validator
 from typing import Optional, Annotated, Tuple, List
 from pathlib import Path
 from enum import StrEnum
 from uuid import UUID
+import shutil
 
-from ..utils import parse_str_to_float
 from .core.config import settings
 from ..rings import BlastRing, AnnotationRing, LabelRing, RingSegment, RingReference, Ring, ReferenceRing
 
@@ -108,6 +108,15 @@ class Session(BaseModel):
             if not '(re-hydrated)' in file.name_original:
                 file.name_original = f"{file.name_original} (re-hydrated)"
         return self
+    
+    def delete_session_data(self) -> bool:
+        session_directory = settings.WORK_DIRECTORY / self.id
+
+        if session_directory.exists() and session_directory.is_dir():
+            shutil.rmtree(session_directory)
+            return True
+        else:
+            return False
 
 # Celery tasks
     

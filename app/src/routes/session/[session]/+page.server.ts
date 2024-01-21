@@ -6,9 +6,6 @@ import { checkCeleryResults, getErrorMessage, isValidUUIDv4, parseEnvInt } from 
 import { env } from '$env/dynamic/private';
 
 
-const CELERY_TIMEOUT = parseEnvInt(env.PRIVATE_CELERY_TASK_CHECK_TIMEOUT, 30000, 'PRIVATE_CELERY_TASK_CHECK_TIMEOUT');
-const CELERY_INTERVAL = parseEnvInt(env.PRIVATE_CELERY_TASK_CHECK_INTERVAL, 1000, 'PRIVATE_CELERY_TASK_CHECK_INTERVAL');
-
 export const load: PageServerLoad = async ({ depends, params }) => {
 
     depends("app:session")
@@ -73,7 +70,7 @@ export const actions: Actions = {
                 try {
                     return await checkCeleryResults(
                         `${env.PRIVATE_DOCKER_API_URL}/tasks/result/${fileUploadResponseData.task_id}`, 
-                        CELERY_TIMEOUT, CELERY_INTERVAL
+                        env.PRIVATE_CELERY_TASK_CHECK_TIMEOUT, env.PRIVATE_CELERY_TASK_CHECK_INTERVAL
                     );
                 } catch (error) {
                     return fail(500, { 
@@ -117,7 +114,7 @@ export const actions: Actions = {
                 try {
                     return await checkCeleryResults(
                         `${env.PRIVATE_DOCKER_API_URL}/tasks/result/${createRingResponseData.task_id}`, 
-                        CELERY_TIMEOUT, CELERY_INTERVAL
+                        env.PRIVATE_CELERY_TASK_CHECK_TIMEOUT, env.PRIVATE_CELERY_TASK_CHECK_INTERVAL
                     );
                 } catch (error) {
                     return fail(500, { 

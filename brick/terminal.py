@@ -1,7 +1,12 @@
 
 import typer
+import asyncio
+
+from typing import Optional
+from datetime import datetime
 from pathlib import Path
 
+from .api.client import ApiClient, schedule_session_cleanup
 from .legacy import *
 from .utils import *
 
@@ -93,7 +98,7 @@ def legacy(
     )
 ):
     """
-    Legacy plot of the initial ported D3.js visualisation from ~ 2016
+    Legacy plot of the visualization (not recommended)
     """
     
     
@@ -191,9 +196,12 @@ def concat(
         None, help="Custom header as {id} {descr}"
     ),
     join_chars: str = typer.Option(
-        "", help="Join contigs with chcaracter string e.g. NNNNNN"
+        "", help="Join contigs with character string e.g. NNNNNN"
     ),
 ):
+    """
+    Concatenate sequences in a sequence file
+    """
     
     seq = f"{join_chars}".join(
         [str(rec.seq) for rec in SeqIO.parse(fasta, "fasta")]
@@ -219,17 +227,17 @@ def slice(
         10000, help="Size of non overlapping slices of concatenated output"
     )
 ):  
-    
+    """
+    Slice a sequence file into non-overlapping sequences
+    """
 
     if outdir is not None and not outdir.exists():
         outdir.mkdir(parents=True)
 
     seq_slices = slice_fasta_sequences(fasta_file=fasta, slice_size=size)
 
-    
-
     if outdir:
-        for rec_id, slices in seq_slices.items():
+        for _, slices in seq_slices.items():
             for record in slices:
                 with (outdir / f"{record.id}.fasta").open("w") as out:
                     out.write(
@@ -237,8 +245,60 @@ def slice(
                     )
     else:
         with output.open("w") as out:
-            for rec_id, slices in seq_slices.items():
+            for _, slices in seq_slices.items():
                 for record in slices:
                     out.write(
                         f">{record.id} {record.description}\n{record.seq}\n"
                     )
+
+@utils.command()
+def clean(
+    base_url: str =  typer.Option(
+        "http://api:8080", help="API base URL", envvar="BRICK_API_BASE_URL"
+    ),
+    expire_days: int = typer.Option(
+        7, help="Expiration time for session data in days"
+    ),
+    day_of_week: str = typer.Option(
+        "*", help="Run the cleaner on a specific day of the week [d]"
+    ),
+    time_of_day: str = typer.Option(
+        "04:00", help="Run the cleaner on a specific time on the day [hh:mm]"
+    ),
+    log: Optional[Path] = typer.Option(
+        None, help="Path to logging file"
+    ),
+):
+    """ Run the session cleanup scheduler """
+
+    
+    logger = get_data_cleaner_logger(path=log) if log else None
+
+    async def main():
+
+        run_day_msg = f'every day @ {time_of_day}h' if day_of_week == '*' else \
+            f'on {day_of_week.capitalize()} @ {time_of_day}h'
+            
+        current_time = datetime.now().isoformat()
+
+        # Always show these at startup regardless of logfile
+        print(f"Session data and files expire in {expire_days} days!", flush=True)  # docker log flush
+        print(f"Session cleaner is run {run_day_msg}", flush=True)
+        print(f"Current localtime is: {current_time}", flush=True)
+
+        api_client = ApiClient(base_url)
+        
+        schedule_session_cleanup(
+            api_client=api_client,
+            logger=logger,
+            expire_days=expire_days, 
+            day_of_week=day_of_week, 
+            time_of_day=time_of_day
+        )
+
+        try:
+            await asyncio.Event().wait()
+        finally:
+            await api_client.close()
+
+    asyncio.run(main())

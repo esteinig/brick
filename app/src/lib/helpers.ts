@@ -13,9 +13,21 @@ export const shortenSessionId = (sessionId: string): string => { return sessionI
 // Celery results checking
 
 export async function checkCeleryResults(
-    url: string, timeout: number = 30000, pollingInterval: number = 1000
+    url: string, timeout: number | string = 30000, pollingInterval: number | string = 1000
 ): Promise<TaskStatusResponse> {
+    
+    // We may be passing dynamic environmental variables to this function, convert to number
+    // or fall back to default - make sure this works and does not silently fall back to 
+    // default when building for production.
 
+    if (typeof timeout === 'string'){
+      timeout = parseEnvInt(timeout, 30000, 'PRIVATE_CELERY_TASK_CHECK_TIMEOUT')
+    }
+
+    if (typeof pollingInterval === 'string'){
+      pollingInterval = parseEnvInt(pollingInterval, 30000, 'PRIVATE_CELERY_TASK_CHECK_TIMEOUT')
+    }
+    
     const startTime = new Date().getTime();
 
     const timeoutPromise = new Promise<TaskStatusResponse>((_, reject) => 
@@ -117,15 +129,11 @@ export function triggerToast(message: string, toastType: ToastType, toastStore: 
 }
 
 
-export const parseEnvInt = (envVar: string | undefined, defaultValue: number, varName: string): number => {
-  if (envVar === undefined) {
-      console.warn(`Environment variable ${varName} is undefined. Using default value: ${defaultValue}`);
-      return defaultValue;
-  }
-
+export const parseEnvInt = (envVar: string, defaultValue: number, varName: string): number => {
+ 
   const parsedValue = parseInt(envVar);
   if (isNaN(parsedValue)) {
-      console.warn(`Failed to parse environment variable ${varName}. Using default value: ${defaultValue}`);
+      console.warn(`Failed to parse environment variable string ${varName}. Using default value: ${defaultValue}`);
       return defaultValue;
   }
 
