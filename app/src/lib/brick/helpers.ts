@@ -119,11 +119,7 @@ export function getDefaultScaleFactor() {
     
         // Determine scaleFactor based on breakpoints
         // used by Tailwind for standard devices
-        if (windowWidth < breakpoints.sm) {
-            return 0.5;
-        } else if (windowWidth < breakpoints.md) {
-            return 0.5;
-        } else if (windowWidth < breakpoints.lg) {
+        if (windowWidth < breakpoints.md) {
             return 0.5;
         } else if (windowWidth < breakpoints.lg) {
             return 0.6;

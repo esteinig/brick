@@ -91,13 +91,13 @@
                 <p class="opacity-60 mb-4">Title</p>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-8">
-
+                    
                     <label class="label text-xs">
                         <p class="opacity-40">Text</p>
                         <input class="input" type="text" bind:value={$plotConfigStore.title.text} />
                     </label>
-                     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-x-4">
-
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-x-4">
                         <div class="flex-1 col-span-3">
                             <label class="label text-xs mb-4">
                                 <p class="opacity-40">Opacity (%)</p>
@@ -108,12 +108,10 @@
                                 <input type="range" bind:value={$plotConfigStore.title.size} min="0" max="500" />
                             </label>
                         </div>
-
                         <div class="flex gap-2 mt-4">
                             <input class="input" type="color" style="height: 1.5rem; width: 1.5rem;" bind:value={$plotConfigStore.title.color} />
                             <PalettePopup id={createUuid()} size={6} updateDatabase={false} bind:color={$plotConfigStore.title.color}></PalettePopup>
                         </div>
-
                         <div class="flex-1 mt-2 text-xs">
                             <FontStyles on:change={(event) => $plotConfigStore.title.style = event.detail}></FontStyles>
                         </div>

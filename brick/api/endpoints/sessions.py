@@ -5,30 +5,57 @@ from datetime import datetime
 from typing import List
 
 from ...rings import Ring, RingType
-from ..schemas import Session, RingUpdate
-from ..core.db import get_session_collection_motor
+from ..schemas import Session, RingUpdate, SessionID
+from ..core.db import get_session_collection_motor, settings
 
 router = APIRouter(
     prefix="/sessions",
     tags=["session"],
 )
 
+@router.get("/identifiers", response_model=List[SessionID])
+async def get_session_ids():
+    collection = await get_session_collection_motor()
+    cursor = collection.find({}, {"_id": 0, "id": 1})
+    session_ids = [doc["id"] async for doc in cursor]
+    
+    return session_ids
 
 @router.get("/{session_id}", response_model=Session)
 async def get_session(session_id: str, session_files_exist: bool = False):
 
     collection = await get_session_collection_motor()
-    session_data = await collection.find_one({"id": session_id})
+    data = await collection.find_one({"id": session_id})
 
-    if not session_data:
+    if not data:
         raise HTTPException(status_code=404, detail="Session not found")
     else:
-        session_data = Session(**session_data)
+        session = Session(**data)
 
     if session_files_exist:
-        session_data.validate_file_paths()
+        session.validate_file_paths()
     
-    return session_data
+    return session
+
+
+@router.delete("/{session_id}")
+async def delete_session(session_id: str, session_data: bool = True):
+
+    collection = await get_session_collection_motor()
+    data = await collection.find_one({"id": session_id})
+
+    if not data:
+        raise HTTPException(status_code=404, detail="Session not found")
+    else:
+        session = Session(**data)
+
+    collection.delete_one({"id": session_id})
+
+    if session_data:
+        if not session.delete_session_data():
+            raise HTTPException(status_code=404, detail="Session directory not found")
+    
+    return {'message': 'Session deleted successfully'}
 
 @router.put("/{session_id}/ring")
 async def update_session_ring(session_id: str, ring_update: RingUpdate):
@@ -90,7 +117,6 @@ async def delete_session_ring(session_id: str, ring_update: RingUpdate):
     else:
         existing_session: Session = Session(**existing_session)
 
-
     # Check if the ring exists in the session
     if not any(ring.id == ring_update.id for ring in existing_session.rings):
         raise HTTPException(status_code=404, detail="Ring not found in session")
@@ -130,7 +156,7 @@ async def delete_session_ring(session_id: str, ring_update: RingUpdate):
     return JSONResponse(
         status_code=200, 
         content={
-            "message": "Ring deleted and specified indices updated successfully",
+            "message": "Ring deleted and indices updated successfully",
             "session_id": session_id,
             "ring_id": ring_update.id
         }
