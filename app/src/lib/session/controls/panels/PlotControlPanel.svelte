@@ -143,7 +143,7 @@
                             </label>
                             <label class="label text-xs">
                                 <p class="opacity-40">Height (%)</p>
-                                <input type="range" bind:value={$plotConfigStore.subtitle.height} min="100" max="500" />
+                                <input type="range" bind:value={$plotConfigStore.subtitle.height} min="0" max="500" />
                             </label>
                         </div>
 

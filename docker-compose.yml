@@ -269,7 +269,7 @@ services:
       MONGODB_DATABASE: tests
       MONGODB_USERNAME: /run/secrets/brick_db_user
       MONGODB_PASSWORD: /run/secrets/brick_db_pwd
-      WORK_DISK_SPACE_GB: 0.01  # 10 MB for testing disk space required - see if this works on runners
+      WORK_DISK_SPACE_GB: 0.01  # see if this works on runners
     volumes:
       - work:/tmp  # test of disk space (test_utils.py) assumes /tmp
     depends_on:
