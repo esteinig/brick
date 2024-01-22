@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { RingType, type Sequence, RingDirection, Ring, FileFormat } from "$lib/types";
+    import { RingType, type Sequence, RingDirection, Ring, FileFormat, type ActionRequestData } from "$lib/types";
 	import { FileType, type SessionFile } from "$lib/types";
     import { sessionFiles } from "$lib/stores/SessionFileStore";
     import { ringReferenceStore } from "$lib/stores/RingReferenceStore";
@@ -32,16 +32,13 @@
 
     let selectedReference: SessionFile | null;
     let selectedSequence: Sequence | null;
-
+    
     let previousReference: SessionFile | null = null;
     
-    
-    // let references: SessionFile[];
-
+    // Automatically select the first sequence if it exists
     $: if (selectedReference !== previousReference) {
-        previousReference = selectedReference; // Update the previous reference
+        previousReference = selectedReference; // update previous
 
-        // Automatically select the first sequence if it exists
         if (selectedReference && selectedReference.selections && selectedReference.selections.sequences.length > 0) {
             selectedSequence = selectedReference.selections.sequences[0];
         } else {
@@ -49,7 +46,7 @@
         }
     }
 
-
+    // Not very nice, needs refactoring
     $: if (selectedSequence) {
 
         $ringReferenceStore = {
@@ -68,13 +65,8 @@
     // ring is changed
     $: indexGroup = $ringData.map(ring => ring.id);
 
-    interface RingRequestData {
-        action: string,
-        body: FormData
-    }
 
-
-    async function handleRingRequest(data: RingRequestData) {
+    async function handleRingRequest(data: ActionRequestData) {
         dispatch("createRingAction", data)
     }
 
@@ -173,13 +165,13 @@
         
         <div class="mt-8">
             {#if newRing == RingType.REFERENCE}
-                <NewReferenceRing></NewReferenceRing>
+                <NewReferenceRing on:submitAction={(event) => handleRingRequest(event.detail)}></NewReferenceRing>
             {:else if newRing == RingType.BLAST}
                 <NewBlastRing on:submitAction={(event) => handleRingRequest(event.detail)}></NewBlastRing>
             {:else if newRing == RingType.ANNOTATION}
-                <NewAnnotationRing></NewAnnotationRing>
+                <NewAnnotationRing on:submitAction={(event) => handleRingRequest(event.detail)}></NewAnnotationRing>
             {:else if newRing == RingType.LABEL}
-                <NewLabelRing></NewLabelRing>
+                <NewLabelRing on:submitAction={(event) => handleRingRequest(event.detail)}></NewLabelRing>
             {/if}
         </div>
 

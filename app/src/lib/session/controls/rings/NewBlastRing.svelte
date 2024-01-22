@@ -1,19 +1,10 @@
 <script lang="ts">
-	import { type BlastRingSchema, BlastMethod, RingType, type TaskStatusResponse, TaskResultType, BlastRing, type ErrorResponse } from "$lib/types";
-	import { ToastType, handleEndpointErrorResponse, triggerToast } from "$lib/helpers";
-	import { FileType } from "$lib/types";
     import { sessionFiles, sessionFileTypeAvailable, getSessionFileById } from "$lib/stores/SessionFileStore";
-    import { addRing } from "$lib/stores/RingStore";
-	import { page } from '$app/stores';
-    import { getToastStore } from '@skeletonlabs/skeleton';
-	import { applyAction, deserialize, enhance } from "$app/forms";
+    import { startRequestState } from '$lib/stores/RequestInProgressStore';
+	import { type BlastRingSchema, BlastMethod, RingType } from "$lib/types";
     import { ringReferenceStore } from "$lib/stores/RingReferenceStore";
-
-    import { startRequestState, completeRequestState } from '$lib/stores/RequestInProgressStore';
-	import type { ActionResult } from "@sveltejs/kit";
 	import { createEventDispatcher } from "svelte";
-	import { goto } from "$app/navigation";
-    
+	import { FileType } from "$lib/types";
     
     const dispatch = createEventDispatcher();
 
