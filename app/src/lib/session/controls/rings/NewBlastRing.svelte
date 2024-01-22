@@ -1,17 +1,22 @@
 <script lang="ts">
-	import { type BlastRingSchema, BlastMethod, RingType } from "$lib/types";
+	import { type BlastRingSchema, BlastMethod, RingType, type TaskStatusResponse, TaskResultType, BlastRing, type ErrorResponse } from "$lib/types";
 	import { ToastType, handleEndpointErrorResponse, triggerToast } from "$lib/helpers";
 	import { FileType } from "$lib/types";
     import { sessionFiles, sessionFileTypeAvailable, getSessionFileById } from "$lib/stores/SessionFileStore";
     import { addRing } from "$lib/stores/RingStore";
 	import { page } from '$app/stores';
     import { getToastStore } from '@skeletonlabs/skeleton';
-	import { applyAction, enhance } from "$app/forms";
+	import { applyAction, deserialize, enhance } from "$app/forms";
     import { ringReferenceStore } from "$lib/stores/RingReferenceStore";
 
     import { startRequestState, completeRequestState } from '$lib/stores/RequestInProgressStore';
+	import type { ActionResult } from "@sveltejs/kit";
+	import { createEventDispatcher } from "svelte";
+	import { goto } from "$app/navigation";
     
-    const toastStore = getToastStore();
+    
+    const dispatch = createEventDispatcher();
+
     
     let ringConfig: BlastRingSchema = {
         reference: null,
@@ -21,8 +26,6 @@
         min_identity: 0,
         min_evalue: 0.000001
     }
-
-    let loading: boolean = false
 
     function isNumberInRange(value: string | number): boolean {
         const num = typeof value === 'string' ? parseFloat(value) : value;
@@ -42,6 +45,40 @@
     $: alignmentInputValidationClass = isNumberValid(ringConfig.min_alignment) ? ringConfig.min_alignment === 0 ? '' : 'input-success' : 'input-error';
     $: evalueInputValidationClass = isNumberValid(ringConfig.min_evalue) ? ringConfig.min_evalue === 0.000001 ? '' : 'input-success' : 'input-error';
 
+
+    // Manual form action, dispatches the action request fetch function after populating 
+    // it with this components value to interface, so it can run in the background - 
+	async function handleSubmit(event: { currentTarget: EventTarget & HTMLFormElement }) {
+		
+        let data = new FormData()
+
+        ringConfig.reference = $ringReferenceStore;
+
+        data.append('ring_config', JSON.stringify(ringConfig))
+        data.append('ring_type', RingType.BLAST)
+
+        ringConfig = {
+            reference: null,
+            genome_id: "",
+            blast_method: BlastMethod.BLASTN,
+            min_alignment: 0,
+            min_identity: 0,
+            min_evalue:  0.000001
+        } // reset
+
+        startRequestState();
+
+        // Instead of executing the action request we dispatch the
+        // data to the parent component (RingControlPanel) and from
+        // there to the overall Interface component, so that the 
+        // form action results can be handled while the user is 
+        // navigating or doing other things - this allows also for
+        // long running requests in the background!
+
+        dispatch('submitAction', { action: event.currentTarget.action, body: data});
+
+	}
+
 </script>
 
 <div class="border border-gray-300 rounded-2xl border-opacity-10 p-4">
@@ -53,39 +90,8 @@
         against the selected reference.</p>
     
     {#if $ringReferenceStore}
-        <form id="createBlastRingForm" action="?/createRing" method="POST" use:enhance={({ formData }) => {
-            
-            ringConfig.reference = $ringReferenceStore;
-
-            formData.append('ring_config', JSON.stringify(ringConfig))
-            formData.append('ring_type', RingType.BLAST)
-
-            ringConfig = {
-                reference: null,
-                genome_id: "",
-                blast_method: BlastMethod.BLASTN,
-                min_alignment: 0,
-                min_identity: 0,
-                min_evalue:  0.000001
-            }
-
-            loading = true;
-            startRequestState();
         
-            return async ({ result }) => {
-                await applyAction(result);
-
-                loading = false;
-                completeRequestState();
-                    
-                if (result.type === "success"){
-                    addRing($page.form.result)
-                    triggerToast("Ring created sucessfully", ToastType.SUCCESS, toastStore);
-                } else {
-                    handleEndpointErrorResponse($page.form?.detail ?? `Error ${result.status}: an unknown error occurred`, toastStore)
-                }
-            };
-        }}>
+        <form id="createBlastRingForm" action="?/createRing" method="POST" on:submit|preventDefault={handleSubmit}>
             <div class="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 gap-4 my-3 items-center">
                 <div>
                     <label class="label text-xs">
@@ -97,7 +103,7 @@
                     {#if sessionFileTypeAvailable(FileType.GENOME)}
                         <label class="label text-xs">
                             <p class="opacity-40">Comparison</p>
-                            <select class="select text-xs" bind:value={ringConfig.genome_id} disabled={loading}>
+                            <select class="select text-xs" bind:value={ringConfig.genome_id}>
                                 {#each $sessionFiles as file}
                                     {#if file.type === FileType.GENOME}
                                         <option value={file.id}>{file.name_original}</option>
@@ -127,7 +133,7 @@
             
 
             <div class="flex justify-right mt-6">
-                <button class="btn variant-outline-surface" type="submit" disabled={loading || !ringConfig.genome_id}>
+                <button class="btn variant-outline-surface" type="submit" disabled={!ringConfig.genome_id}>
                     <div class="flex items-center align-center">
                         <span>Construct</span>
                     </div>

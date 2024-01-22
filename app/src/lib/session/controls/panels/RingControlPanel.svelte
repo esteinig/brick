@@ -20,7 +20,10 @@
 	import RingVisibility from "$lib/session/controls/helpers/RingVisibility.svelte";
 	import DeleteRing from "../helpers/DeleteRing.svelte";
 	import RingIndex from "../helpers/RingIndex.svelte";
-    import { page } from "$app/stores";
+
+	import { createEventDispatcher } from "svelte";
+
+    const dispatch = createEventDispatcher();
 
     $: ringData = createFilteredRingsStore($ringReferenceStore) // reactive so it updates on changes to reference sequence
 
@@ -64,6 +67,16 @@
     // their indices if the index / position of a 
     // ring is changed
     $: indexGroup = $ringData.map(ring => ring.id);
+
+    interface RingRequestData {
+        action: string,
+        body: FormData
+    }
+
+
+    async function handleRingRequest(data: RingRequestData) {
+        dispatch("createRingAction", data)
+    }
 
 </script>
 
@@ -162,7 +175,7 @@
             {#if newRing == RingType.REFERENCE}
                 <NewReferenceRing></NewReferenceRing>
             {:else if newRing == RingType.BLAST}
-                <NewBlastRing></NewBlastRing>
+                <NewBlastRing on:submitAction={(event) => handleRingRequest(event.detail)}></NewBlastRing>
             {:else if newRing == RingType.ANNOTATION}
                 <NewAnnotationRing></NewAnnotationRing>
             {:else if newRing == RingType.LABEL}
