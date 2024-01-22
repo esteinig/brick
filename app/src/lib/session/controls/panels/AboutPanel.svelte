@@ -72,7 +72,8 @@
     </dl>
 
     <p class="opacity-80 mt-8 mb-4">
-        BRICK would not be possible without the amazing work of bioinformaticians and researchers making their software available open-source. Please cite the following publications to support the authors if you use these tools in the visualization and research outputs:
+        BRICK would not be possible without the amazing work of bioinformaticians and researchers who make their software available open-source. 
+        If you use their tools in the visualization, please cite the following publications:
     </p>
 
     <dl class="list-dl">
