@@ -35,7 +35,7 @@
                   </svg>
                   SVG
                 </button>
-                <button class="btn border border-secondary-500 text-base truncate" on:click={() => downloadPNG("brickPlotSession")}>
+                <button class="btn border border-primary-500 text-base truncate" on:click={() => downloadPNG("brickPlotSession")}>
                   <svg class="w-6 h-6 mr-2" data-slot="icon" aria-hidden="true" fill="none" stroke-width="1.5" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" stroke-linecap="round" stroke-linejoin="round"></path>
                   </svg>
@@ -52,12 +52,12 @@
                     <input class="checkbox focus:ring-offset-surface-500 focus:checked:ring-offset-secondary-500" type="checkbox" bind:checked={$plotConfigStore.svg.zoomEnabled} />
                     <div class="opacity-40 ml-2">Enable zoom</div>
                 </label>
-                <p class="text-xs opacity-20 mt-4">Use mousewheel or buttons below plot</p>
+                <p class="text-xs opacity-20 mt-4">Use mousewheel or buttons to zoom, click and drag to move</p>
                 <label class="text-sm flex items-center mt-4">
                     <input class="checkbox focus:ring-offset-surface-500 focus:checked:ring-offset-secondary-500" type="checkbox" bind:checked={$plotConfigStore.svg.positionEnabled} />
                     <div class="opacity-40 ml-2">Enable position</div>
                 </label>
-                <p class="text-xs opacity-20 mt-4">Use mouse to display position on reference</p>
+                <p class="text-xs opacity-20 mt-4">Hover anywhere to display position on central reference</p>
             </div>
                 
                 <div class="flex-1 col-span-3">
@@ -78,9 +78,9 @@
         <div id="brickPlotSettings">
             <p class="opacity-60 mb-4">Settings</p>
             <ListBox class="text-sm opacity-80" active="variant-outline-secondary">
-                <ListBoxItem bind:group={selectedConfig} name="medium" value="title">Title styles</ListBoxItem>
-                <ListBoxItem bind:group={selectedConfig} name="medium" value="labels">Label styles</ListBoxItem>
-                <ListBoxItem bind:group={selectedConfig} name="medium" value="rings">Ring spacing</ListBoxItem>
+                <ListBoxItem bind:group={selectedConfig} name="medium" value="title" active="variant-ghost-secondary">Title styles</ListBoxItem>
+                <ListBoxItem bind:group={selectedConfig} name="medium" value="labels" active="variant-ghost-secondary">Label styles</ListBoxItem>
+                <ListBoxItem bind:group={selectedConfig} name="medium" value="rings" active="variant-ghost-secondary">Ring spacing</ListBoxItem>
             </ListBox>
         </div>
     </div>

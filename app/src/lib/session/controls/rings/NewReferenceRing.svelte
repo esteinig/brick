@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { type ReferenceRingSchema, RingType } from "$lib/types";
-	import { ToastType, triggerToast } from "$lib/helpers";
+	import { ToastType, handleEndpointErrorResponse, triggerToast } from "$lib/helpers";
     import { addRing } from "$lib/stores/RingStore";
 	import { page } from '$app/stores';
     import { getToastStore } from '@skeletonlabs/skeleton';
@@ -52,7 +52,7 @@
                     addRing($page.form.result)
                     triggerToast("Ring created sucessfully", ToastType.SUCCESS, toastStore);
                 } else {
-                    triggerToast($page.form.detail ?? `Error ${result.status}: an unknown error occurred`, ToastType.ERROR, toastStore);
+                    handleEndpointErrorResponse($page.form?.detail ?? `Error ${result.status}: an unknown error occurred`, toastStore)
                 }
             };
         }}>

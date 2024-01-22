@@ -19,9 +19,9 @@ services:
       # Give access to the UNIX Docker socket
       - /var/run/docker.sock:/var/run/docker.sock:ro
       # Map the static configuration into the container
-      - ./traefik/static.yml:/etc/traefik/traefik.yml:ro
+      - ./traefik/localhost/static.yml:/etc/traefik/traefik.yml:ro
       # Map the dynamic configuration into the container
-      - ./traefik/dynamic.yml:/etc/traefik/dynamic.yml:ro
+      - ./traefik/localhost/dynamic.yml:/etc/traefik/dynamic.yml:ro
       # Set the location where the local ACME certificate is saved
       - ./certs:/etc/traefik/certs                                           
     networks:

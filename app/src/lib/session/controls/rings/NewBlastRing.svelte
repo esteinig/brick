@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { type BlastRingSchema, BlastMethod, RingType } from "$lib/types";
-	import { ToastType, triggerToast } from "$lib/helpers";
+	import { ToastType, handleEndpointErrorResponse, triggerToast } from "$lib/helpers";
 	import { FileType } from "$lib/types";
     import { sessionFiles, sessionFileTypeAvailable, getSessionFileById } from "$lib/stores/SessionFileStore";
     import { addRing } from "$lib/stores/RingStore";
@@ -82,7 +82,7 @@
                     addRing($page.form.result)
                     triggerToast("Ring created sucessfully", ToastType.SUCCESS, toastStore);
                 } else {
-                    triggerToast($page.form.detail ?? `Error ${result.status}: an unknown error occurred`, ToastType.ERROR, toastStore);
+                    handleEndpointErrorResponse($page.form?.detail ?? `Error ${result.status}: an unknown error occurred`, toastStore)
                 }
             };
         }}>

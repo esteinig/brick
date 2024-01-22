@@ -8,11 +8,12 @@
 	import { getDefaultScaleFactor } from "$lib/brick/helpers";	
 	import { DEFAULT_RINGS, DEFAULT_REFERENCE } from "$lib/data";
 	import { ringReferenceStore } from "$lib/stores/RingReferenceStore";
+	import { plotConfigStore } from "$lib/stores/PlotConfigStore";
 
 	
 	onMount(() => {
-		$rings = DEFAULT_RINGS;
 		$ringReferenceStore = DEFAULT_REFERENCE;
+		$rings = DEFAULT_RINGS;
 	});
 	
 

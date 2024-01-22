@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { RingType, type LabelRingSchema } from "$lib/types";
-	import { ToastType, triggerToast } from "$lib/helpers";
+	import { ToastType, handleEndpointErrorResponse, triggerToast } from "$lib/helpers";
 	import { FileType } from "$lib/types";
     import { sessionFiles, sessionFileTypeAvailable } from "$lib/stores/SessionFileStore";
     import { addRing } from "$lib/stores/RingStore";
@@ -65,7 +65,7 @@
                         triggerToast("Ring created, requested labels not found", ToastType.WARNING, toastStore);
                     }   
                 } else {
-                    triggerToast($page.form.detail ?? `Error ${result.status}: an unknown error occurred`, ToastType.ERROR, toastStore);
+                    handleEndpointErrorResponse($page.form?.detail ?? `Error ${result.status}: an unknown error occurred`, toastStore)
                 }
             };
         }}>
