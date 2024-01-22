@@ -1,5 +1,5 @@
 
-import { TaskStatus, type TaskStatusResponse } from './types';
+import { TaskStatus, type PydanticValidationError, type TaskStatusResponse } from './types';
 import { v4 as uuidv4 } from 'uuid';
 
 export const createUuid = (short: boolean = false) => {
@@ -85,7 +85,7 @@ function toErrorWithMessage(maybeError: unknown): ErrorWithMessage {
   }
 }
 
-export function getErrorMessage(error: unknown) {
+export function getErrorMessage(error: unknown): string {
   return toErrorWithMessage(error).message
 }
 
@@ -143,4 +143,39 @@ export const parseEnvInt = (envVar: string, defaultValue: number, varName: strin
 export function isValidUUIDv4(uuid: string): boolean {
   const regex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
   return regex.test(uuid);
+}
+
+
+export function handleEndpointErrorResponse(detail: string | PydanticValidationError[], toastStore: any) {
+  if (typeof detail === 'string'){
+    toastStore.trigger({
+      message: detail,
+      background: 'variant-filled-error',
+      timeout: 5000,
+    })
+  } else if (Array.isArray(detail) && detail.every(element =>
+      typeof element === 'object' && 
+      element !== null &&
+      'ctx' in element &&
+      'loc' in element &&
+      'msg' in element &&
+      'type' in element &&
+      'url' in element
+    )) {
+      for (let pydanticError of detail) {
+        toastStore.trigger({
+          message: pydanticError.msg,
+          background: 'variant-filled-error',
+          timeout: 5000,
+        })
+      }
+    } else {
+      toastStore.trigger({
+        message: "Error: an unexpected response error occurred :(",
+        background: 'variant-filled-error',
+        timeout: 5000,
+      })
+    }
+
+
 }

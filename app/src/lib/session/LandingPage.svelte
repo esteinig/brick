@@ -10,11 +10,10 @@
 
         <div class="gap-y-0 mb-6">
             <h2 class="h2 mb-1"><code>BRICK</code></h2>
-            <p><code>BRIG</code><sup>*</sup> - like interactive data visualization for bacterial whole genome annotation and comparison</p>
-            
+            <p><code>BRIG</code><sup>*</sup> - like interactive data visualization for bacterial genome annotation and comparison</p>
 
             <div class="w-full mt-1">
-                <div class="opacity-70" style="font-size: 0.6rem"><sup>*</sup>BLAST Ring Image Generator (<a target="_blank" rel="noreferrer" href="https://github.com/happykhan/BRIG">Alikhan et al. 2011)</a></div>
+                <div class="opacity-70" style="font-size: 0.6rem"><sup>*</sup><a target="_blank" rel="noreferrer" href="https://github.com/happykhan/BRIG">BLAST Ring Image Generator (Alikhan et al. 2011)</a></div>
             </div>
         </div>
         <div class="flex justify-center space-x-2 mb-10">
@@ -27,6 +26,7 @@
             </a>
             <button
                 class="btn border border-secondary-500"
+                disabled
             >
                 Documentation
         </button>

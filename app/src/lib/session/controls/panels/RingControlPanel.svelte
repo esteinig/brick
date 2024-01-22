@@ -73,21 +73,6 @@
 
 <div id="brickRingControlPanel" class="p-2 text-base">
 
-    {#if showNewRingMenu}
-        <div class="text-sm opacity-90 mb-12">
-            <button class="btn p-0" on:click={() => showNewRingMenu = false}>
-                <div class="flex items-center align-center">
-                    <div class="w-7 h-7">
-                        <svg data-slot="icon" aria-hidden="true" fill="none" stroke-width="1.5" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path d="m11.25 9-3 3m0 0 3 3m-3-3h7.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke-linecap="round" stroke-linejoin="round"></path>
-                        </svg>
-                    </div>
-                    <span class="ml-2 text-base">Rings</span>
-                </div>
-            </button>
-        </div>
-    {/if}
-
     <div class="mb-8">
         <p class="opacity-60 mb-2">Reference</p>
 
@@ -129,22 +114,22 @@
             <p class="opacity-60 mb-2">Basic rings</p>
             <div class="p-2">
                 <div class="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-4 gap-4 my-3">
-                    <button class="btn variant-outline-primary" disabled={!selectedReference || $requestInProgress ? true : false} on:click={() => newRing = RingType.REFERENCE}>
+                    <button class="btn {newRing === RingType.REFERENCE ? 'variant-ghost-primary' : 'variant-ringed-primary'}" disabled={!selectedReference || $requestInProgress ? true : false} on:click={() => newRing = RingType.REFERENCE}>
                         <div class="flex items-center align-center truncate">
                             <span>Reference</span>
                         </div>
                     </button>
-                    <button class="btn variant-outline-primary" disabled={!selectedReference || $requestInProgress ? true : false}  on:click={() => newRing = RingType.ANNOTATION}>
+                    <button class="btn {newRing === RingType.ANNOTATION ? 'variant-ghost-primary' : 'variant-ringed-primary'}" disabled={!selectedReference || $requestInProgress ? true : false}  on:click={() => newRing = RingType.ANNOTATION}>
                         <div class="flex items-center align-center truncate">
                             <span>Annotations</span>
                         </div>
                     </button>
-                    <button class="btn variant-outline-secondary" disabled={!selectedReference || $requestInProgress ? true : false}  on:click={() => newRing = RingType.BLAST}>
+                    <button class="btn {newRing === RingType.BLAST ? 'variant-ghost-secondary' : 'variant-ringed-secondary'}" disabled={!selectedReference || $requestInProgress ? true : false}  on:click={() => newRing = RingType.BLAST}>
                         <div class="flex items-center align-center truncate">
                             <span>BLAST</span>
                         </div>
                     </button>
-                    <button class="btn variant-outline-secondary" disabled={!selectedReference || $requestInProgress ? true : false}  on:click={() => newRing = RingType.LABEL}>
+                    <button class="btn {newRing === RingType.LABEL ? 'variant-ghost-secondary' : 'variant-ringed-secondary'}" disabled={!selectedReference || $requestInProgress ? true : false}  on:click={() => newRing = RingType.LABEL}>
                         <div class="flex items-center align-center truncate">
                             <span>Labels</span>
                         </div>

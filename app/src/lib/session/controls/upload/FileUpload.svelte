@@ -104,7 +104,7 @@
       }
       
     } else {
-      triggerToast($page.form.detail ?? `Error ${result.status}: an unknown error occurred`, ToastType.ERROR, toastStore);
+      triggerToast($page.form?.detail ?? `Error ${result.status}: an unknown error occurred`, ToastType.ERROR, toastStore);
     }
   };
 }}>

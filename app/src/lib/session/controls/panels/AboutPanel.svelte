@@ -59,14 +59,28 @@
     </dl>
 
     <p class="opacity-80 mt-8 mb-4">
-        BRICK depends on open-source research tools and libraries. Please cite the following publications, dependening on their use in the visualization:
+        If you would like to acknowledge the authors of the original visualization, please cite:
     </p>
 
     <dl class="list-dl">
         <div>
             <span class="badge text-lg">📑</span>
             <span class="flex-auto opacity-60">
-                <dt><a href="https://pubmed.ncbi.nlm.nih.gov/2231712/">Altschul et al. (1990) - Basic local alignment search tool</a></dt>
+                <dt><a href="https://bmcgenomics.biomedcentral.com/articles/10.1186/1471-2164-12-402">Alikhan et al. (2011) - BLAST Ring Image Generator (BRIG): simple prokaryote genome comparisons</a></dt>
+            </span>
+        </div>
+    </dl>
+
+    <p class="opacity-80 mt-8 mb-4">
+        BRICK would not be possible without the amazing work of bioinformaticians and researchers making their software available open-source. Please cite the following publications to support the authors if you use these tools in the visualization and research outputs:
+    </p>
+
+    <dl class="list-dl">
+
+        <div>
+            <span class="badge text-lg">📑</span>
+            <span class="flex-auto opacity-60">
+                <dt><a href="https://www.nature.com/articles/s41467-022-35713-4">Sherry et al. (2023) - An ISO-certified genomics workflow for identification and surveillance of antimicrobial resistance (abritAMR)</a></dt>
             </span>
         </div>
         <div>
@@ -78,23 +92,11 @@
         <div>
             <span class="badge text-lg">📑</span>
             <span class="flex-auto opacity-60">
-                <dt><a href="https://www.nature.com/articles/s41467-022-35713-4">Sherry et al. (2023) - An ISO-certified genomics workflow for identification and surveillance of antimicrobial resistance (abritAMR)</a></dt>
+                <dt><a href="https://pubmed.ncbi.nlm.nih.gov/2231712/">Altschul et al. (1990) - Basic local alignment search tool</a></dt>
             </span>
         </div>
     </dl>
 
-    <p class="opacity-80 mt-8 mb-4">
-        If you would like to acknowledge the authors of the original visualization, please cite:
-    </p>
-
-    <dl class="list-dl">
-        <div>
-            <span class="badge text-lg">📑</span>
-            <span class="flex-auto opacity-60">
-                <dt><a href="https://bmcgenomics.biomedcentral.com/articles/10.1186/1471-2164-12-402">Alikhan et al. (2011) - BLAST Ring Image Generator (BRIG)</a></dt>
-            </span>
-        </div>
-    </dl>
 
     <p class="opacity-60 mt-12 mb-4 text-xs">
         BRICK is maintained by <a class="opacity-60" href="https://github.com/esteinig">Eike Steinig (@esteinig)</a> and was built with 

@@ -5,6 +5,11 @@
 	import { ProgressBar } from '@skeletonlabs/skeleton';
 	import { env } from '$env/dynamic/public';
 	import { requestInProgress } from '$lib/stores/RequestInProgressStore';
+	import { page } from '$app/stores';
+	import type { Session } from '$lib/types';
+	import { sessionFiles } from '$lib/stores/SessionFileStore';
+	import { rings } from '$lib/stores/RingStore';
+	import { downloadJSON } from '$lib/brick/helpers';
 
 	const modalStore = getModalStore();
 	
@@ -17,6 +22,19 @@
 		type: 'component',
 		component: 'saveSessionModal'
 	};
+
+	function downloadSession() {
+		
+		/** Recreate the session model data from stores. */
+		const modelData: Session = {
+			id: $page.params.session,
+			date: $page.data.session.date,
+			files: $sessionFiles,
+			rings: $rings
+		}
+
+		downloadJSON(modelData);
+	}
 
 </script>
 
@@ -31,11 +49,11 @@
 					<svg class="w-4 h-4" data-slot="icon" aria-hidden="true" fill="none" stroke-width="1.5" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
 						<path d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 0 0-3.7-3.7 48.678 48.678 0 0 0-7.324 0 4.006 4.006 0 0 0-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 0 0 3.7 3.7 48.656 48.656 0 0 0 7.324 0 4.006 4.006 0 0 0 3.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3-3 3" stroke-linecap="round" stroke-linejoin="round"></path>
 					  </svg>
-					<div class="opacity-90 ml-2">New session</div>
+					<div class="opacity-90 ml-2">New Session</div>
 				</button>
-				<button class="btn btn-sm variant-ghost-surface" on:click={() => modalStore.trigger(saveSessionModal)}>
+				<button class="btn btn-sm variant-ghost-surface" on:click={downloadSession}>
 					<svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-					<div class="opacity-90 ml-2">Save session</div>
+					<div class="opacity-90 ml-2">Download</div>
 				</button>
 				<!-- <button class="btn btn-sm variant-ghost-surface" on:click={() => modalStore.trigger(newSessionPrompt)}>
 					<svg class="w-4 h-4" data-slot="icon" aria-hidden="true" fill="none" stroke-width="1.5" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">

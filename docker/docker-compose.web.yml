@@ -1,4 +1,4 @@
-version: '3.8'
+ersion: '3.8'
 
 services:
 
@@ -23,13 +23,23 @@ services:
     env_file: docker/brick.env
     environment:
       NODE_ENV: production
-      ORIGIN: http://localhost:5173
+      ORIGIN: https://brick.ink
       PUBLIC_BRICK_VERSION: 0.1.0
       PRIVATE_DOCKER_API_URL: http://api:8080
     depends_on:
       - api
     networks:
+      - proxy
       - internal
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: "proxy"
+      traefik.http.routers.app.rule: "Host(`brick.ink`)"
+      traefik.http.routers.app.entrypoints: "https"
+      traefik.http.routers.app.middlewares: "default@file"
+      traefik.http.routers.app.tls.certresolver: "letsEncrypt"
+      traefik.http.routers.app.tls.options: "modern@file"
+      traefik.http.routers.app.tls: "true"
   
   app-dev:
     profiles:
@@ -50,13 +60,23 @@ services:
     env_file: docker/brick.env
     environment:
       NODE_ENV: development
-      ORIGIN: http://localhost:5174
+      ORIGIN: https://dev.brick.ink
       PUBLIC_BRICK_VERSION: 0.1.0
       PRIVATE_DOCKER_API_URL: http://api-dev:8080
     depends_on:
       - api-dev
     networks:
+      - proxy
       - internal
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: "proxy"
+      traefik.http.routers.app.rule: "Host(`dev.brick.ink`)"
+      traefik.http.routers.app.entrypoints: "https"
+      traefik.http.routers.app.middlewares: "default@file"
+      traefik.http.routers.app.tls.certresolver: "letsEncrypt"
+      traefik.http.routers.app.tls.options: "modern@file"
+      traefik.http.routers.app.tls: "true"
 
 
   # ========================
@@ -325,5 +345,5 @@ secrets:
     
 networks:
   internal:
-  # proxy:
-  #   external: true
+  proxy:
+    external: true

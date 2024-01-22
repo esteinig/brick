@@ -338,6 +338,7 @@ export type SvgConfig = {
     zoomLowerLimit: number
     zoomUpperLimit: number
     positionEnabled: boolean
+    tooltipEnabled: boolean
 }
 
 export type TitleConfig = {

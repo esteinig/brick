@@ -123,7 +123,7 @@ export const actions: Actions = {
                     })
                 }
             } else {
-                return fail(response.status, createRingResponseData)
+                return fail(response.status, createRingResponseData) // { detail: PydanticValidationError or other failure states send with detail: '' }
             }
         } catch(error) {
             // Catch if something bad happens during validation with pydantic

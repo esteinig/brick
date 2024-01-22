@@ -23,13 +23,18 @@ services:
     env_file: docker/brick.env
     environment:
       NODE_ENV: production
-      ORIGIN: http://localhost:5173
+      ORIGIN: http://brick.localhost
       PUBLIC_BRICK_VERSION: 0.1.0
       PRIVATE_DOCKER_API_URL: http://api:8080
     depends_on:
       - api
     networks:
+      - proxy
       - internal
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: "proxy"
+      traefik.http.routers.app.rule: "Host(`brick.localhost`)"
   
   app-dev:
     profiles:
@@ -50,13 +55,18 @@ services:
     env_file: docker/brick.env
     environment:
       NODE_ENV: development
-      ORIGIN: http://localhost:5174
+      ORIGIN: http://dev.brick.localhost
       PUBLIC_BRICK_VERSION: 0.1.0
       PRIVATE_DOCKER_API_URL: http://api-dev:8080
     depends_on:
       - api-dev
     networks:
+      - proxy
       - internal
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: "proxy"
+      traefik.http.routers.app-dev.rule: "Host(`dev.brick.localhost`)"
 
 
   # ========================
@@ -325,5 +335,5 @@ secrets:
     
 networks:
   internal:
-  # proxy:
-  #   external: true
+  proxy:
+    external: true
