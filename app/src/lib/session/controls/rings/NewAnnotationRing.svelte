@@ -1,16 +1,12 @@
 <script lang="ts">
 	import { RingType, type AnnotationRingSchema } from "$lib/types";
-	import { ToastType, handleEndpointErrorResponse, triggerToast } from "$lib/helpers";
 	import { FileType, type SessionFile } from "$lib/types";
     import { sessionFiles, sessionFileTypeAvailable } from "$lib/stores/SessionFileStore";
-    import { addRing } from "$lib/stores/RingStore";
-	import { page } from '$app/stores';
-    import { getToastStore } from '@skeletonlabs/skeleton';
-	import { applyAction, enhance } from "$app/forms";
     import { ringReferenceStore } from "$lib/stores/RingReferenceStore";
-    import { startRequestState, completeRequestState } from '$lib/stores/RequestInProgressStore';
-    
-    const toastStore = getToastStore();
+    import { startRequestState } from '$lib/stores/RequestInProgressStore';
+    import { createEventDispatcher } from "svelte";
+
+    const dispatch = createEventDispatcher();
     
     let ringConfig: AnnotationRingSchema = {
         reference: null,
@@ -20,11 +16,33 @@
         genbank_qualifiers: []
     }
 
-    let loading: boolean = false;
     let selectedGenbankFile: SessionFile;
     
     $: ringConfig.genbank_id = selectedGenbankFile?.id ?? null; // bit of fuckery due to listing of selections below
+    
+	async function handleSubmit(event: { currentTarget: EventTarget & HTMLFormElement }) {
+		
+        let data = new FormData()
 
+        ringConfig.reference = $ringReferenceStore
+
+        data.append('ring_config', JSON.stringify(ringConfig))
+        data.append('ring_type', RingType.ANNOTATION)
+
+        ringConfig = {
+            reference: null,
+            genbank_id: null,
+            tsv_id: null,
+            genbank_features: [],
+            genbank_qualifiers: []
+        }
+
+        startRequestState();
+
+        dispatch('submitAction', { action: event.currentTarget.action, body: data });
+
+	}
+    
 </script>
 
 <div class="border border-gray-300 rounded-2xl border-opacity-10 p-4">
@@ -36,46 +54,8 @@
         selected reference genome. Annotations can be extracted from Genbank or custom table files.</p>
     
     {#if $ringReferenceStore}
-        <form id="createAnnotationRingForm" action="?/createRing" method="POST" use:enhance={({ formData }) => {
-            
-            ringConfig.reference = $ringReferenceStore
-
-            formData.append('ring_config', JSON.stringify(ringConfig))
-            formData.append('ring_type', RingType.ANNOTATION)
-
-            // Clear data in this component
-            ringConfig = {
-                reference: null,
-                genbank_id: null,
-                tsv_id: null,
-                genbank_features: [],
-                genbank_qualifiers: []
-            }
-
-            loading = true;
-            startRequestState();
-
-        
-            return async ({ result }) => {
-                await applyAction(result);
-
-                loading = false;
-                completeRequestState();
-                    
-                if (result.type === "success"){
-                    addRing($page.form.result)
-                    if ($page.form.result.data.length) {
-                        triggerToast("Ring created sucessfully", ToastType.SUCCESS, toastStore);
-                    } else {
-                        triggerToast("Ring created, requested annotations not found", ToastType.WARNING, toastStore);
-                    }
-                } else {
-                    handleEndpointErrorResponse($page.form?.detail ?? `Error ${result.status}: an unknown error occurred`, toastStore)
-                }
-            };
-        }}>
+        <form id="createAnnotationRingForm" action="?/createRing" method="POST" on:submit|preventDefault={handleSubmit}>
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 my-3">
-                   
                 <div>
                     <label class="label text-xs">
                         <p class="opacity-40">Genbank annotations</p>
@@ -88,20 +68,18 @@
                         </select>
                     </label>
                 </div>
-
                 <div>
-                        <label class="label text-xs">
-                            <p class="opacity-40">Genbank features</p>
-                            <select class="select text-xs" multiple bind:value={ringConfig.genbank_features} disabled={!sessionFileTypeAvailable(FileType.ANNOTATION_GENBANK)}>
-                                {#if selectedGenbankFile}
-                                    {#each selectedGenbankFile.selections.features.sort() as feature}
-                                        <option value={feature}>{feature}</option>
-                                    {/each}
-                                {/if}
-                            </select>
-                        </label>
+                    <label class="label text-xs">
+                        <p class="opacity-40">Genbank features</p>
+                        <select class="select text-xs" multiple bind:value={ringConfig.genbank_features} disabled={!sessionFileTypeAvailable(FileType.ANNOTATION_GENBANK)}>
+                            {#if selectedGenbankFile}
+                                {#each selectedGenbankFile.selections.features.sort() as feature}
+                                    <option value={feature}>{feature}</option>
+                                {/each}
+                            {/if}
+                        </select>
+                    </label>
                 </div>
-
                 <div>
                     <label class="label text-xs mt-3">
                         <p class="opacity-40">Custom annotations</p>
@@ -118,7 +96,7 @@
             </div>
             
             <div class="flex items-center mt-12">
-                <button class="btn variant-outline-surface" type="submit" disabled={loading || !(ringConfig.genbank_id || ringConfig.tsv_id)}>
+                <button class="btn variant-outline-surface" type="submit" disabled={!(ringConfig.genbank_id || ringConfig.tsv_id)}>
                     <div class="flex items-center align-center">
                         <span>Construct</span>
                     </div>

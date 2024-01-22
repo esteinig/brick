@@ -1,27 +1,46 @@
 <script lang="ts">
-	import { RingType, type LabelRingSchema } from "$lib/types";
-	import { ToastType, handleEndpointErrorResponse, triggerToast } from "$lib/helpers";
-	import { FileType } from "$lib/types";
-    import { sessionFiles, sessionFileTypeAvailable } from "$lib/stores/SessionFileStore";
-    import { addRing } from "$lib/stores/RingStore";
-	import { page } from '$app/stores';
-    import { getToastStore } from '@skeletonlabs/skeleton';
-	import { applyAction, enhance } from "$app/forms";
-	import RingSegment from "../helpers/RingSegment.svelte";
-    import { ringReferenceStore } from "$lib/stores/RingReferenceStore";
+
+    import RingSegment from "../helpers/RingSegment.svelte";
 
     import { startRequestState, completeRequestState } from '$lib/stores/RequestInProgressStore';
+    import { sessionFiles, sessionFileTypeAvailable } from "$lib/stores/SessionFileStore";
+	import { ToastType, handleEndpointErrorResponse, triggerToast } from "$lib/helpers";
+    import { ringReferenceStore } from "$lib/stores/RingReferenceStore";
+	import { RingType, type LabelRingSchema } from "$lib/types";
+	import { applyAction, enhance } from "$app/forms";
+    import { addRing } from "$lib/stores/RingStore";
+    import { createEventDispatcher } from "svelte";
+    import { FileType } from "$lib/types";
+	import { page } from '$app/stores';
     
-    const toastStore = getToastStore();
-
+    const dispatch = createEventDispatcher();
+    
     let ringConfig: LabelRingSchema = {
         reference: null,
         tsv_id: null,
         labels: []
     }
 
-    let loading: boolean = false;
+    async function handleSubmit(event: { currentTarget: EventTarget & HTMLFormElement }) {
+		
+        let data = new FormData()
 
+        ringConfig.reference = $ringReferenceStore;
+
+        data.append('ring_config', JSON.stringify(ringConfig))
+        data.append('ring_type', RingType.LABEL)
+
+        ringConfig =  {
+            reference: null,
+            tsv_id: null,
+            labels: []
+        }
+
+        startRequestState();
+
+        dispatch('submitAction', { action: event.currentTarget.action, body: data });
+
+	}
 
 </script>
 
@@ -35,40 +54,7 @@
         file are different, their midpoint is used to draw the annotation line.</p>
     
     {#if $ringReferenceStore}
-        <form id="createLabelRingForm" action="?/createRing" method="POST" use:enhance={({ formData }) => {
-            
-            ringConfig.reference = $ringReferenceStore;
-
-            formData.append('ring_config', JSON.stringify(ringConfig))
-            formData.append('ring_type', RingType.LABEL)
-
-            ringConfig =  {
-                reference: null,
-                tsv_id: null,
-                labels: []
-            }
-
-            loading = true
-            startRequestState();
-
-            return async ({ result }) => {
-                await applyAction(result);
-
-                loading = false;
-                completeRequestState();
-                    
-                if (result.type === "success"){
-                    addRing($page.form.result)
-                    if ($page.form.result.data.length) {
-                        triggerToast("Ring created sucessfully", ToastType.SUCCESS, toastStore);
-                    } else {
-                        triggerToast("Ring created, requested labels not found", ToastType.WARNING, toastStore);
-                    }   
-                } else {
-                    handleEndpointErrorResponse($page.form?.detail ?? `Error ${result.status}: an unknown error occurred`, toastStore)
-                }
-            };
-        }}>
+        <form id="createLabelRingForm" action="?/createRing" method="POST" on:submit|preventDefault={handleSubmit}>
             <div class="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-1 gap-4 mt-3">
                 
                 <label class="label text-xs mt-3 lg:w-1/2">
@@ -88,15 +74,13 @@
 
             </div>
             
-            
-
             <div class="mt-6">
-                <button class="btn variant-outline-surface mr-2" type="submit" disabled={loading || !(ringConfig.tsv_id || ringConfig.labels.length)}>
+                <button class="btn variant-outline-surface mr-2" type="submit" disabled={!(ringConfig.tsv_id || ringConfig.labels.length)}>
                     <div class="flex items-center align-center">    
                         <span>Construct</span>
                     </div>
                 </button>
-                <button class="btn variant-outline-surface" type="button" disabled={loading} on:click={() => ringConfig.labels = [...ringConfig.labels, { start: 0, end: 0, text: "", color: "#d3d3d3"}]}>
+                <button class="btn variant-outline-surface" type="button" on:click={() => ringConfig.labels = [...ringConfig.labels, { start: 0, end: 0, text: "", color: "#d3d3d3"}]}>
                     <div class="flex items-center align-center">
                         <span>New label</span>
                     </div>

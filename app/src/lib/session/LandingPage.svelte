@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { createSessionId } from "$lib/helpers";
     import { clearRings } from "$lib/stores/RingStore";
+    import { clearRingReference } from "$lib/stores/RingReferenceStore";
     
     const published: boolean = false;
 </script>
@@ -20,7 +21,7 @@
             <a
                 class="btn border border-primary-500"
                 href="/session/{createSessionId()}"
-                on:click={() => clearRings()}
+                on:click={() => { clearRingReference(); clearRings() }}
             >
                 Create Figure
             </a>

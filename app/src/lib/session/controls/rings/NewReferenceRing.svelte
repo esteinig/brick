@@ -1,20 +1,31 @@
 <script lang="ts">
 	import { type ReferenceRingSchema, RingType } from "$lib/types";
-	import { ToastType, handleEndpointErrorResponse, triggerToast } from "$lib/helpers";
-    import { addRing } from "$lib/stores/RingStore";
-	import { page } from '$app/stores';
-    import { getToastStore } from '@skeletonlabs/skeleton';
-	import { applyAction, enhance } from "$app/forms";
     import { ringReferenceStore } from "$lib/stores/RingReferenceStore";
-    import { startRequestState, completeRequestState } from '$lib/stores/RequestInProgressStore';
+    import { startRequestState } from '$lib/stores/RequestInProgressStore';
+    import { createEventDispatcher } from "svelte";
     
-    const toastStore = getToastStore();
+    const dispatch = createEventDispatcher();
     
     let ringConfig: ReferenceRingSchema = {
         reference: null
     }
+ 
+	async function handleSubmit(event: { currentTarget: EventTarget & HTMLFormElement }) {
+		
+        let data = new FormData()
 
-    let loading: boolean = false
+        ringConfig.reference = $ringReferenceStore;
+
+        data.append('ring_config', JSON.stringify(ringConfig))
+        data.append('ring_type', RingType.REFERENCE)
+
+        ringConfig = { reference: null }
+
+        startRequestState();
+
+        dispatch('submitAction', { action: event.currentTarget.action, body: data});
+
+	}
 
 </script>
 
@@ -30,35 +41,10 @@
     </p>
     
     {#if $ringReferenceStore}
-        <form id="createBlastRingForm" action="?/createRing" method="POST" use:enhance={({ formData }) => {
-            
-            ringConfig.reference = $ringReferenceStore;
-
-            formData.append('ring_config', JSON.stringify(ringConfig))
-            formData.append('ring_type', RingType.REFERENCE)
-
-            ringConfig = { reference: null }
-            
-            loading = true;
-            startRequestState();
-        
-            return async ({ result }) => {
-                await applyAction(result);
-
-                loading = false;
-                completeRequestState();
-                    
-                if (result.type === "success"){
-                    addRing($page.form.result)
-                    triggerToast("Ring created sucessfully", ToastType.SUCCESS, toastStore);
-                } else {
-                    handleEndpointErrorResponse($page.form?.detail ?? `Error ${result.status}: an unknown error occurred`, toastStore)
-                }
-            };
-        }}>
+        <form id="createReferenceRingForm" action="?/createRing" method="POST" on:submit|preventDefault={handleSubmit}>
             
             <div class="flex justify-right mt-4">
-                <button class="btn variant-outline-surface" type="submit"  disabled={loading || !$ringReferenceStore}>
+                <button class="btn variant-outline-surface" type="submit"  disabled={!$ringReferenceStore}>
                     <div class="flex items-center align-center">
                         <span>Construct</span>
                     </div>

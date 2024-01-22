@@ -50,8 +50,8 @@ class ReferenceRing(Ring):
     title: str = "Reference Ring"
 
     @staticmethod
-    def from_reference(reference: RingReference) -> BlastRing:
-        return BlastRing(
+    def from_reference(reference: RingReference) -> ReferenceRing:
+        return ReferenceRing(
             id=str(uuid.uuid4()), 
             data=[RingSegment(start=0, end=reference.sequence.length, text=reference.sequence.id)],
             reference=reference

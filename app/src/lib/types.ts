@@ -168,6 +168,7 @@ export type FileConfig = {
 }
 
 export type UploadConfig = {
+    id: string
     title: string
     message: string
     meta: string
@@ -249,6 +250,18 @@ export type RingUpdateSchema = {
     title: string | null
     visible: boolean | null
     index_group: string[] | null
+}
+
+
+
+/*  =============
+ *  FORM ACTIONS
+ *  =============
+*/
+
+export type ActionRequestData = {
+    action: string
+    body: FormData
 }
 
 /*  =============

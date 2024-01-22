@@ -26,7 +26,7 @@
     const dispatch = createEventDispatcher();
 
     function deleteRing() {
-        dispatch('delete', { delete: true  });
+        dispatch('delete', { updateVerbose: updateVerbose, updateDatabase: updateDatabase });
         if (updateDatabase) formElement.requestSubmit();
     }
 
