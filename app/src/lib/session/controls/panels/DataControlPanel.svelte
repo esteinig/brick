@@ -1,12 +1,11 @@
 <script lang="ts">
     import { FileFormat, FileType, type ActionRequestData } from "$lib/types";
     import FileUpload from "$lib/session/controls/upload/FileUpload.svelte";
-	import FileTable from "$lib/session/controls/upload/FileTable.svelte";
-	import { sessionFiles } from "$lib/stores/SessionFileStore";
+	import { sessionFiles, removeSessionFile } from "$lib/stores/SessionFileStore";
     import { SlideToggle } from "@skeletonlabs/skeleton";
 	import { type UploadConfig } from "$lib/types";
 	import { createEventDispatcher } from "svelte";
-	import { config } from "dotenv";
+    import DeleteFile from "../helpers/DeleteFile.svelte";
 
     const dispatch = createEventDispatcher();
     
@@ -77,6 +76,9 @@
     function handleFileUploadAction(data: ActionRequestData, id: string) {
         dispatch("fileUploadAction", {data: data, id: id})
     }
+    function handleFileDeleteAction(data: ActionRequestData, id: string) {
+        dispatch("fileDeleteAction", {data: data, id: id})
+    }
 
  </script>
 
@@ -142,7 +144,39 @@
  
     {#if showFileTable}
         <div class="mt-8">
-            <FileTable></FileTable>
+            
+            {#if $sessionFiles.length}
+                <div class="table-container">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>File</th>
+                                <th>Type</th>
+                                <th>Format</th>
+                                <th>Records</th>
+                                <th>Length</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {#each $sessionFiles as sessionFile}
+                                <tr>
+                                    <td class="truncate">{sessionFile.name_original}</td>
+                                    <td>{sessionFile.type}</td>
+                                    <td>{sessionFile.format}</td>
+                                    <td>{sessionFile.records}</td>
+                                    <td>{sessionFile.total_length}</td>
+                                    <td><DeleteFile id={sessionFile.id} updateVerbose on:submitAction={(event) => handleFileDeleteAction(event.detail, sessionFile.id)} on:delete={() => removeSessionFile(sessionFile.id)}></DeleteFile></td>
+                                </tr>
+                            {/each}
+                        </tbody>
+                    </table>
+                </div>
+            {:else}
+                <div class="p-4 text-center">
+                    <p class="text-secondary-500">No files have been uploaded to this session</p>
+                </div>
+            {/if}
         </div>
     {:else}
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-x-8 gap-y-4">

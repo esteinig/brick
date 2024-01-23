@@ -3,12 +3,10 @@
     import { paletteStore } from "$lib/stores/PaletteStore";
 	import ColorPalette from "./ColorPalette.svelte";
     import { createEventDispatcher } from 'svelte';
-	import { applyAction, enhance } from "$app/forms";
 	import { page } from "$app/stores";
-    import { ToastType, triggerToast } from "$lib/helpers";
     import { getToastStore } from '@skeletonlabs/skeleton';
 	import type { RingUpdateSchema } from "$lib/types";
-	import { completeRequestState, startRequestState } from "$lib/stores/RequestInProgressStore";
+	import { startRequestState } from "$lib/stores/RequestInProgressStore";
     
     const dispatch = createEventDispatcher();
     const toastStore = getToastStore();
@@ -68,6 +66,27 @@
         index_group: null
     }
 
+    // Manual form action, dispatches the action request fetch function after populating 
+    // it with this components value to interface, so it can run in the background - 
+	async function handleSubmit(event: { currentTarget: EventTarget & HTMLFormElement }) {
+		
+        let data = new FormData();
+
+        if (updateVerbose) startRequestState();
+                
+        sessionRingUpdateSchema.id = id;
+        sessionRingUpdateSchema.color = color;
+
+        data.append('session_id', $page.params.session);
+        data.append('ring_update', JSON.stringify(sessionRingUpdateSchema));
+        
+        sessionRingUpdateSchema.id = "";
+        sessionRingUpdateSchema.color = null;
+
+        dispatch('submitAction', { action: event.currentTarget.action, body: data, updateVerbose: updateVerbose, updateDatabase: updateDatabase });
+
+	}
+
 </script>
 
 <div id="palettePopup-{id}">
@@ -80,43 +99,7 @@
 
     <div class="card p-4  shadow-xl border border-opacity-80 border-surface-500 bg-surface-300 z-50" data-popup={`popupPalette-${id}`}>
 
-        <form id="updateRingColorPaletteForm" bind:this={formElement} action="?/updateSessionRing" method="POST" use:enhance={({ formData }) => {
-            
-            if (updateVerbose) startRequestState();
-            
-            sessionRingUpdateSchema.id = id;
-            sessionRingUpdateSchema.color = color;
-
-            formData.append('session_id', $page.params.session);
-            formData.append('ring_update', JSON.stringify(sessionRingUpdateSchema));
-            
-            sessionRingUpdateSchema.id = "";
-            sessionRingUpdateSchema.color = null;
-
-            return async ({ result }) => {
-                await applyAction(result);
-
-                if (updateVerbose) completeRequestState();
-
-                if (result.type === "success"){
-                    if (updateVerbose) triggerToast("Ring updated sucessfully", ToastType.SUCCESS, toastStore);
-                } else {
-                    // Validation errors from pydantic schemes are an array of validation objects:
-                    if ($page.form.detail instanceof Array){
-                        for (const error of $page.form.detail) {
-                            triggerToast(
-                                error.msg ?? `Error ${result.status}: an unknown error occurred`, 
-                                ToastType.ERROR, 
-                                toastStore
-                            );
-                        }
-                    } else {
-                        triggerToast($page.form.detail ?? `Error ${result.status}: an unknown error occurred`, ToastType.ERROR, toastStore);
-                    }
-                }
-            };
-
-        }}>
+        <form id="updateRingColorPaletteForm" bind:this={formElement} action="?/updateSessionRing" method="POST" on:submit|preventDefault={handleSubmit}>
             <div class="head mb-4 flex justify-between items-center align-middle">
                 <p class="opacity-80 text-lg">Palette selections</p>
                 

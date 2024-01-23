@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { RingType, type Sequence, RingDirection, Ring, FileFormat, type ActionRequestData } from "$lib/types";
+    import { RingType, type Sequence, RingDirection, Ring, FileFormat, type ActionRequestData, type ActionRequestDataUpdate } from "$lib/types";
 	import { FileType, type SessionFile } from "$lib/types";
     import { sessionFiles } from "$lib/stores/SessionFileStore";
     import { ringReferenceStore } from "$lib/stores/RingReferenceStore";
@@ -66,8 +66,16 @@
     $: indexGroup = $ringData.map(ring => ring.id);
 
 
-    async function handleRingRequest(data: ActionRequestData) {
+    async function handleCreateRingRequest(data: ActionRequestData) {
         dispatch("createRingAction", data)
+    }
+
+    async function handleUpdateRingRequest(data: ActionRequestDataUpdate) {
+        dispatch("updateRingAction", data)
+    }
+    
+    async function handleDeleteRingRequest(data: ActionRequestDataUpdate) {
+        dispatch("deleteRingAction", data)
     }
 
 </script>
@@ -165,13 +173,13 @@
         
         <div class="mt-8">
             {#if newRing == RingType.REFERENCE}
-                <NewReferenceRing on:submitAction={(event) => handleRingRequest(event.detail)}></NewReferenceRing>
+                <NewReferenceRing on:submitAction={(event) => handleCreateRingRequest(event.detail)}></NewReferenceRing>
             {:else if newRing == RingType.BLAST}
-                <NewBlastRing on:submitAction={(event) => handleRingRequest(event.detail)}></NewBlastRing>
+                <NewBlastRing on:submitAction={(event) => handleCreateRingRequest(event.detail)}></NewBlastRing>
             {:else if newRing == RingType.ANNOTATION}
-                <NewAnnotationRing on:submitAction={(event) => handleRingRequest(event.detail)}></NewAnnotationRing>
+                <NewAnnotationRing on:submitAction={(event) => handleCreateRingRequest(event.detail)}></NewAnnotationRing>
             {:else if newRing == RingType.LABEL}
-                <NewLabelRing on:submitAction={(event) => handleRingRequest(event.detail)}></NewLabelRing>
+                <NewLabelRing on:submitAction={(event) => handleCreateRingRequest(event.detail)}></NewLabelRing>
             {/if}
         </div>
 
@@ -184,28 +192,28 @@
                         <div class="grid grid-cols-8 gap-x-2 items-center align-center p-2 rounded-token hover:variant-soft hover:cursor-pointer">
                             <div class="flex items-center gap-x-2 col-span-7">
                                 <span class="text-black ml-2">
-                                    <ColorPicker id={ring.id} color={ring.color} on:selectColor={(event) => changeRingColor(ring.id, event.detail.color)}></ColorPicker>
+                                    <ColorPicker id={ring.id} color={ring.color} on:submitAction={(event) => handleUpdateRingRequest(event.detail) } on:selectColor={(event) => changeRingColor(ring.id, event.detail.color)}></ColorPicker>
                                 </span>
                                 <div class="mt-0.5">
-                                    <PalettePopup id={ring.id} color={ring.color} on:selectColor={(event) => changeRingColor(ring.id, event.detail.color)}></PalettePopup>
+                                    <PalettePopup id={ring.id} color={ring.color} on:submitAction={(event) => handleUpdateRingRequest(event.detail) } on:selectColor={(event) => changeRingColor(ring.id, event.detail.color)}></PalettePopup>
                                 </div>
-                                <RingVisibility id={ring.id} visible={ring.visible} on:toggleVisibility={(_) => toggleRingVisibility(ring.id)}></RingVisibility>
-                                <RingTitle id={ring.id} title={ring.title} titleColor={ring.color} on:update={(event) => changeRingTitle(ring.id, event.detail.title)} />
+                                <RingVisibility id={ring.id} visible={ring.visible} on:submitAction={(event) => handleUpdateRingRequest(event.detail) } on:toggleVisibility={(_) => toggleRingVisibility(ring.id)}></RingVisibility>
+                                <RingTitle id={ring.id} title={ring.title} titleColor={ring.color} on:submitAction={(event) => handleUpdateRingRequest(event.detail) } on:update={(event) => changeRingTitle(ring.id, event.detail.title)} />
                             </div>
                             <div class="flex justify-end gap-x-2 col-span-1">
                                 {#if ring.type !== RingType.LABEL}
                                     {#if ring.index !== 0}
-                                        <RingIndex id={ring.id} direction={RingDirection.IN} currentIndex={ring.index} on:update={(_) => moveRingInside(ring.id)} indexGroup={indexGroup}></RingIndex>
+                                        <RingIndex id={ring.id} direction={RingDirection.IN} currentIndex={ring.index} on:submitAction={(event) => handleUpdateRingRequest(event.detail) } on:update={(_) => moveRingInside(ring.id)} indexGroup={indexGroup}></RingIndex>
                                     {:else}
                                         <RingIndex placeholder id={ring.id} direction={RingDirection.IN} currentIndex={ring.index} indexGroup={indexGroup}></RingIndex>
                                     {/if}
                                     {#if !((isRingTypePresent(RingType.LABEL) && ring.index === $ringData.length-2) || ring.index === $ringData.length-1)}
-                                        <RingIndex id={ring.id} direction={RingDirection.OUT} currentIndex={ring.index} on:update={(_) => moveRingOutside(ring.id, $ringData.length-1)} indexGroup={indexGroup}></RingIndex>
+                                        <RingIndex id={ring.id} direction={RingDirection.OUT} currentIndex={ring.index} on:submitAction={(event) => handleUpdateRingRequest(event.detail) } on:update={(_) => moveRingOutside(ring.id, $ringData.length-1)} indexGroup={indexGroup}></RingIndex>
                                     {:else}
                                         <RingIndex placeholder id={ring.id} direction={RingDirection.OUT} currentIndex={ring.index} indexGroup={indexGroup}></RingIndex>
                                     {/if}
                                 {/if}
-                                <DeleteRing id={ring.id} indexGroup={indexGroup} on:delete={() => removeRing(ring.id, indexGroup)}></DeleteRing>
+                                <DeleteRing id={ring.id} indexGroup={indexGroup} on:submitAction={(event) => handleDeleteRingRequest(event.detail)} on:delete={() => removeRing(ring.id, indexGroup)}></DeleteRing>
                             </div>
                         </div>
                     {/each}
