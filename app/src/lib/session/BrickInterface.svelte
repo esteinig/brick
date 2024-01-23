@@ -223,7 +223,7 @@
      * @param data
      */
      async function handleUpdateRingAction(data: ActionRequestDataUpdate) {
-        console.log("Triggered", data)
+        
         if (data.updateDatabase) {
             const response = await fetch(data.action, {
                 method: 'POST',

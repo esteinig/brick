@@ -16,7 +16,6 @@
     $: segment.end = segment.start;
 
 
-
     function isNumberValid(value: string | number): boolean {
         const num = typeof value === 'string' ? parseFloat(value) : value;
         const maxPosition = $ringReferenceStore?.sequence?.length ?? Number.MAX_SAFE_INTEGER; // fallback to a large number if undefined
