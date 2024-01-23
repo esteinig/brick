@@ -1,0 +1,5 @@
+http:
+  routers:
+    traefik:
+      rule: "Host(`traefik.brick.localhost`)"
+      service: "api@internal"

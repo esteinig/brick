@@ -1,0 +1,52 @@
+http:
+  middlewares:
+    # A basic authentification middleware, to protect the Traefik dashboard
+    # Use with traefik.http.routers.myRouter.middlewares: "traefikAuth@file"
+    traefikAuth:
+      basicAuth:
+        users:
+          - "{{{ traefik.web.username }}}:{{{ traefik.web.password_hashed }}}"
+    
+    # Recommended default middleware for most of the services, others can be added to the default chain
+    # Use with traefik.http.routers.myRouter.middlewares: "default@file"
+    # Equivalent of traefik.http.routers.myRouter.middlewares: "default-security-headers@file"
+    default:
+      chain:
+        middlewares:
+          - default-security-headers
+
+    # Add some security headers
+    # Use with traefik.http.routers.myRouter.middlewares: "default-security-headers@file"
+    default-security-headers:
+      headers:
+        browserXssFilter: true                            # X-XSS-Protection=1; mode=block
+        contentTypeNosniff: true                          # X-Content-Type-Options=nosniff
+        forceSTSHeader: true                              # Add the Strict-Transport-Security header even when the connection is HTTP
+        frameDeny: true                                   # X-Frame-Options=deny
+        referrerPolicy: "strict-origin-when-cross-origin"
+        sslRedirect: true                                 # Allow only https requests
+        stsIncludeSubdomains: true                        # Add includeSubdomains to the Strict-Transport-Security header
+        stsPreload: true                                  # Add preload flag appended to the Strict-Transport-Security header
+        stsSeconds: 63072000                              # Set the max-age of the Strict-Transport-Security header (63072000 = 2 years)
+
+  routers:
+    # Traefik dashboard router
+    traefik:
+      rule: "Host(`traefik.brick.ink`)"
+      service: "api@internal"
+      entrypoints: 
+        - "https"
+      middlewares: 
+        - "traefikAuth@file"
+        - "default@file"
+      tls: 
+        certresolver: "letsEncrypt"
+        options: "modern@file"
+
+# See https://doc.traefik.io/traefik/https/tls/
+tls:
+  options:
+    # To use with the label "traefik.http.routers.myrouter.tls.options=modern@file"
+    modern:
+      minVersion: "VersionTLS13"                          # Minimum TLS Version
+      sniStrict: true                                     # Strict SNI Checking

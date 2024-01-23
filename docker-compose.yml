@@ -1,0 +1,326 @@
+version: '3.8'
+
+services:
+
+  # =================
+  # BRICK APPLICATION
+  # =================
+
+  app:
+    profiles:
+      - prod
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.app
+    restart: unless-stopped
+    expose:
+      - "5173"
+    ports:
+      - "5173:5173"
+    security_opt:
+      - no-new-privileges:true
+    env_file: docker/brick.env
+    environment:
+      NODE_ENV: production
+      ORIGIN: http://localhost:5173
+      PUBLIC_BRICK_VERSION: 0.1.0
+      PRIVATE_DOCKER_API_URL: http://api:8080
+    depends_on:
+      - api
+    networks:
+      - internal
+  
+  app-dev:
+    profiles:
+      - dev
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.app.dev
+    restart: unless-stopped
+    volumes:
+      - ./app:/usr/src/app
+      - /usr/src/app/node_modules
+    expose:
+      - "5174"
+    ports:
+      - "5174:5174"
+    security_opt:
+      - no-new-privileges:true
+    env_file: docker/brick.env
+    environment:
+      NODE_ENV: development
+      ORIGIN: http://localhost:5174
+      PUBLIC_BRICK_VERSION: 0.1.0
+      PRIVATE_DOCKER_API_URL: http://api-dev:8080
+    depends_on:
+      - api-dev
+    networks:
+      - internal
+
+
+  # ========================
+  # BRICK API SERVER AND CLI
+  # ========================
+
+  api:
+    profiles:
+      - prod
+    build: 
+      context: .
+      dockerfile: docker/Dockerfile.server
+    restart: unless-stopped
+    command: uvicorn brick.api.main:app --host 0.0.0.0 --port 8080
+    volumes:
+      - api:/data
+      - work:/tmp
+    env_file: docker/brick.env
+    environment:
+      CORS_ORIGINS: http://app:5173
+      MONGODB_DATABASE: brick
+      MONGODB_USERNAME: /run/secrets/brick_db_user
+      MONGODB_PASSWORD: /run/secrets/brick_db_pwd
+    expose:
+      - "8080"
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      - redis
+      - mongodb
+    secrets:
+      - brick_db_user
+      - brick_db_pwd
+    networks:
+      - internal
+  
+  api-dev:
+    profiles:
+      - dev
+    build: 
+      context: .
+      dockerfile: docker/Dockerfile.server
+    restart: unless-stopped
+    command: uvicorn brick.api.main:app --host 0.0.0.0 --port 8080
+    volumes:
+      - api_dev:/data
+      - work:/tmp
+    env_file: docker/brick.env
+    environment:
+      CORS_ORIGINS: http://app-dev:5174
+      MONGODB_DATABASE: dev
+      MONGODB_USERNAME: /run/secrets/brick_db_user
+      MONGODB_PASSWORD: /run/secrets/brick_db_pwd
+    expose:
+      - "8080"
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      - redis
+      - mongodb
+    secrets:
+      - brick_db_user
+      - brick_db_pwd
+    networks:
+      - internal
+
+
+  # ==================
+  # TASK QUEUE WORKERS
+  # ==================
+
+  # Celery workers have access to some API settings
+  # and update the session model in the database and therefore
+  # need access to the API config and secrets
+
+  worker:
+    profiles:
+      - prod
+    build: 
+      context: .
+      dockerfile: docker/Dockerfile.server
+    restart: unless-stopped
+    command: celery -A brick.api.core.celery.celery_app worker --loglevel=INFO
+    volumes:
+      - work:/tmp
+    env_file: docker/brick.env
+    environment:
+      CORS_ORIGINS: http://app:5173
+      MONGODB_DATABASE: brick
+      MONGODB_USERNAME: /run/secrets/brick_db_user
+      MONGODB_PASSWORD: /run/secrets/brick_db_pwd
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      - api
+      - redis
+      - mongodb
+    secrets:
+      - brick_db_user
+      - brick_db_pwd
+    networks:
+      - internal
+
+  worker-dev:
+    profiles:
+      - dev
+    build: 
+      context: .
+      dockerfile: docker/Dockerfile.server
+    restart: unless-stopped
+    command: celery -A brick.api.core.celery.celery_app worker --loglevel=INFO
+    volumes:
+      - work:/tmp
+    env_file: docker/brick.env
+    environment:
+      CORS_ORIGINS: http://app-dev:5174
+      MONGODB_DATABASE: dev
+      MONGODB_USERNAME: /run/secrets/brick_db_user
+      MONGODB_PASSWORD: /run/secrets/brick_db_pwd
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      - api-dev
+      - redis
+      - mongodb
+    secrets:
+      - brick_db_user
+      - brick_db_pwd     
+    networks:
+      - internal 
+
+
+  # ========= 
+  # DATABASES 
+  # ========= 
+
+  # Currently using the same Redis (Celery) and MongoDB for
+  # dev and and prod (different collections) should probably
+  # have their own database stack to ensure non-interference
+
+  redis:
+    profiles:
+      - prod
+      - dev
+      - test
+    image: redis:7.0.12-alpine
+    restart: unless-stopped
+    expose:
+      - "6379"
+    volumes:
+      - redis_db:/data
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - internal
+
+  mongodb:
+    profiles:
+      - prod
+      - dev
+      - test
+    image: mongo:7.0.0-rc10
+    restart: unless-stopped
+    command: mongod --auth --quiet --logpath /dev/null
+    expose:
+      - "27017"
+    volumes:
+      - mongo_db:/data/db
+      - mongo_db_cfg:/data/configdb # will create anonymous volumes otherwise if not specified
+      - ./docker/mongodb/mongo-init.sh:/docker-entrypoint-initdb.d/mongo-init.sh:ro
+    environment:
+      MONGODB_INIT_ROOT_USER_FILE: /run/secrets/mongo_root_user
+      MONGODB_INIT_ROOT_PWD_FILE: /run/secrets/mongo_root_pwd
+      MONGODB_USERNAME_FILE: /run/secrets/brick_db_user
+      MONGODB_PASSWORD_FILE: /run/secrets/brick_db_pwd
+    security_opt:
+      - no-new-privileges:true
+    secrets:
+      - mongo_root_user
+      - mongo_root_pwd
+      - brick_db_user
+      - brick_db_pwd
+    networks:
+      - internal
+
+
+  # ================================================
+  # DELETES SESSIONS AND UPLOADED FILES PERIODICALLY
+  # ================================================
+
+  data-cleaner:
+    restart: unless-stopped
+    profiles:
+      - server
+    build: 
+      context: .
+      dockerfile: docker/Dockerfile.server
+    command: brick utils clean --expire-days 1 --time-of-day '04:00' --log /tmp/brick-cleaner.log
+    volumes:
+      - api:/data
+      - work:/tmp
+      # Set the container timezone by sharing the read-only localtime
+      - /etc/localtime:/etc/localtime:ro 
+    env_file: docker/brick.env
+    environment:
+      BRICK_API_BASE_URL: http://api:8080
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      - api
+      - redis
+      - mongodb
+    networks:
+      - internal
+
+  # ============
+  # UNIT TESTING
+  # ============
+
+  tests:
+    profiles:
+      - test
+    build: 
+      context: .
+      dockerfile: docker/Dockerfile.server
+    command: pytest
+    environment:
+      MONGODB_DATABASE: tests
+      MONGODB_USERNAME: /run/secrets/brick_db_user
+      MONGODB_PASSWORD: /run/secrets/brick_db_pwd
+      WORK_DISK_SPACE_GB: 0.01  # see if this works on runners
+    volumes:
+      - work:/tmp  # test of disk space (test_utils.py) assumes /tmp
+    depends_on:
+      - redis
+      - mongodb
+    secrets:
+      - brick_db_user
+      - brick_db_pwd
+    networks:
+      - internal
+
+volumes:
+  work:
+    driver: local
+  api:
+    driver: local
+  api_dev:
+    driver: local
+  redis_db:
+    driver: local
+  mongo_db:
+    driver: local
+  mongo_db_cfg:
+    driver: local
+
+secrets:
+  mongo_root_user:
+    file: ./docker/mongodb/mongo_root_user.txt
+  mongo_root_pwd:
+    file: ./docker/mongodb/mongo_root_pwd.txt
+  brick_db_user:
+    file: ./docker/mongodb/brick_db_user.txt
+  brick_db_pwd:
+    file: ./docker/mongodb/brick_db_pwd.txt
+    
+networks:
+  internal:

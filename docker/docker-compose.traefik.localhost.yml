@@ -1,0 +1,34 @@
+version: "3.8"
+
+services:
+  reverse-proxy:
+    image: traefik:v2.10
+    restart: unless-stopped
+    ports:
+      # To be able to listen on port 80 (http) - check firewall settings
+      - mode: host
+        published: 80
+        target: 80
+      # To be able to listen on port 443 (https) - check firewall settings
+      - mode: host
+        published: 443
+        target: 443
+    volumes:
+      # Set the container timezone by sharing the read-only localtime
+      - /etc/localtime:/etc/localtime:ro 
+      # Give access to the UNIX Docker socket
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      # Map the static configuration into the container
+      - ./traefik/localhost/static.yml:/etc/traefik/traefik.yml:ro
+      # Map the dynamic configuration into the container
+      - ./traefik/localhost/dynamic.yml:/etc/traefik/dynamic.yml:ro
+      # Set the location where the local ACME certificate is saved
+      - ./certs:/etc/traefik/certs                                           
+    networks:
+      - proxy
+    security_opt:
+      - no-new-privileges:true
+
+networks:
+  proxy:
+    external: true

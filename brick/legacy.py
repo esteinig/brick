@@ -451,11 +451,11 @@ class AnnotationRing(Ring):
 
 class BlastRing(Ring):
 
-    """Sub-class Blast Ring, for depicting BLAST comparisons against a reference DB"""
+    """Sub-class `BlastRing`, for depicting BLAST comparisons against a reference genome/DB"""
 
     def __init__(self):
 
-        """Initialize super-class ring and attributes for Blast Ring."""
+        """Initialize super-class ring and attributes for `BlastRing`."""
 
         Ring.__init__(self)
 
@@ -490,6 +490,48 @@ class BlastRing(Ring):
         self._popups = [self.tooltip.get_popup(text) for text in texts]
 
         self._get_ring()
+
+class GenomadRing(Ring):
+
+
+    """Sub-class `GenomadRing`, for depicting geNomad probabilites for chromosome, viral or plasmid sequence in slices of a genome sequence"""
+
+    def __init__(self):
+
+        """Initialize super-class ring and attributes for `GenomadRing`."""
+
+        Ring.__init__(self)
+
+        self.min_probability = 0.
+        self.values = []
+
+    def set_filter(self, min_probability: float = 0.0):
+
+        """ Set the Genomad minimum probability parsing filer"""
+
+        self.min_probability = min_probability
+
+    def read_comparison(self, file: Path):
+
+        """Reads aggregated Genomad output from sliced Fasta"""
+
+        self._clear()
+
+        with file.open() as infile:
+            reader = csv.reader(infile, delimiter='\t')
+            for row in reader:
+                positions = sorted([int(row[8]), int(row[9])])
+                if positions[1] - positions[0] >= self.min_length and float(row[2]) >= self.min_identity:
+                    self._positions.append(positions)
+                    self.values.append(float(row[2]))
+
+        self._colors = [self.color for v in self.values]
+        self._heights = [self.height for v in self.values]
+        texts = [[('Genome:', self.name), ('BLAST Identity:', str(v) + '%')] for v in self.values]
+        self._popups = [self.tooltip.get_popup(text) for text in texts]
+
+        self._get_ring()
+
 
 class Blaster:
 
