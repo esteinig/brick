@@ -1,6 +1,12 @@
+
+import json
 import logging 
 
-from pydantic import AnyHttpUrl, field_validator
+from fastapi import FastAPI
+from typing import Dict
+from pathlib import Path
+from contextlib import asynccontextmanager
+from pydantic import AnyHttpUrl, field_validator, model_validator
 from pydantic_settings import BaseSettings
 from typing import List, Optional
 from pathlib import Path
@@ -32,6 +38,7 @@ class Settings(BaseSettings):
     CORS_ORIGINS: List[str] | str = ['http://app:5173']
 
     # Database configuration
+    MONGODB_URL: str = ""
     MONGODB_USERNAME: str = ""
     MONGODB_PASSWORD: str = ""
     MONGODB_DATABASE: str = "brick"
@@ -62,16 +69,39 @@ class Settings(BaseSettings):
             v = Path(v).read_text()
         return v
     
+    @model_validator(mode="after")
+    def get_default_mongodb_url(self) -> 'Settings':
+        if not self.MONGODB_URL:
+            self.MONGODB_URL = f"mongodb://{self.MONGODB_USERNAME}:{self.MONGODB_PASSWORD}@mongodb:27017?authSource=admin"
+        return self
 
 def get_settings():
     logging.info("Initiating settings for FastAPI")
     return Settings()
 
-
-# Global settings intitiation
-# note that this will initiate
-# settings for any execution of
-# tasks in the CLI
+# Global settings intitiation note that this will initiate
+# settings for any execution of tasks in the CLI
 settings = get_settings()
 
 
+# Default session for session endpoint
+DEFAULT_SESSIONS: Dict[str, dict] = {}
+
+def read_default_session(path: Path) -> dict or None:
+    session_data = None
+    if path.exists() and path.is_file():
+        with path.open() as default_session:
+            session_data = json.load(default_session)
+        logging.info("Loaded default session for session endpoint")
+    else:
+        logging.info(f"Could not find default session for session endpoint ({path})")
+        
+    return session_data
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    DEFAULT_SESSIONS['default'] = read_default_session(
+        path=Path("default.json")  # /app in container
+    ) 
+    yield
+    DEFAULT_SESSIONS.clear()

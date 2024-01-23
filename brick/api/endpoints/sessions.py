@@ -6,7 +6,8 @@ from typing import List
 
 from ...rings import Ring, RingType
 from ..schemas import Session, RingUpdate, SessionID
-from ..core.db import get_session_collection_motor, settings
+from ..core.config import DEFAULT_SESSIONS
+from ..core.db import get_session_collection_motor
 
 router = APIRouter(
     prefix="/sessions",
@@ -24,6 +25,10 @@ async def get_session_ids():
 @router.get("/{session_id}", response_model=Session)
 async def get_session(session_id: str, session_files_exist: bool = False):
 
+    if session_id in DEFAULT_SESSIONS:
+        session_data = DEFAULT_SESSIONS[session_id]
+        return Session(**session_data)
+    
     collection = await get_session_collection_motor()
     data = await collection.find_one({"id": session_id})
 

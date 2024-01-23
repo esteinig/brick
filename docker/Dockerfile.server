@@ -51,3 +51,4 @@ RUN pip install --no-dependencies --no-cache .
 
 # Use other application code if necessary
 COPY --chown=${USERNAME}:${USERNAME} tests ./tests/
+COPY --chown=${USERNAME}:${USERNAME} docker/data/default.json ./

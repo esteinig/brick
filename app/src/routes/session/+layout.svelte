@@ -18,10 +18,6 @@
 		component: 'newSessionModal'
 	};
 	
-	const saveSessionModal: ModalSettings = {
-		type: 'component',
-		component: 'saveSessionModal'
-	};
 
 	function downloadSession() {
 		

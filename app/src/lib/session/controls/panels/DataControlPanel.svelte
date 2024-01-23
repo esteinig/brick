@@ -137,8 +137,8 @@
 
     <div class="mt-4 mb-8 flex justify-between items-center">
         <p class="text-xs opacity-60">{infoText}</p>
-        <div class="text-sm opacity-80">
-            <SlideToggle name="sliderFileTable" active="bg-secondary-500" size="sm" bind:checked={showFileTable}>File table</SlideToggle>
+        <div class="opacity-80">
+            <SlideToggle name="sliderFileTable" active="bg-secondary-500" size="sm" bind:checked={showFileTable}>Files</SlideToggle>
         </div> 
     </div>
  

@@ -205,7 +205,6 @@ class BlastRingSchema(RingSchema):
         
         return v
     
-
     @field_validator('min_evalue', mode="after")
     @classmethod
     def check_min_evalue(cls, v: float):

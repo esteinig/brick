@@ -67,6 +67,7 @@ RATTNER = [
 LAPUTA_MEDIUM.reverse()
 YESTERDAY_MEDIUM.reverse()
 
+
 def slice_fasta_sequences(fasta_file, slice_size=10000) -> Dict[str, List[SeqRecord]]:
     """
     Takes a FASTA file and returns slices of each sequence with slice coordinates in the header.
@@ -246,3 +247,4 @@ def get_data_cleaner_logger(path: Path):
     logger.addHandler(file_handler)
 
     return logger
+
