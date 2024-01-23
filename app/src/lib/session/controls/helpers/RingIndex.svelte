@@ -1,13 +1,9 @@
 <script lang="ts">
 	import { RingDirection, type RingUpdateSchema } from '$lib/types';
-    import { createEventDispatcher, tick } from 'svelte';
-	import { applyAction, enhance } from "$app/forms";
+    import { createEventDispatcher } from 'svelte';
 	import { page } from "$app/stores";
-    import { ToastType, triggerToast } from "$lib/helpers";
-    import { getToastStore } from '@skeletonlabs/skeleton';
-	import { completeRequestState, startRequestState } from "$lib/stores/RequestInProgressStore";
+	import { startRequestState } from "$lib/stores/RequestInProgressStore";
     
-    const toastStore = getToastStore();
 
     type RingId = string;
 
@@ -43,53 +39,39 @@
     function updateIndex() {
         newIndex = direction === RingDirection.IN ? currentIndex-1 : currentIndex+1
         dispatch('update', { index: newIndex });
+
         if (updateDatabase) formElement.requestSubmit();
     }
+
+    // Manual form action, dispatches the action request fetch function after populating 
+    // it with this components value to interface, so it can run in the background - 
+	async function handleSubmit(event: { currentTarget: EventTarget & HTMLFormElement }) {
+		
+        let data = new FormData();
+
+        if (updateVerbose) startRequestState();
+                
+        sessionRingUpdateSchema.id = id;
+        sessionRingUpdateSchema.index = newIndex;
+        sessionRingUpdateSchema.index_group = indexGroup;
+
+        data.append('session_id', $page.params.session);
+        data.append('ring_update', JSON.stringify(sessionRingUpdateSchema));
+
+        sessionRingUpdateSchema.index = null;
+        sessionRingUpdateSchema.index_group = null;
+        sessionRingUpdateSchema.id = "";
+
+        dispatch('submitAction', { action: event.currentTarget.action, body: data, updateVerbose: updateVerbose, updateDatabase: updateDatabase });
+
+	}
 
 
 </script>
 
 <div id="updateRingIndex-{id}" class="{placeholder ? 'invisible' : ''}">
     <div class="flex items-center align-center w-full pr-4 truncate">
-        <form id="updateRingIndexForm-{id}" bind:this={formElement} action="?/updateSessionRing" method="POST" use:enhance={({ formData }) => {
-                
-            if (updateVerbose) startRequestState();
-            
-            sessionRingUpdateSchema.id = id;
-            sessionRingUpdateSchema.index = newIndex;
-            sessionRingUpdateSchema.index_group = indexGroup;
-
-            formData.append('session_id', $page.params.session);
-            formData.append('ring_update', JSON.stringify(sessionRingUpdateSchema));
-
-            sessionRingUpdateSchema.index = null;
-            sessionRingUpdateSchema.index_group = null;
-            sessionRingUpdateSchema.id = "";
-            
-            return async ({ result }) => {
-                await applyAction(result);
-
-                if (updateVerbose) completeRequestState();
-                    
-                if (result.type === "success"){
-                    if (updateVerbose) triggerToast("Ring updated sucessfully", ToastType.SUCCESS, toastStore);
-                } else {
-                    // Validation errors from pydantic schemes are an array of validation objects:
-                    if ($page.form.detail instanceof Array){
-                        for (const error of $page.form.detail) {
-                            triggerToast(
-                                error.msg ?? `Error ${result.status}: an unknown error occurred`, 
-                                ToastType.ERROR, 
-                                toastStore
-                            );
-                        }
-                    } else {
-                        triggerToast($page.form.detail ?? `Error ${result.status}: an unknown error occurred`, ToastType.ERROR, toastStore);
-                    }
-                }
-            };
-
-        }}>
+        <form id="updateRingIndexForm-{id}" bind:this={formElement} action="?/updateSessionRing" method="POST" on:submit|preventDefault={handleSubmit}>
            {#if direction === RingDirection.IN}
                 <button class="btn btn-icon h-4 w-4" type="button" on:click={updateIndex} disabled={placeholder}>
                     <svg data-slot="icon" aria-hidden="true" fill="none" stroke-width="1.5" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">

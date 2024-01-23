@@ -264,6 +264,11 @@ export type ActionRequestData = {
     body: FormData
 }
 
+export type ActionRequestDataUpdate = {
+    updateDatabase: boolean
+    updateVerbose: boolean
+} & ActionRequestData
+
 /*  =============
  *  API RESPONSES
  *  =============

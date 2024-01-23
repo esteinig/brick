@@ -1,13 +1,9 @@
 <script lang="ts">
 	import type { RingUpdateSchema } from '$lib/types';
     import { createEventDispatcher, tick } from 'svelte';
-	import { applyAction, enhance } from "$app/forms";
 	import { page } from "$app/stores";
-    import { ToastType, triggerToast } from "$lib/helpers";
-    import { getToastStore } from '@skeletonlabs/skeleton';
-	import { completeRequestState, startRequestState } from "$lib/stores/RequestInProgressStore";
+	import { startRequestState } from "$lib/stores/RequestInProgressStore";
     
-    const toastStore = getToastStore();
 
     type RingId = string;
 
@@ -62,49 +58,33 @@
         inputElement.select();
     }
 
+    // Manual form action, dispatches the action request fetch function after populating 
+    // it with this components value to interface, so it can run in the background - 
+	async function handleSubmit(event: { currentTarget: EventTarget & HTMLFormElement }) {
+		
+        let data = new FormData();
+
+        if (updateVerbose) startRequestState();
+                
+        sessionRingUpdateSchema.id = id;
+        sessionRingUpdateSchema.title = title;
+
+        data.append('session_id', $page.params.session);
+        data.append('ring_update', JSON.stringify(sessionRingUpdateSchema));
+
+        sessionRingUpdateSchema.color = null;
+        sessionRingUpdateSchema.id = "";
+
+        dispatch('submitAction', { action: event.currentTarget.action, body: data, updateVerbose: updateVerbose, updateDatabase: updateDatabase });
+
+	}
+
 </script>
 
 <div id="editableRingTitle-{id}">
     <div class="flex items-center align-center w-full pr-4 truncate">
         {#if editing}
-            <form id="updateRingTitleForm-{id}" bind:this={formElement} action="?/updateSessionRing" method="POST" use:enhance={({ formData }) => {
-                    
-                if (updateVerbose) startRequestState();
-                
-                sessionRingUpdateSchema.id = id;
-                sessionRingUpdateSchema.title = title;
-
-                formData.append('session_id', $page.params.session);
-                formData.append('ring_update', JSON.stringify(sessionRingUpdateSchema));
-
-                sessionRingUpdateSchema.color = null;
-                sessionRingUpdateSchema.id = "";
-
-                return async ({ result }) => {
-                    await applyAction(result);
-
-                    if (updateVerbose) completeRequestState();
-
-                        
-                    if (result.type === "success"){
-                        if (updateVerbose) triggerToast("Ring updated sucessfully", ToastType.SUCCESS, toastStore);
-                    } else {
-                        // Validation errors from pydantic schemes are an array of validation objects:
-                        if ($page.form.detail instanceof Array){
-                            for (const error of $page.form.detail) {
-                                triggerToast(
-                                    error.msg ?? `Error ${result.status}: an unknown error occurred`, 
-                                    ToastType.ERROR, 
-                                    toastStore
-                                );
-                            }
-                        } else {
-                            triggerToast($page.form.detail ?? `Error ${result.status}: an unknown error occurred`, ToastType.ERROR, toastStore);
-                        }
-                    }
-                };
-
-            }}>
+            <form id="updateRingTitleForm-{id}" bind:this={formElement} action="?/updateSessionRing" method="POST" on:submit|preventDefault={handleSubmit}>
                 <input bind:this={inputElement} class="input p-1 pl-2 w-full truncate" style="color: {titleColor}" type="text" bind:value={title} on:keypress={updateTitleWithEnter} on:blur={updateTitle}  />
             </form>
         {:else}

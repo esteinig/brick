@@ -8,7 +8,7 @@
 	import PaletteControlPanel from './controls/panels/PaletteControlPanel.svelte';
 	import AboutPanel from './controls/panels/AboutPanel.svelte';
 
-    import { type TaskStatusResponse, TaskResultType, BlastRing, type ErrorResponse, LabelRing, AnnotationRing, ReferenceRing, Ring, type SessionFile, type Session, type ActionRequestData } from "$lib/types";
+    import { type TaskStatusResponse, TaskResultType, BlastRing, type ErrorResponse, LabelRing, AnnotationRing, ReferenceRing, Ring, type SessionFile, type Session, type ActionRequestData, type ActionRequestDataUpdate } from "$lib/types";
 	import { ToastType, handleEndpointErrorResponse, triggerToast } from "$lib/helpers";
     import { completeRequestState } from '$lib/stores/RequestInProgressStore';
 	import { tabIndexStore } from '$lib/stores/TabIndexStore';
@@ -106,6 +106,20 @@
         }
     }
 
+    function handleActionUpdateResult(result: ActionResult, updateVerbose: boolean, successMessage: string) {
+
+        if (result.type === "success"){
+            if (updateVerbose) triggerToast(successMessage, ToastType.SUCCESS, toastStore);         
+        } else if (result.type === 'failure') {
+            let updateResponse = result.data as ErrorResponse;
+            handleEndpointErrorResponse(updateResponse.detail ?? `Error ${result.status}: an unknown error occurred`, toastStore)
+        } else if (result.type === 'error') {
+            throw result.error
+        } else {
+            goto(result.location)
+        }
+    }
+
     /**
      * Handler for ring construction action requests
      * @param data
@@ -182,7 +196,7 @@
      * Handler for form upload action requests
      * @param data
      */
-    async function handleFileUploadAction(data: ActionRequestData, id: string) {
+    async function handleUploadFileAction(data: ActionRequestData, id: string) {
         const boundary = '--------------------------' + Date.now().toString(16);
 
         const response = await fetch(data.action, {
@@ -202,6 +216,85 @@
 
         completeDropzoneLoading(id);
         handleActionResult(result);
+    }
+
+    /**
+     * Handler for ring (style) updates
+     * @param data
+     */
+     async function handleUpdateRingAction(data: ActionRequestDataUpdate) {
+        console.log("Triggered", data)
+        if (data.updateDatabase) {
+            const response = await fetch(data.action, {
+                method: 'POST',
+                body: data.body,
+                headers: {
+                    'x-sveltekit-action': 'true'
+                }
+            });
+
+            // Results from the server action function must
+            // be deserialized manually in this case
+            const result: ActionResult = deserialize(await response.text());
+
+            await applyAction(result);
+
+            if (data.updateVerbose) completeRequestState();
+            handleActionUpdateResult(result, data.updateVerbose, "Ring updated sucessfully");
+        }
+        
+    }
+
+    /**
+     * Handler for ring deletion
+     * @param data
+     */
+     async function handleDeleteRingAction(data: ActionRequestDataUpdate) {
+        
+        if (data.updateDatabase) {
+            const response = await fetch(data.action, {
+                method: 'POST',
+                body: data.body,
+                headers: {
+                    'x-sveltekit-action': 'true'
+                }
+            });
+
+            // Results from the server action function must
+            // be deserialized manually in this case
+            const result: ActionResult = deserialize(await response.text());
+
+            await applyAction(result);
+
+            if (data.updateVerbose) completeRequestState();
+            handleActionUpdateResult(result, data.updateVerbose, "Ring deleted successfully");
+        }
+    }
+
+    /**
+     * Handler for file deletion
+     * @param data
+     */
+     async function handleDeleteFileAction(data: ActionRequestDataUpdate) {
+        
+        if (data.updateDatabase) {
+            const response = await fetch(data.action, {
+                method: 'POST',
+                body: data.body,
+                headers: {
+                    'x-sveltekit-action': 'true'
+                }
+            });
+
+            // Results from the server action function must
+            // be deserialized manually in this case
+            const result: ActionResult = deserialize(await response.text());
+
+            await applyAction(result);
+
+            if (data.updateVerbose) completeRequestState();
+            handleActionUpdateResult(result, data.updateVerbose, "File deleted successfully");
+        }
     }
 
 </script>
@@ -230,9 +323,16 @@
         <!-- Tab Panels --->
         <svelte:fragment slot="panel">
             {#if $tabIndexStore === 0}
-                <DataControlPanel on:fileUploadAction={(event) => handleFileUploadAction(event.detail.data, event.detail.id)}></DataControlPanel>
+                <DataControlPanel 
+                    on:fileUploadAction={(event) => handleUploadFileAction(event.detail.data, event.detail.id)}
+                    on:fileDeleteAction={(event) => handleDeleteFileAction(event.detail.data)}
+                ></DataControlPanel>
             {:else if $tabIndexStore === 1}
-                <RingControlPanel on:createRingAction={(event) => handleCreateRingAction(event.detail)}></RingControlPanel>
+                <RingControlPanel 
+                    on:createRingAction={(event) => handleCreateRingAction(event.detail)} 
+                    on:updateRingAction={(event) => handleUpdateRingAction(event.detail)}
+                    on:deleteRingAction={(event) => handleDeleteRingAction(event.detail)}
+                ></RingControlPanel>
             {:else if $tabIndexStore === 2}
                 <PlotControlPanel></PlotControlPanel>
             {:else if $tabIndexStore === 3}
