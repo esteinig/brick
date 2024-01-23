@@ -32,6 +32,8 @@
 		downloadJSON(modelData);
 	}
 
+	const INFOBANNER: string = "BRICK is under active development - persistence of session data and backwards compatibility are not guaranteed until major version release"
+
 </script>
 
 <AppShell>
@@ -39,6 +41,9 @@
 		<AppBar>
 			<svelte:fragment slot="lead">
 				<a href="/"><code class="text-xl">BRICK {env.PUBLIC_BRICK_VERSION}</code></a>
+				{#if INFOBANNER}
+					<div class="ml-16 text-xs opacity-40">{INFOBANNER}</div>
+				{/if}
 			</svelte:fragment>
 			<svelte:fragment slot="trail">
 				<button class="btn btn-sm variant-ghost-surface" on:click={() => modalStore.trigger(newSessionPrompt)}>

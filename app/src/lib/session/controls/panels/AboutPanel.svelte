@@ -25,7 +25,7 @@
     
 
     <p class="opacity-80 mt-12 mb-4">
-        BRICK implements an interactive derivative of the iconic
+        BRICK implements an interactive version of the iconic
         <a class="opacity-60" href="https://bmcgenomics.biomedcentral.com/articles/10.1186/1471-2164-12-402">BLAST Ring Image Generator (BRIG)</a>. 
         Support for development, maintenance and deployment comes from the following institutions:
     </p>
@@ -66,7 +66,7 @@
         <div>
             <span class="badge text-lg">📑</span>
             <span class="flex-auto opacity-60">
-                <dt><a href="https://bmcgenomics.biomedcentral.com/articles/10.1186/1471-2164-12-402">Alikhan et al. (2011) - BLAST Ring Image Generator (BRIG): simple prokaryote genome comparisons</a></dt>
+                <dt><a href="https://bmcgenomics.biomedcentral.com/articles/10.1186/1471-2164-12-402">Alikhan et al. (2011) - BLAST Ring Image Generator (BRIG): simple prokaryote genome comparisons - BMC Genomics</a></dt>
             </span>
         </div>
     </dl>
@@ -81,19 +81,19 @@
         <div>
             <span class="badge text-lg">📑</span>
             <span class="flex-auto opacity-60">
-                <dt><a href="https://www.nature.com/articles/s41467-022-35713-4">Sherry et al. (2023) - An ISO-certified genomics workflow for identification and surveillance of antimicrobial resistance (abritAMR)</a></dt>
+                <dt><a href="https://www.nature.com/articles/s41467-022-35713-4">Sherry et al. (2023) - An ISO-certified genomics workflow for identification and surveillance of antimicrobial resistance (abritAMR) - Nature Communications</a></dt>
             </span>
         </div>
         <div>
             <span class="badge text-lg">📑</span>
             <span class="flex-auto opacity-60">
-                <dt><a href="https://www.nature.com/articles/s41587-023-01953-y">Camargo et al. (2023) - Identification of mobile genetic elements with geNomad</a></dt>
+                <dt><a href="https://www.nature.com/articles/s41587-023-01953-y">Camargo et al. (2023) - Identification of mobile genetic elements with geNomad - Nature Biotechnology</a></dt>
             </span>
         </div>
         <div>
             <span class="badge text-lg">📑</span>
             <span class="flex-auto opacity-60">
-                <dt><a href="https://pubmed.ncbi.nlm.nih.gov/2231712/">Altschul et al. (1990) - Basic local alignment search tool</a></dt>
+                <dt><a href="https://pubmed.ncbi.nlm.nih.gov/2231712/">Altschul et al. (1990) - Basic local alignment search tool - Journal of Molecular Biology</a></dt>
             </span>
         </div>
     </dl>

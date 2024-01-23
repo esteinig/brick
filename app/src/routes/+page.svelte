@@ -8,9 +8,17 @@
 	import { getDefaultScaleFactor } from "$lib/brick/helpers";	
 	import { ringReferenceStore } from "$lib/stores/RingReferenceStore";
 	import { page } from "$app/stores";
+	import { plotConfigStore } from "$lib/stores/PlotConfigStore";
 
 	
+	function setDefaultTitles() {
+		$plotConfigStore.title.text = "Mycobacterium sp. nov."
+		$plotConfigStore.title.style.italic = true;
+		$plotConfigStore.subtitle.text = "Genome annotation and comparison with non-tuberculous mycobacteria";
+	}
+
 	onMount(() => {
+		setDefaultTitles();
 		$ringReferenceStore = $page.data.reference;
 		$rings = $page.data.rings;
 	});

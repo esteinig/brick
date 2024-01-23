@@ -2,6 +2,7 @@
 	import { createSessionId } from "$lib/helpers";
     import { clearRings } from "$lib/stores/RingStore";
     import { clearRingReference } from "$lib/stores/RingReferenceStore";
+	import { resetPlotConfig } from "$lib/stores/PlotConfigStore";
     
     const published: boolean = false;
 </script>
@@ -21,7 +22,7 @@
             <a
                 class="btn border border-primary-500"
                 href="/session/{createSessionId()}"
-                on:click={() => { clearRingReference(); clearRings() }}
+                on:click={() => { clearRingReference(); clearRings(); resetPlotConfig() }}
             >
                 Create Figure
             </a>
