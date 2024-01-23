@@ -2,7 +2,6 @@ version: '3.8'
 
 services:
 
-
   # =================
   # BRICK APPLICATION
   # =================
@@ -325,5 +324,3 @@ secrets:
     
 networks:
   internal:
-  # proxy:
-  #   external: true

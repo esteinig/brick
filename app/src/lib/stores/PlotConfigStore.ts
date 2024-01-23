@@ -8,8 +8,9 @@ const initialPlotConfig: PlotConfig = {
         backgroundColor: "#d3d3d3",
         zoomEnabled: false,
         zoomLowerLimit: 0.5,
-        zoomUpperLimit: 10,
-        positionEnabled: true
+        zoomUpperLimit: 42,
+        positionEnabled: true,
+        tooltipEnabled: true
     },
     transition: {
       enabled: true,
@@ -56,8 +57,13 @@ const initialPlotConfig: PlotConfig = {
     }
 };
 
+export function resetPlotConfig() {
+  plotConfigStore.set(initialPlotConfig);
+}
+
+export const plotConfigStore = writable<PlotConfig>(initialPlotConfig);
+
 export function getTransitionDurationTotal() {
   const plotConfig = get(plotConfigStore);
   return plotConfig.transition.fadeDelay + plotConfig.transition.fadeDuration;
 }
-export const plotConfigStore = writable<PlotConfig>(initialPlotConfig);

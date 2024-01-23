@@ -14,7 +14,6 @@ router = APIRouter(
 )
 
 
-
 @router.post("/reference", response_model=ReferenceRingResponse)
 def create_reference_ring(ring_config: ReferenceRingSchema):
         
