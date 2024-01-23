@@ -257,9 +257,7 @@
         <div class="mt-12">
             <p class="mt-2">
                 <span class="opacity-40 mr-1">{$tooltip?.start.toLocaleString()} - {$tooltip?.end.toLocaleString()} bp{#if $tooltip?.text}: {/if}</span>
-                
                 <span class="opacity-60">{$tooltip?.text}</span>
-                
             </p>
         </div>
     {/if}

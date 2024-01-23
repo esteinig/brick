@@ -1,9 +1,10 @@
 import logging
+import json 
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .core.config import settings, Settings
+from .core.config import lifespan, settings, Settings
 
 from .endpoints import files
 from .endpoints import sessions
@@ -11,6 +12,9 @@ from .endpoints import tasks
 from .endpoints import rings
 
 from ..utils import enough_disk_space
+
+
+
 
 def init_working_directory(settings: Settings):
 
@@ -44,14 +48,17 @@ def init_working_directory(settings: Settings):
     else:
         logging.info(f"Sufficient disk space (>= {settings.WORK_DISK_SPACE_GB} GB) at working directory: {settings.WORK_DIRECTORY}")
 
-
 def init_api():
     
     logging.info("Initiating FastAPI")
 
     init_working_directory(settings=settings)
 
-    app = FastAPI(title="BRICK API")
+    app = FastAPI(
+        title="BRICK API", 
+        lifespan=lifespan
+    )
+
     app.include_router(files.router)
     app.include_router(sessions.router)
     app.include_router(tasks.router)

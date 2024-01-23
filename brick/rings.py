@@ -233,7 +233,6 @@ class AnnotationRing(Ring):
 class LabelRing(Ring):
     type: RingType = RingType.LABEL
     title: str = "Label Ring"
-
     
     def from_genbank_file(file: Path, features: List[str], reference: RingReference | None = None, sanitize: bool = True) -> LabelRing:
         return LabelRing(

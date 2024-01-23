@@ -6,14 +6,13 @@
 	import { onMount } from 'svelte';
 	import { rings } from "$lib/stores/RingStore";
 	import { getDefaultScaleFactor } from "$lib/brick/helpers";	
-	import { DEFAULT_RINGS, DEFAULT_REFERENCE } from "$lib/data";
 	import { ringReferenceStore } from "$lib/stores/RingReferenceStore";
-	import { plotConfigStore } from "$lib/stores/PlotConfigStore";
+	import { page } from "$app/stores";
 
 	
 	onMount(() => {
-		$ringReferenceStore = DEFAULT_REFERENCE;
-		$rings = DEFAULT_RINGS;
+		$ringReferenceStore = $page.data.reference;
+		$rings = $page.data.rings;
 	});
 	
 
@@ -22,12 +21,11 @@
 <div class="container mx-auto max-w-[90%] max-h-[90%] h-full">
 
     <div class="grid sm:grid-cols-1 md:grid-cols-8 h-full">
-		<div class="h-full w-ful col-span-4">
+		<div class="h-full w-ful col-span-5">
 			<Brick id="brickPlotLandingPage" scaleFactor={getDefaultScaleFactor() + 0.2}></Brick>
 		</div>
-		<div class="flex items-center h-full w-full col-span-4">
+		<div class="flex items-center h-full w-full col-span-3">
 			<LandingPage></LandingPage>
-		</div>
-		
+		</div>	
 	</div>
 </div>

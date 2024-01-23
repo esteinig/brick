@@ -1,22 +1,32 @@
-import { type BlastRing, type AnnotationRing, type ReferenceRing, RingType, LabelRing, type Palette, type RingReference } from "$lib/types";
+import { type BlastRing, type AnnotationRing, type ReferenceRing, RingType, LabelRing, type Palette, type RingReference, Ring } from "$lib/types";
+import type { Session } from "$lib/types";
 
-export const DEFAULT_REFERENCE: RingReference = {
+
+/** DEFAULT DATA */ 
+
+
+/** FALLBACK DATA */ 
+
+export const FALLBACK_REFERENCE: RingReference = {
     session_id: "DEFAULT", 
     reference_id: "DEFAULT", 
-    sequence: { id: "SOLO", length: 5983947 }
+    sequence: { 
+        id: "SOLO", 
+        length: 5983947 
+    }
 }
 
 let innerRingData: Array<ReferenceRing | AnnotationRing> = [
 
     {   
-        id: 'drgaetyq346    3246    3',
+        id: 'drgaetyq346',
         index: 0,
         visible: true,
         color: '#b4b87f',
         height: 20,
         type: RingType.ANNOTATION,
         title: "Open reading frames from Bakta v1.9.3",
-        reference: DEFAULT_REFERENCE,
+        reference: FALLBACK_REFERENCE,
         data: [
             {
                 "color": "#b4b87f",
@@ -37,7 +47,7 @@ let blastRingData: Array<BlastRing> = [
         height: 20,
         type: RingType.BLAST,
         title: "Mycobacterium sp. SMC-2",
-        reference: DEFAULT_REFERENCE,
+        reference: FALLBACK_REFERENCE,
         data: [
             {
                 "color": "#6ea8ab",
@@ -55,7 +65,7 @@ let blastRingData: Array<BlastRing> = [
         height: 20,
         type: RingType.BLAST,
         title: "Mycobacterium nebraskense",
-        reference: DEFAULT_REFERENCE,
+        reference: FALLBACK_REFERENCE,
         data: [
             {
                 "color": "#8f5715",
@@ -77,7 +87,7 @@ let outerRingData: Array<AnnotationRing | LabelRing> = [
         height: 20,
         type: RingType.LABEL,
         title: "Custom feature labels",
-        reference: DEFAULT_REFERENCE,
+        reference: FALLBACK_REFERENCE,
         data: [
             {
                 "color": "#8f5715",
@@ -101,20 +111,30 @@ let outerRingData: Array<AnnotationRing | LabelRing> = [
     },
 ];
 
-export const DEFAULT_RINGS: Array<ReferenceRing | AnnotationRing | BlastRing> = [...innerRingData, ...blastRingData, ...outerRingData];
+export const FALLBACK_RINGS: Array<ReferenceRing | AnnotationRing | BlastRing> = [...innerRingData, ...blastRingData, ...outerRingData];
 
+export const FALLBACK_SESSION: Session = {
+    id: 'FALLBACK',
+    date: '2024-01-23T02:47:28.686146',
+    files: [],
+    rings: FALLBACK_RINGS
+}
+
+/** PALETTES */ 
+
+// MoMA
 
 const DALI = [
-    "#b4b87f", "#9c913f", "#585b33", "#6ea8ab", "#397893", "#31333f","#8f5715", "#ba9a44", "#cfbb83"
-]
+    "#b4b87f", "#9c913f", "#585b33", "#6ea8ab", "#397893", "#31333f", "#8f5715", "#ba9a44", "#cfbb83"
+];
 
 const PANTON = [
     "#e84a00", "#bb1d2c", "#9b0c43", "#661f66", "#2c1f62", "#006289", "#004759"
-]
+];
 
 const RATTNER = [
-    "#de8e69", "#f1be99", "#c1bd38", "#7a9132",  "#4c849a", "#184363", "#5d5686","#a39fc9"
-]
+    "#de8e69", "#f1be99", "#c1bd38", "#7a9132", "#4c849a", "#184363", "#5d5686", "#a39fc9"
+];
 
 const ALKALAY = [
     "#241d1d", "#5b2125", "#8d3431", "#bf542e", "#e9a800"
@@ -147,47 +167,28 @@ const VANGOGH = [
     "#c3a016", "#c3d878", "#58a787", "#8ebacd", "#246893", "#163274", "#0C1F4b"
 ]
 
-// NZ 
+// Manu New Zealand
 
 const HOIHO = [
-    "#CABEE9",
-    "#7C7189", 
-    "#FAE093", 
-    "#D04E59", 
-    "#BC8E7D", 
-    "#2F3D70"
-]
+    "#CABEE9", "#7C7189", "#FAE093", "#D04E59", "#BC8E7D", "#2F3D70"
+];
 
 const KAKAPO = [
-    "#7D9D33", 
-    "#CED38C", 
-    "#DCC949", 
-    "#BCA888", 
-    "#CD8862", 
-    "#775B24"
-]
+    "#7D9D33", "#CED38C", "#DCC949", "#BCA888", "#CD8862", "#775B24"
+];
+
 const KAKARIKI = [
-    "#44781E", 
-    "#A1B654", 
-    "#2C3B75", 
-    "#B8321A", 
-    "#565052"
-]
+    "#44781E", "#A1B654", "#2C3B75", "#B8321A", "#565052"
+];
+
 const KERERU = [
-    "#325756", 
-    "#7d9fc2", 
-    "#C582B2", 
-    "#51806a", 
-    "#4d5f8e",
-    "#A092B7"
-]
+    "#325756", "#7d9fc2", "#C582B2", "#51806a", "#4d5f8e", "#A092B7"
+];
+
 const TAMBJA = [
-    "#3399ff", 
-    "#666600", 
-    "#003399", 
-    "#999900", 
-    "#000000"
-]
+    "#3399ff", "#666600", "#003399", "#999900", "#000000"
+];
+
 
 // National Parks
 

@@ -103,6 +103,7 @@ export function getDefaultScaleFactor() {
     
     if (browser){
         const windowWidth = window.innerWidth;
+        console.log(windowWidth)
 
         // Tailwind breakpoints for window sizes
         const breakpoints = {
@@ -120,21 +121,21 @@ export function getDefaultScaleFactor() {
         // Determine scaleFactor based on breakpoints
         // used by Tailwind for standard devices
         if (windowWidth < breakpoints.md) {
-            return 0.5;
+            return 0.4;
         } else if (windowWidth < breakpoints.lg) {
-            return 0.6;
+            return 0.5;
         } else if (windowWidth < breakpoints.xl) {
-            return 0.7;
+            return 0.6;
         } else if (windowWidth < breakpoints.xxl) {
-            return 0.8;
+            return 0.7;
         } else if (windowWidth < breakpoints.xxxl) {
-            return 0.9;
+            return 0.8;
         } else if (windowWidth < breakpoints.uhd) {
-            return 1.0;
+            return 0.9;
         } else if (windowWidth < breakpoints.uhd4k) {
-            return 1.3;
+            return 1.0;
         } else {
-            return 1.4;
+            return 1.1;
         }
     } else {
         return 1.0

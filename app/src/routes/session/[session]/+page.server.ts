@@ -2,7 +2,7 @@ import { fail, error} from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import type { FileUploadResponse, CreateRingResponse, SessionResponse } from '$lib/types';
 import { RingType } from '$lib/types';
-import { checkCeleryResults, getErrorMessage, isValidUUIDv4, parseEnvInt } from '$lib/helpers';
+import { checkCeleryResults, getErrorMessage, isValidUUIDv4 } from '$lib/helpers';
 import { env } from '$env/dynamic/private';
 
 
