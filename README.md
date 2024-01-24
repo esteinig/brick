@@ -4,7 +4,9 @@
 
 ## Overview
 
-`BRICK` is under active development. Feel free to check out a demonstration of the application stack at: [https://brick.ink](https://brick.ink). Please note there is currently no guarantee for data persistence or backwards compatabiltity until major version release. 
+`BRICK` is under active development - you can check out a demonstration of the application stack at [https://brick.ink](https://brick.ink).
+
+Please note there is currently no guarantee for data persistence or backwards compatabiltity until major version release. 
 
 
 ## Stack deployment
@@ -18,7 +20,7 @@ git clone https://github.com/esteinig/brick && cd brick
 # -d for detached mode
 docker compose --profile prod up 
 
-# Application available in your browser at: http://localhost:5473/ 
+# Application available in your browser at: http://localhost:5173/ 
 ```
 
 The production stack comes with a database cleaner that removes sessions and session working directories in the `work` volume. 
