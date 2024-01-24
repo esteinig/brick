@@ -42,7 +42,7 @@ To update to the latest stable release version:
 
 ```bash
 git pull # update
-docker compose --profile prod up --rebuild 
+docker compose --profile prod up --build 
 ```
 
 ## Dependencies
