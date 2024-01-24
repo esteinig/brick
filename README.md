@@ -71,7 +71,7 @@ Similarly, the stack would not be possible without the following amazing tools:
 
 ## Etymology
 
-I thought it would be funny because the visualization is not very brick-like. **BR**IG-like **I**nteractive **C**ircular **K**nowledgabase is a bit of a stretch though...
+`BRICK` is not very brick-like... and **BR**IG-like **I**nteractive **C**ircular **K**nowledgebase is a bit of a stretch 👀
 
 ## Contributors
 
