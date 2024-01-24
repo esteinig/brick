@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "brick"
-version = "0.1.0"
+version = "0.2.0"
 authors = [{name="Eike Steinig", email="eike.steinig@unimelb.edu.au"}]
 description = "BRICK implements BRIG-like interactive figures in D3 for bacterial genome visualization, annotation, comparison and exploration using a Python scripting API, CLI, REST API or UI."
 readme = "README.md"
