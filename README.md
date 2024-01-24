@@ -1,13 +1,10 @@
 # BRICK
 
-[`BRIG`]()-like interactive data visualization for bacterial whole genome annotation and comparison.
+[`BRIG`]()-like interactive data visualization for bacterial whole genome annotation and comparison ([https://brick.ink](https://brick.ink))
 
 ## Overview
 
-`BRICK` is under active development - you can check out a demonstration of the application stack at [https://brick.ink](https://brick.ink).
-
-Please note there is currently no guarantee for data persistence or backwards compatabiltity until major version release. 
-
+`BRICK` is under active development. Please note there is currently no guarantee for data persistence in the web application or backwards compatabiltity until major version release. 
 
 ## Stack deployment
 
