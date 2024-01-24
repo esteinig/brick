@@ -1,7 +1,9 @@
-from_latest_tag = false
 ignore_merge_commits = true
-generate_mono_repository_global_tag = true
-branch_whitelist = []
+branch_whitelist = [
+    "main", 
+    "release/**"
+]
+
 skip_untracked = false
 pre_bump_hooks = []
 post_bump_hooks = []
