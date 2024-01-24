@@ -1,9 +1,16 @@
 <script lang="ts">
 	import { createSessionId } from "$lib/helpers";
-    import { clearRings } from "$lib/stores/RingStore";
-    import { clearRingReference } from "$lib/stores/RingReferenceStore";
-	import { resetPlotConfig } from "$lib/stores/PlotConfigStore";
-    
+	import { plotConfigStore } from "$lib/stores/PlotConfigStore";
+
+    function resetPlotConfig() {
+        // On the landing page we set values that overwrite the ones
+        // from the DEFAULT_CONFIGSTORE - this should be improved for 
+        // the next release
+        $plotConfigStore.title.text = "BRICK";
+        $plotConfigStore.title.style.italic = false;
+        $plotConfigStore.subtitle.text = "BRIG-like Interactive Circular Knowledgebase";
+    }
+
     const published: boolean = false;
 </script>
 
@@ -22,7 +29,7 @@
             <a
                 class="btn border border-primary-500"
                 href="/session/{createSessionId()}"
-                on:click={() => { clearRingReference(); clearRings(); resetPlotConfig() }}
+                on:click={resetPlotConfig}
             >
                 Create Figure
             </a>

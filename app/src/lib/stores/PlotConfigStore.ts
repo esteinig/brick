@@ -2,7 +2,7 @@
 import { writable, get } from 'svelte/store';
 import { type PlotConfig } from '$lib/types';
 
-const initialPlotConfig: PlotConfig = {
+const DEFAULT_PLOTCONFIG: PlotConfig = {
     svg: {
         backgroundOpacity: 0,
         backgroundColor: "#d3d3d3",
@@ -57,11 +57,7 @@ const initialPlotConfig: PlotConfig = {
     }
 };
 
-export function resetPlotConfig() {
-  plotConfigStore.set(initialPlotConfig);
-}
-
-export const plotConfigStore = writable<PlotConfig>(initialPlotConfig);
+export const plotConfigStore = writable<PlotConfig>(DEFAULT_PLOTCONFIG);
 
 export function getTransitionDurationTotal() {
   const plotConfig = get(plotConfigStore);
