@@ -11,7 +11,7 @@
 `BRICK` is fairly easy to deploy on your local machine (desktop/laptop) if you have `Docker` installed. You can run a preconfigured local production stack of the latest release like this:
 
 ```bash
-# Clone latest release on main and enter repository
+# Clone latest stable release on main
 git clone https://github.com/esteinig/brick && cd brick
 
 # -d for detached mode
@@ -29,7 +29,7 @@ docker compose --profile prod --profile server up
 Default interval (every day) and expiration time (7 days) can be changed in `docker-compose.yml`.
 
 ```yml
-command: brick utils clean --expire-days 3 --day-of-week "*" --time-of-day '04:00' --log /tmp/brick-cleaner.log
+command: brick utils clean --expire-days 7 --day-of-week "*" --time-of-day '04:00' --log /tmp/brick-cleaner.log
 ```
 
 Some minor unit tests can be run with the `tests` service:
