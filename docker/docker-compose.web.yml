@@ -272,7 +272,7 @@ services:
     build: 
       context: .
       dockerfile: docker/Dockerfile.server
-    command: brick utils clean --expire-days 1 --time-of-day '04:00' --log /tmp/brick-cleaner.log
+    command: brick utils clean --expire-days 3 --day-of-week '*' --time-of-day '04:00' --log /tmp/brick-cleaner.log
     volumes:
       - api:/data
       - work:/tmp
