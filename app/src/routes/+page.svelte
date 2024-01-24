@@ -21,6 +21,7 @@
 		setDefaultTitles();
 		$ringReferenceStore = $page.data.reference;
 		$rings = $page.data.rings;
+		console.log("Landing page", $plotConfigStore)
 	});
 	
 
