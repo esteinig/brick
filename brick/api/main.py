@@ -14,8 +14,6 @@ from .endpoints import rings
 from ..utils import enough_disk_space
 
 
-
-
 def init_working_directory(settings: Settings):
 
     logging.info("Initiating working directory")
@@ -47,6 +45,7 @@ def init_working_directory(settings: Settings):
         exit(1)
     else:
         logging.info(f"Sufficient disk space (>= {settings.WORK_DISK_SPACE_GB} GB) at working directory: {settings.WORK_DIRECTORY}")
+
 
 def init_api():
     

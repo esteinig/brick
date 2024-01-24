@@ -77,7 +77,6 @@
     </p>
 
     <dl class="list-dl">
-
         <div>
             <span class="badge text-lg">📑</span>
             <span class="flex-auto opacity-60">

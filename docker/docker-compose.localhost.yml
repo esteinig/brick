@@ -323,13 +323,13 @@ volumes:
 
 secrets:
   mongo_root_user:
-    file: ./docker/mongodb/mongo_root_user.txt
+    file: ./.secrets/mongo_root_user.txt
   mongo_root_pwd:
-    file: ./docker/mongodb/mongo_root_pwd.txt
+    file: ./.secrets/mongo_root_pwd.txt
   brick_db_user:
-    file: ./docker/mongodb/brick_db_user.txt
+    file: ./.secrets/brick_db_user.txt
   brick_db_pwd:
-    file: ./docker/mongodb/brick_db_pwd.txt
+    file: ./.secrets/brick_db_pwd.txt
     
 networks:
   internal:
