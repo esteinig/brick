@@ -103,7 +103,6 @@ export function getDefaultScaleFactor() {
     
     if (browser){
         const windowWidth = window.innerWidth;
-        console.log(windowWidth)
 
         // Tailwind breakpoints for window sizes
         const breakpoints = {

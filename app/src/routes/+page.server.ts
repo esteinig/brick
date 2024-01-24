@@ -1,7 +1,7 @@
 import type { SessionResponse } from '$lib/types';
 import { env } from '$env/dynamic/private';
 import type { PageServerLoad } from './$types';
-import { FALLBACK_REFERENCE, FALLBACK_RINGS, FALLBACK_SESSION } from '$lib/data';
+import { FALLBACK_REFERENCE, FALLBACK_RINGS } from '$lib/data';
 
 
 
