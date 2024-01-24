@@ -60,13 +60,13 @@ class Settings(BaseSettings):
         if v:
             path = Path(v)     
             if path.is_file() and path.exists():
-                v = path.read_text()
+                v = path.read_text().strip('\n')
         return v
     
     @field_validator('MONGODB_PASSWORD', mode="before")
     def get_mongodb_secret_pwd(cls, v: str):      
         if v and Path(v).exists():
-            v = Path(v).read_text()
+            v = Path(v).read_text().strip('\n')
         return v
     
     @model_validator(mode="after")

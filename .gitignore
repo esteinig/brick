@@ -43,3 +43,4 @@ venv.bak/
 .vscode
 
 certs/*
+.secrets/
