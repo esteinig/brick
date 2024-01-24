@@ -24,7 +24,6 @@ services:
     environment:
       NODE_ENV: production
       ORIGIN: http://brick.localhost
-      PUBLIC_BRICK_VERSION: 0.1.0
       PRIVATE_DOCKER_API_URL: http://api:8080
     depends_on:
       - api
@@ -56,7 +55,6 @@ services:
     environment:
       NODE_ENV: development
       ORIGIN: http://dev.brick.localhost
-      PUBLIC_BRICK_VERSION: 0.1.0
       PRIVATE_DOCKER_API_URL: http://api-dev:8080
     depends_on:
       - api-dev
