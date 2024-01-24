@@ -1,0 +1,28 @@
+from_latest_tag = false
+ignore_merge_commits = true
+generate_mono_repository_global_tag = true
+branch_whitelist = []
+skip_untracked = false
+pre_bump_hooks = []
+post_bump_hooks = []
+pre_package_bump_hooks = []
+post_package_bump_hooks = []
+
+[git_hooks]
+
+[commit_types]
+chore = { changelog_title = "", omit_from_changelog = true }
+ci = { changelog_title = "", omit_from_changelog = true }
+perf = { changelog_title = "", omit_from_changelog = true }
+hotfix = { changelog_title = "Hotfixes" }
+release = { changelog_title = "Releases" }
+
+[changelog]
+path = "CHANGELOG.md"
+authors = [
+    { username = "esteinig", signature = "Eike Steinig" }
+]
+
+[bump_profiles]
+
+[packages]
