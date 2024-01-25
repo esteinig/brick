@@ -1,0 +1,22 @@
+# Any pushes to `test` must be done from `dev`
+# with the repository branch protection rules in place
+
+name: Test Development Workflow
+
+on:
+  push:
+    branches:
+      - test/* 
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Docker
+        run: sudo service docker start
+
+      - name: Build and Run Tests
+        run: docker compose run tests
