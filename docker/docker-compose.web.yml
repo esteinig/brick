@@ -23,7 +23,7 @@ services:
     env_file: docker/brick.env
     environment:
       NODE_ENV: production
-      ORIGIN: https://brick.ink
+      ORIGIN: https://{{{ traefik.web.domain }}}
       PRIVATE_DOCKER_API_URL: http://api:8080
     depends_on:
       - api
@@ -33,7 +33,7 @@ services:
     labels:
       traefik.enable: "true"
       traefik.docker.network: "proxy"
-      traefik.http.routers.app.rule: "Host(`brick.ink`)"
+      traefik.http.routers.app.rule: "Host(`{{{ traefik.web.domain }}}`)"
       traefik.http.routers.app.entrypoints: "https"
       traefik.http.routers.app.middlewares: "default@file"
       traefik.http.routers.app.tls.certresolver: "letsEncrypt"
@@ -59,7 +59,7 @@ services:
     env_file: docker/brick.env
     environment:
       NODE_ENV: development
-      ORIGIN: https://dev.brick.ink
+      ORIGIN: https://{{{ traefik.web.domain_dev }}}
       PRIVATE_DOCKER_API_URL: http://api-dev:8080
     depends_on:
       - api-dev
@@ -69,7 +69,7 @@ services:
     labels:
       traefik.enable: "true"
       traefik.docker.network: "proxy"
-      traefik.http.routers.app.rule: "Host(`dev.brick.ink`)"
+      traefik.http.routers.app.rule: "Host(`{{{ traefik.web.domain_dev }}}`)"
       traefik.http.routers.app.entrypoints: "https"
       traefik.http.routers.app.middlewares: "default@file"
       traefik.http.routers.app.tls.certresolver: "letsEncrypt"

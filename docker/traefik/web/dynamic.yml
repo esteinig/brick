@@ -32,7 +32,7 @@ http:
   routers:
     # Traefik dashboard router
     traefik:
-      rule: "Host(`traefik.brick.ink`)"
+      rule: "Host(`traefik.{{{ traefik.web.domain }}}`)"
       service: "api@internal"
       entrypoints: 
         - "https"
