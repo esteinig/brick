@@ -6,7 +6,10 @@ name: Test Development Workflow
 on:
   push:
     branches:
-      - test/* 
+      - 'test/**'
+  create:
+    branches:
+      - 'test/**' 
 
 jobs:
   build-and-test:
