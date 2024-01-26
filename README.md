@@ -1,6 +1,6 @@
 # BRICK
 
-[`BRIG`]()-like interactive data visualization for bacterial whole genome annotation and comparison ([https://brick.ink](https://brick.ink))
+[`BRIG`]()-like interactive data visualization for bacterial whole genome annotation, comparison and exploration
 
 ## Overview
 
