@@ -16,8 +16,6 @@ services:
     restart: unless-stopped
     expose:
       - "5173"
-    ports:
-      - "5173:5173"
     security_opt:
       - no-new-privileges:true
     env_file: docker/brick.env
@@ -52,8 +50,6 @@ services:
       - /usr/src/app/node_modules
     expose:
       - "5174"
-    ports:
-      - "5174:5174"
     security_opt:
       - no-new-privileges:true
     env_file: docker/brick.env
