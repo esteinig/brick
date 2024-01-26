@@ -1,13 +1,15 @@
-# On creating a new release
+# Merged pull request from 'dev' into 'main' to stage for release
 
-name: CI/CD Production
+name: CI/CD Development
 
 on:
-  release:
-    types: [created]
+  pull_request:
+    branches: [ main ]
+    types: [ closed ]
 
 jobs:
   deploy:
+    if: github.event.pull_request.merged == true && github.head_ref == 'dev'
     runs-on: ubuntu-latest
 
     steps:
@@ -25,7 +27,5 @@ jobs:
       with:
         ssh-private-key: ${{ secrets.SSH_PRODUCTION_PRIVATE_KEY }}
 
-    # Deployment should happen at the specific tag - we must modify the `deploy.sh` script for this!
-
-    - name: Deploy to production server
-      run: ssh -o UserKnownHostsFile=/home/runner/.ssh/known_hosts ${{ secrets.SSH_PRODUCTION_SERVER }} 'bash ${{ secrets.SSH_PRODUCTION_PATH }}/scripts/deploy.sh prod ${{ secrets.SSH_PRODUCTION_PATH }}'
+    - name: Deploy to development server
+      run: ssh -o UserKnownHostsFile=/home/runner/.ssh/known_hosts ${{ secrets.SSH_PRODUCTION_SERVER }} 'bash ${{ secrets.SSH_DEVELOPMENT_PATH }}/scripts/deploy.sh dev ${{ secrets.SSH_DEVELOPMENT_PATH }}'

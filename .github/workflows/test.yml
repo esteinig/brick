@@ -1,5 +1,5 @@
 
-name: Test Development Workflow
+name: Unit Tests
 
 on:
   push:

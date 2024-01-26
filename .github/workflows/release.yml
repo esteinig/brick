@@ -1,0 +1,48 @@
+# On pushing to a new release branch auto version bump is
+# performed from latest release, changelog modified, 
+# versions modified (cocogitto) and a pull request 
+# for merging into main is created
+
+name: CI/CD Release
+
+on:
+  push:
+    branches:
+      - 'release/*' 
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: Conventional commits check
+      uses: oknozor/cocogitto-action@v3
+      with:
+        check-latest-tag-only: true
+
+    - name: Auto-bump semantic version for release
+      id: release
+      uses: oknozor/cocogitto-action@v3
+      with:
+        release: true
+    
+    - name: Create a new branch for the pull request
+      run: |
+        NEW_BRANCH="pr-release-${{ steps.release.outputs.version }}"
+        git checkout -b $NEW_BRANCH
+        git push origin $NEW_BRANCH
+
+    - name: Create Pull Request
+      uses: peter-evans/create-pull-request@v5
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        commit-message: 'Merge release ${{ steps.release.outputs.version }}'
+        title: '[RELEASE] Merge release ${{ steps.release.outputs.version }} into main'
+        body: 'This is an automated pull request to merge changes from the release ${{ steps.release.outputs.version }} into the main branch.'
+        branch: "pr-release-${{ steps.release.outputs.version }}"
+        base: main
