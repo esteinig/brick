@@ -6,22 +6,40 @@
 
 `BRICK` is under active development. Please note there is currently no guarantee for data persistence in the web application or backwards compatabiltity until major version release. 
 
+Table of contents:
+
+- How to run `BRICK`
+  - [Web application](#web-service-convenient) 
+  - [Local application (Docker)](#local-application-easy)
+  - [Self-hosted application (Docker)](#server-application-advanced)
+- [Development setup and workflow](#development)
+- [Dependencies and citations](#dependencies)
+- [Etymology](#etymology)
+- [Contributors](#contributors)
+
+
 ## Web service (convenient)
 
-At the moment, the most convenient way to get started is by using our web application ([https://brick.ink](https://brick.ink)).
+At the moment, the most convenient way to get started is by using our hosted web application ([brick.ink](https://brick.ink)). 
 
-In the current iteration of the web application there are some restrictions in place until we upgrade to a larger server:
+If you see any egregious bugs or styling issues, please [let us know]()! Testing is currently limited to Linux OS and Firefox. Session visualizations and all session data, including uploaded files and working data expire after seven days and are deleted from database and storage. We are planning to give users control over how long files and session data persist. All data is stored anonymously and sessions are identifiable only by their unique identifier in the URL.
 
-* File uploads and session data in the web application are automatically deleted seven days after creation
-* File upload size is restricted to 20MB per file and a session has a maximum size of 200MB
+### Files
 
-Don't hesitate to come back to the session! While a session has not expired, you can:
+ In the current iteration of the web application there are some restrictions in place:
+
+* File upload size is restricted to 20 MB, please let me know if this is not sufficient
+* Files and working data have a total session limit of 200 MB
+
+### Sessions
+
+Don't hesitate to come back to the session - while a session has not expired you can:
 
 * Navigate away at any time and come back to the session using the session URL
-* Share your (editable) session with colleagues using the session URL
-* Download the session data (`.json`) to persist your visualization.
+* Download the session data and re-hydrate your session in the data upload panel
+* Share your (editable) session with colleagues by sending them the session URL
 
-However, please note there is currently no guarantee for backwards compatability of downloaded session data until major version release.
+Please note there is currently no guarantee for backwards compatability for re-hydration until major version release.
 
 ## Local application (easy)
 
@@ -46,9 +64,17 @@ docker compose --profile prod up --build
 
 ## Server application (advanced)
 
+You can self-host the application on a local or remote server - in this case my assumption is that you know what you are doing 👀
+
+<details>
+
+<summary>Expand to view self-hosting instructions</summary>
+
 See the `docker` subdirectory for reverse-proxy and alternative service configurations using `Traefik`. 
 
 If you are hosting your own instance of the application on the web, my assumption is that you know what you are doing and have enough background knowledge to modify `docker/traefik/web/dynamic.yml` and `docker/docker-compose.web.yml`. Please ensure proper attribution if you are running your own web-instance, it helps to keep our main server running :heart:  
+
+Please note that some tools may require adjustments of the `docker/brick.env` application and server configuration file, in particular adjustment of the `BODY_SIZE_LIMIT` variable which controls the maximum size for requests including file uploads, and the `PRIVATE_CELERY_TASK_CHECK_TIMEOUT` variable, which controls how long we are checking for results from a task queue worker that processes a long-running task.
 
 In this example, we are using the pre-configured `localhost` reverse-proxy to test deployment on a local machine (`http://brick.localhost/`), assuming there are no other reverse-proxy service running:
 
@@ -93,15 +119,25 @@ command: brick utils clean --expire-days 7 --day-of-week "*" --time-of-day '04:0
 
 If you are running a web-instance through `Cloudflare` you need to set your SSL configuration to `full`. 
 
+
+</details>
+
 ## Development
 
 Any and all questions, suggestions for improvement, bug reports, pull requests and ideas you would like to see implemented are welcome! Please open an [issue](https://github.com/esteinig/brick/issues) in this repository. 
 
-Development and pull requests can be made on the [`dev`](https://github.com/esteinig/brick/tree/dev) branch. You can use the `dev` profile for hot reloads of changes to the application interface. Note that the `dev` profile in `docker-compose.web.yml` actually deploys the production service, but on a different domain (to be implemented at `dev.brick.ink`).
+<details>
 
-It often helps to run a fresh development stack with a project identifier to keep volumes and containers separate for the current branch. Project specific stack containers and volumes (all data) can be removed with the `-v` flag. Changes to the `Python` package currently have to use the `--build` flag to rebuild the package inside the `docker/Dockerfile.server` container. 
+<summary>Expand to view development notes and workflows</summary>
 
-Note that the `--profile dev` stack serves the application on port `5174` **not on**  `5173` (`--profile prod`), so that it can be run concurrently for production build testing.
+Development workflows and notes are mainly are reminder to myself and anyone who would like to contribute - if you have any questions please feel free to open an issue or contact me through the usual channels.
+
+Development and pull requests can be made on the [`dev`](https://github.com/esteinig/brick/tree/dev) branch. You can use the `dev` profile for hot reloads of changes to the application interface. Note that the `dev` profile in `docker-compose.web.yml` actually deploys the production service, but on a different domain, to be implemented (`dev.brick.ink`).
+
+Note that the `--profile dev` stack serves the application on port `5174` **not on**  `5173` (`--profile prod`) for concurrent production build testing.
+
+It may help to run a fresh development stack with a project identifier to keep volumes and containers separate for the current branch. Project specific stack containers and volumes (all data) can be removed with the `-v` flag. Changes to the `Python` package currently have to use the `--build` flag to rebuild the package inside the `docker/Dockerfile.server` container. 
+
 
 ```bash
 # You may be on a new feature branch `feat/new-feature`...
@@ -113,6 +149,7 @@ docker compose --profile dev --project-name new-feature up -d
 docker compose --profile dev --project-name new-feature down -v
 ```
 
+
 Unit tests are defined in `tests` can be run with the `tests` service:
 
 ```bash
@@ -123,6 +160,8 @@ docker compose build tests && docker compose run --rm tests
 Release branches (`release/**`) can be used to auto bump version and generate the changelog for example byt using `git checkout -b release/$(cog bump --dry-run --auto) && cog bump --auto`. I am not sure if `cocogitto` is stable yet, it may be worthwhile checking version bumps before creating the branch with `cog bump --dry-run --auto`. 
 
 Releases are deployed to the production server on merge into `main` using the `cicd-prod.yml` action workflow. Tests are run with the `test.yml` action workflow on push any test branch (`test/**`). One can create a release branch and before merging into `main` simply checkout and push a new test branch of the release to trigger the unit testing action for example `git checkout -b test/0.3.0 && git push origin test/0.3.0`.
+
+</details>
 
 ## Dependencies
 
