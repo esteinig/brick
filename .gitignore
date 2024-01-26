@@ -40,6 +40,14 @@ venv.bak/
 # mkdocs documentation
 /site
 
-.vscode
+# Development
+/app/.vscode
+/app/.sveltekit
 
-certs/*
+# Deployment
+/docker/certs/*
+/.secrets/
+/docker-compose.web.yml
+/docker-compose.localhost.yml
+/docker-compose.traefik.web.yml
+/docker-compose.traefik.localhost.yml

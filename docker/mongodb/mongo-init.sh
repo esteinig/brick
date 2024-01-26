@@ -5,10 +5,10 @@ set -e
 # configured directly in the container deployment
 
 
-MONGO_INITDB_ROOT_USERNAME=$(cat /run/secrets/mongo_root_user)
-MONGO_INITDB_ROOT_PASSWORD=$(cat /run/secrets/mongo_root_pwd)
-BRICK_MONGODB_USERNAME=$(cat /run/secrets/brick_db_user)
-BRICK_MONGODB_PASSWORD=$(cat /run/secrets/brick_db_pwd)
+MONGO_INITDB_ROOT_USERNAME=$(cat /run/secrets/mongo_root_user | tr -d "\n")
+MONGO_INITDB_ROOT_PASSWORD=$(cat /run/secrets/mongo_root_pwd | tr -d "\n")
+BRICK_MONGODB_USERNAME=$(cat /run/secrets/brick_db_user | tr -d "\n")
+BRICK_MONGODB_PASSWORD=$(cat /run/secrets/brick_db_pwd | tr -d "\n")
 
 mongosh <<EOF
 disableTelemetry()

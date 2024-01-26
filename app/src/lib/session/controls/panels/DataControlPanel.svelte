@@ -6,6 +6,7 @@
 	import { type UploadConfig } from "$lib/types";
 	import { createEventDispatcher } from "svelte";
     import DeleteFile from "../helpers/DeleteFile.svelte";
+	import { type SessionFile } from "$lib/types";
 
     const dispatch = createEventDispatcher();
     
@@ -18,7 +19,7 @@
             single: false,
             format: FileFormat.FASTA,
             type: FileType.REFERENCE,
-            info: 'Chromosome- or scaffold-level assemblyies as reference genome'
+            info: 'Chromosome- or scaffold-level assemblies as reference genome'
         },
         {
             id: 'blastDropzone',
@@ -38,7 +39,7 @@
             single: false,
             format: FileFormat.GENBANK,
             type: FileType.ANNOTATION_GENBANK,
-            info: 'Complete or contig-level sequences for comparison against reference'
+            info: 'Complete or contig-level sequences for comparison against reference with BLAST'
         },
         {
             id: 'customDropzone',
@@ -65,7 +66,7 @@
     let showFileTable: boolean = false;
     let infoText: string = "";
 
-    $: referenceAvailable = $sessionFiles.some(file => file.type === FileType.REFERENCE);
+    $: referenceAvailable = $sessionFiles.some((file: SessionFile) => file.type === FileType.REFERENCE);
     
     function handleInfoMouseover(event: any){ 
         infoText = event.detail 
