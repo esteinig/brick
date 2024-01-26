@@ -11,11 +11,17 @@ jobs:
     if: github.event.pull_request.merged == true && startsWith(github.head_ref, 'release/')
 
     steps:
+    - name: "Add GitHub to the SSH known hosts file"
+      run: |
+        mkdir -p -m 0700 /home/runner/.ssh
+        curl --silent https://api.github.com/meta  | jq --raw-output '"github.com "+.ssh_keys[]' >> /home/runner/.ssh/known_hosts
+        chmod 600 /home/runner/.ssh/known_hosts
+
     - name: Checkout repository
       uses: actions/checkout@v3
 
     - name: Setup SSH Agent
-      uses: webfactory/ssh-agent@v0.7.0
+      uses: webfactory/ssh-agent@v0.8.0
       with:
         ssh-private-key: ${{ secrets.SSH_PRODUCTION_PRIVATE_KEY }}
 
