@@ -1,6 +1,6 @@
 # BRICK
 
-[`BRIG`]()-like interactive data visualization for bacterial whole genome annotation, comparison and exploration
+[`BRIG`](https://github.com/happykhan/BRIG)-like interactive data visualization for bacterial whole genome annotation, comparison and exploration
 
 ## Overview
 
