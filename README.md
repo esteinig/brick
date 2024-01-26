@@ -33,13 +33,7 @@ docker compose --profile prod up
 # Application available in your browser at: http://localhost:5173/ 
 ```
 
-Some minor unit tests can be run with the `tests` service:
-
-```bash
-docker compose run tests
-```
-
-Update to the latest stable version onm `main`:
+Update to the latest stable version on `main`:
 
 ```bash
 git pull # update main
@@ -59,8 +53,7 @@ In this example, we are using the pre-configured `localhost` reverse-proxy to te
 # connects your stack with the reverse-proxy
 docker network create proxy
 
-# Link the localhost stack and traefik service
-# into the current repository
+# Link the localhost stack into the current repository
 ln -s docker/docker-compose.localhost.yml .
 ln -s docker/docker-compose.traefik.localhost.yml .
 
@@ -98,7 +91,29 @@ If you are running a web-instance through `Cloudflare` you need to set your SSL 
 
 ## Development
 
-Any and all questions, suggestions for improvement, bug reports, pull requests and ideas you would like to see implemented are welcome! Please open an [issue](https://github.com/esteinig/brick/issues) in this repository. Development and pull requests can be made on the [`dev`](https://github.com/esteinig/brick/tree/dev) branch.
+Any and all questions, suggestions for improvement, bug reports, pull requests and ideas you would like to see implemented are welcome! Please open an [issue](https://github.com/esteinig/brick/issues) in this repository. 
+
+Development and pull requests can be made on the [`dev`](https://github.com/esteinig/brick/tree/dev) branch. You can use the `dev` profile for hot reloads of changes to the application interface. 
+
+It often helps to run a fresh development stack with a project identifier to keep volumes and containers separate for the current branch. Project specific stack containers and volumes (all data) can be removed with the `-v` flag. Changes to the `Python` package currently have to use the `--build` flag to rebuild the package inside the `docker/Dockerfile.server` container. 
+
+Note that the `--profile dev` stack serves the application on port `5174` **not** on `5173` as for the `--profile prod` service, so that it can be run concurrently for production build testing.
+
+```bash
+# You may be on a new feature branch `feat/new-feture`
+# Up a fresh stack with the `--project` flag for this branch
+docker compose --profile dev --project new-feature up -d
+
+# Down the stack and remove all volumes 
+docker compose --profile dev --project new-feature down -v
+```
+
+Unit tests are defined in `tests` can be run with the `tests` service:
+
+```bash
+# At the moment we need to rebuild after modifying tests
+docker compose build tests && docker compose run --rm tests
+```
 
 ## Dependencies
 
