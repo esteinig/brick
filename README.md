@@ -20,9 +20,11 @@ Table of contents:
 
 ## Web service (convenient)
 
-At the moment, the most convenient way to get started is by using our hosted web application ([brick.ink](https://brick.ink)). 
+At the moment, the most convenient way to get started is by using our hosted web application ([brick.ink](https://brick.ink)). Please not that the server is located in Australia - for a snappier experience you can [deploy the application](#local-application-easy) on your local machine.
 
-If you see any egregious bugs or styling issues, please [let us know]()! Testing is currently limited to Linux OS and Firefox. Session visualizations and all session data, including uploaded files and working data expire after seven days and are deleted from database and storage. We are planning to give users control over how long files and session data persist. All data is stored anonymously and sessions are identifiable only by their unique identifier in the URL.
+Session visualizations and all session data, including uploaded files and working data expire after seven days and are deleted from database and storage. We are planning to give users control over how long files and session data persist. All data is stored anonymously and sessions are identifiable only by their unique identifier in the URL.
+
+If you see any egregious bugs or styling issues, please [let us know]()! Testing is currently limited to Linux and Firefox. 
 
 ### Files
 
