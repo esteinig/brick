@@ -38,23 +38,25 @@ services:
       traefik.http.routers.app.tls.options: "modern@file"
       traefik.http.routers.app.tls: "true"
   
+  # `Dev` profile for deployment is the same production environment 
+  # as the normal production service! We are just deploying the 
+  # `dev` branch with an adjusted `--profile dev` as shown in this
+  # specifically configured `app-dev` service:
+
   app-dev:
     profiles:
       - dev
     build:
       context: .
-      dockerfile: docker/Dockerfile.app.dev
+      dockerfile: docker/Dockerfile.app
     restart: unless-stopped
-    volumes:
-      - ./app:/usr/src/app
-      - /usr/src/app/node_modules
     expose:
       - "5174"
     security_opt:
       - no-new-privileges:true
     env_file: docker/brick.env
     environment:
-      NODE_ENV: development
+      NODE_ENV: production
       ORIGIN: https://{{{ traefik.web.domain_dev }}}
       PRIVATE_DOCKER_API_URL: http://api-dev:8080
     depends_on:
@@ -281,6 +283,31 @@ services:
       - no-new-privileges:true
     depends_on:
       - api
+      - redis
+      - mongodb
+    networks:
+      - internal
+
+  data-cleaner-dev:
+    restart: unless-stopped
+    profiles:
+      - server-dev
+    build: 
+      context: .
+      dockerfile: docker/Dockerfile.server
+    command: brick utils clean --expire-days 3 --day-of-week '*' --time-of-day '04:00' --log /tmp/brick-cleaner.log
+    volumes:
+      - api:/data
+      - work:/tmp
+      # Set the container timezone by sharing the read-only localtime
+      - /etc/localtime:/etc/localtime:ro 
+    env_file: docker/brick.env
+    environment:
+      BRICK_API_BASE_URL: http://api-dev:8080
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      - api-dev
       - redis
       - mongodb
     networks:
