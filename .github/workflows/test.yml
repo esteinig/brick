@@ -9,7 +9,6 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
-    if: startsWith(github.head_ref, 'test/')
 
     steps:
       - uses: actions/checkout@v3
