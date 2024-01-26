@@ -91,7 +91,7 @@ Default interval (every day) and expiration time (7 days) can be changed in `doc
 command: brick utils clean --expire-days 7 --day-of-week "*" --time-of-day '04:00' --log /tmp/brick-cleaner.log
 ```
 
-If you are running a web-instance through `Cloudflare` you need to set your SSL configuration to `strict`. 
+If you are running a web-instance through `Cloudflare` you need to set your SSL configuration to `full`. 
 
 ## Development
 
