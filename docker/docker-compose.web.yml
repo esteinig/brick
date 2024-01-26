@@ -337,9 +337,9 @@ secrets:
   mongo_root_pwd:
     file: ./.secrets/mongo_root_pwd.txt
   brick_db_user:
-    file: ./.secrets/mongodb/brick_db_user.txt
+    file: ./.secrets/brick_db_user.txt
   brick_db_pwd:
-    file: ./.secrets/mongodb/brick_db_pwd.txt
+    file: ./.secrets/brick_db_pwd.txt
     
 networks:
   internal:
