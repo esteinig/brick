@@ -97,19 +97,20 @@ If you are running a web-instance through `Cloudflare` you need to set your SSL 
 
 Any and all questions, suggestions for improvement, bug reports, pull requests and ideas you would like to see implemented are welcome! Please open an [issue](https://github.com/esteinig/brick/issues) in this repository. 
 
-Development and pull requests can be made on the [`dev`](https://github.com/esteinig/brick/tree/dev) branch. You can use the `dev` profile for hot reloads of changes to the application interface. 
+Development and pull requests can be made on the [`dev`](https://github.com/esteinig/brick/tree/dev) branch. You can use the `dev` profile for hot reloads of changes to the application interface. Note that the `dev` profile in `docker-compose.web.yml` actually deploys the production service, but on a different domain (to be implemented at `dev.brick.ink`).
 
 It often helps to run a fresh development stack with a project identifier to keep volumes and containers separate for the current branch. Project specific stack containers and volumes (all data) can be removed with the `-v` flag. Changes to the `Python` package currently have to use the `--build` flag to rebuild the package inside the `docker/Dockerfile.server` container. 
 
-Note that the `--profile dev` stack serves the application on port `5174` **not** on `5173` as for the `--profile prod` service, so that it can be run concurrently for production build testing.
+Note that the `--profile dev` stack serves the application on port `5174` **not on**  `5173` (`--profile prod`), so that it can be run concurrently for production build testing.
 
 ```bash
-# You may be on a new feature branch `feat/new-feture`
+# You may be on a new feature branch `feat/new-feature`...
+
 # Up a fresh stack with the `--project` flag for this branch
-docker compose --profile dev --project new-feature up -d
+docker compose --profile dev --project-name new-feature up -d
 
 # Down the stack and remove all volumes 
-docker compose --profile dev --project new-feature down -v
+docker compose --profile dev --project-name new-feature down -v
 ```
 
 Unit tests are defined in `tests` can be run with the `tests` service:
@@ -119,7 +120,9 @@ Unit tests are defined in `tests` can be run with the `tests` service:
 docker compose build tests && docker compose run --rm tests
 ```
 
-Release branches (`release/**`) can be used to auto bump version and generate the changelog using `cocogitto`. They are deployed to the production server on merge into `main` using the `cicd-prod.yml` action workflow. Tests are run with the `test.yml` action workflow on push to test branches (`test/**`).
+Release branches (`release/**`) can be used to auto bump version and generate the changelog for example byt using `git checkout -b release/$(cog bump --dry-run --auto) && cog bump --auto`. I am not sure if `cocogitto` is stable yet, it may be worthwhile checking version bumps before creating the branch with `cog bump --dry-run --auto`. 
+
+Releases are deployed to the production server on merge into `main` using the `cicd-prod.yml` action workflow. Tests are run with the `test.yml` action workflow on push any test branch (`test/**`). One can create a release branch and before merging into `main` simply checkout and push a new test branch of the release to trigger the unit testing action for example `git checkout -b test/0.3.0 && git push origin test/0.3.0`.
 
 ## Dependencies
 
