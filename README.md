@@ -10,14 +10,18 @@
 
 At the moment, the most convenient way to get started is by using our web application ([https://brick.ink](https://brick.ink)).
 
-In the current iteration of the web application, note that:
+In the current iteration of the web application there are some restrictions in place until we upgrade to a larger server:
 
 * File uploads and session data in the web application are automatically deleted seven days after creation
-* You can navigate away at any time and come back to the session page (unique identifier)
-* You can share your (editable) session with colleagues using the session page URL
-* Download your session data from the application to persist your visualization data
+* File upload size is restricted to 20MB per file and a session has a maximum size of 200MB
 
-Please note there is currently no guarantee for backwards compatability until major version release.
+Don't hesitate to come back to the session! While a session has not expired, you can:
+
+* Navigate away at any time and come back to the session using the session URL
+* Share your (editable) session with colleagues using the session URL
+* Download the session data (`.json`) to persist your visualization.
+
+However, please note there is currently no guarantee for backwards compatability of downloaded session data until major version release.
 
 ## Local application (easy)
 
@@ -44,9 +48,9 @@ docker compose --profile prod up --build
 
 See the `docker` subdirectory for reverse-proxy and alternative service configurations using `Traefik`. 
 
-If you are hosting your own instance of the application on the web, my assumption is that know what you are doing and have enough background knowledge to modify `docker/traefik/web/dynamic.yml` and `docker/docker-compose.web.yml`. Please ensure proper attribution if you are running your own web-instance, it helps to keep our main server running :heart:  
+If you are hosting your own instance of the application on the web, my assumption is that you know what you are doing and have enough background knowledge to modify `docker/traefik/web/dynamic.yml` and `docker/docker-compose.web.yml`. Please ensure proper attribution if you are running your own web-instance, it helps to keep our main server running :heart:  
 
-In this example, we are using the pre-configured `localhost` reverse-proxy to test deployment on a local machine (`http://brick.localhost/`), assuming you have no other reverse-proxy service running:
+In this example, we are using the pre-configured `localhost` reverse-proxy to test deployment on a local machine (`http://brick.localhost/`), assuming there are no other reverse-proxy service running:
 
 ```bash
 # Create the external `proxy` network which 
@@ -114,6 +118,8 @@ Unit tests are defined in `tests` can be run with the `tests` service:
 # At the moment we need to rebuild after modifying tests
 docker compose build tests && docker compose run --rm tests
 ```
+
+Release branches (`release/**`) can be used to auto bump version and generate the changelog using `cocogitto`. They are deployed to the production server on merge into `main` using the `cicd-prod.yml` action workflow. Tests are run with the `test.yml` action workflow on push to test branches (`test/**`).
 
 ## Dependencies
 
