@@ -1,5 +1,6 @@
 ignore_merge_commits = true
 branch_whitelist = [
+    "main",
     "release/**"
 ]
 
