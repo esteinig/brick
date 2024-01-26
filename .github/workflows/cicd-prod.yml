@@ -1,0 +1,23 @@
+name: CI/CD Workflow
+
+on:
+  pull_request:
+    branches: [ main ]
+    types: [ closed ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true && startsWith(github.head_ref, 'release/')
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Setup SSH Agent
+      uses: webfactory/ssh-agent@v0.8.0
+      with:
+        ssh-private-key: ${{ secrets.SSH_PRODUCTION_PRIVATE_KEY }}
+
+    - name: Deploy to production server
+      run: ssh ${{ secrets.SSH_PRODUCTION_SERVER }} 'bash -s' < scripts/deploy.sh prod ${{ secrets.SSH_PRODUCTION_PATH }}
