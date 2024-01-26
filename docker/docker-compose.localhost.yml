@@ -33,6 +33,9 @@ services:
       traefik.docker.network: "proxy"
       traefik.http.routers.app.rule: "Host(`brick.localhost`)"
   
+  # We keep this as the development image with hot reload for
+  # local development running on dev.brick.localhost/
+  
   app-dev:
     profiles:
       - dev
@@ -271,6 +274,31 @@ services:
       - no-new-privileges:true
     depends_on:
       - api
+      - redis
+      - mongodb
+    networks:
+      - internal
+  
+  data-cleaner-dev:
+    restart: unless-stopped
+    profiles:
+      - server-dev
+    build: 
+      context: .
+      dockerfile: docker/Dockerfile.server
+    command: brick utils clean --expire-days 3 --day-of-week '*' --time-of-day '04:00' --log /tmp/brick-cleaner.log
+    volumes:
+      - api:/data
+      - work:/tmp
+      # Set the container timezone by sharing the read-only localtime
+      - /etc/localtime:/etc/localtime:ro 
+    env_file: docker/brick.env
+    environment:
+      BRICK_API_BASE_URL: http://api-dev:8080
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      - api-dev
       - redis
       - mongodb
     networks:
