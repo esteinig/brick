@@ -26,4 +26,4 @@ jobs:
         ssh-private-key: ${{ secrets.SSH_PRODUCTION_PRIVATE_KEY }}
 
     - name: Deploy to production server
-      run: ssh ${{ secrets.SSH_PRODUCTION_SERVER }} 'bash scripts/deploy.sh prod ${{ secrets.SSH_PRODUCTION_PATH }}'
+      run: ssh -o UserKnownHostsFile=/home/runner/.ssh/known_hosts ${{ secrets.SSH_PRODUCTION_SERVER }} 'bash scripts/deploy.sh prod ${{ secrets.SSH_PRODUCTION_PATH }}'
