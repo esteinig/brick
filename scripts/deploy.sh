@@ -5,6 +5,7 @@ cd $2
 
 # Depending on the environment, deploy the appropriate Docker Compose setup
 if [ "$1" = "prod" ]; then
+
     # Pull down the production stack
     docker-compose -f docker-compose.web.yml --profile prod --profile server --project-name prod down
     
@@ -22,6 +23,7 @@ if [ "$1" = "prod" ]; then
     echo "$date Successfully deployed the production application" >> ~/brick_deploy_action.log
 
 elif [ "$1" = "dev" ]; then
+
     # Pull down the development stack 
     docker-compose -f docker-compose.web.yml --profile dev --profile server-dev --project-name dev down
     
@@ -37,5 +39,5 @@ elif [ "$1" = "dev" ]; then
 
 else
     # Deployment script was run with invalid command-line input
-    echo "$date Failed to run deploy script - `$2` is not a valid option!" >> ~/brick_deploy_action.log
+    echo "$date Failed to run deploy script - $1 is not a valid option!" >> ~/brick_deploy_action.log
 fi
