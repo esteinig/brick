@@ -2,6 +2,32 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## 0.3.0 - 2024-01-26
+#### Bug Fixes
+- **(action)** revert ssh-agent action version - (327b9eb) - esteinig
+- **(action)** remove ubuntu image in action - (efe04ae) - esteinig
+- **(app)** remove .vscode - (63c7ee3) - esteinig
+- **(ci)** test action - (3237260) - esteinig
+- **(stack)** mod web deployment dev profile - (f58f929) - esteinig
+- **(stack)** deployment .gitignore and spelling - (e42bfc3) - esteinig
+- **(stack)** fix web secrets path - (a180845) - esteinig
+- **(stack)** agnostic domain templates - (e054d63) - esteinig
+- **(stack)** proxied docker compose secrets location - (07cf507) - esteinig
+- **(stack)** docker web data cleaner - (f49c5d7) - esteinig
+#### Documentation
+- **(readme)** production reminder, web app restrictions - (8103782) - esteinig
+- **(readme)** deployment and development - (19b4859) - esteinig
+- **(readme)** fix etymology section - (0bc1c2a) - *esteinig*
+- **(readme)** fix rebuild command - (5c395d4) - *esteinig*
+- **(readme)** fix params - (5712a4d) - *esteinig*
+- **(readme)** fix styles - (ce0d76b) - *esteinig*
+- **(readme)** fix browser address and overview - (119aa4d) - *esteinig*
+- **(readme)** local stack deployment and dependencies - (567c75e) - esteinig
+#### Features
+- **(ci)** ci/cd for production releases - (e600e15) - esteinig
+
+- - -
+
 ## 0.2.0 - 2024-01-24
 #### Features
 - **(changelog)** auto bump version config - (8448509) - esteinig
