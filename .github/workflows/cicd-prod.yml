@@ -14,7 +14,7 @@ jobs:
     - name: "Add GitHub to the SSH known hosts file"
       run: |
         mkdir -p -m 0700 /home/runner/.ssh
-        curl --silent https://api.github.com/meta  | jq --raw-output '"github.com "+.ssh_keys[]' >> /home/runner/.ssh/known_hosts
+        echo "${{ secrets.SSH_PRODUCTION_HOST }}" >> /home/runner/.ssh/known_hosts
         chmod 600 /home/runner/.ssh/known_hosts
 
     - name: Checkout repository
@@ -26,4 +26,4 @@ jobs:
         ssh-private-key: ${{ secrets.SSH_PRODUCTION_PRIVATE_KEY }}
 
     - name: Deploy to production server
-      run: ssh ${{ secrets.SSH_PRODUCTION_SERVER }} 'bash -s' < scripts/deploy.sh prod ${{ secrets.SSH_PRODUCTION_PATH }}
+      run: ssh ${{ secrets.SSH_PRODUCTION_SERVER }} 'bash scripts/deploy.sh prod ${{ secrets.SSH_PRODUCTION_PATH }}'
