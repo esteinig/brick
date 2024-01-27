@@ -44,6 +44,9 @@ class Settings(BaseSettings):
     MONGODB_DATABASE: str = "brick"
     MONGODB_SESSION_COLLECTION: str = "sessions"
 
+    # Local database in the database:/data volume
+    GENOMAD_DATABASE: Path = Path("/data/genomad_db")
+
     class ConfigDict:
         case_sensitive = True
 
@@ -69,6 +72,14 @@ class Settings(BaseSettings):
             v = Path(v).read_text().strip('\n')
         return v
     
+
+    @field_validator('GENOMAD_DATABASE', mode="after")
+    def get_mongodb_secret_pwd(cls, v: Path):      
+        if v and not v.exists():
+            logging.warn(f"geNomad database directory not found! ({v})")
+            logging.warn(f"Attempts to execute `genomad` will fail in the `process_genomad_ring` worker!")
+        return v
+
     @model_validator(mode="after")
     def get_default_mongodb_url(self) -> 'Settings':
         if not self.MONGODB_URL:

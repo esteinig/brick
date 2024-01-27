@@ -71,6 +71,7 @@ services:
     volumes:
       - api:/data
       - work:/tmp
+      - databases:/data
     env_file: docker/brick.env
     environment:
       CORS_ORIGINS: http://app:5173
@@ -84,6 +85,7 @@ services:
     depends_on:
       - redis
       - mongodb
+      - databases
     secrets:
       - brick_db_user
       - brick_db_pwd
@@ -101,6 +103,7 @@ services:
     volumes:
       - api_dev:/data
       - work:/tmp
+      - databases:/data
     env_file: docker/brick.env
     environment:
       CORS_ORIGINS: http://app-dev:5174
@@ -114,6 +117,7 @@ services:
     depends_on:
       - redis
       - mongodb
+      - databases
     secrets:
       - brick_db_user
       - brick_db_pwd
@@ -139,6 +143,7 @@ services:
     command: celery -A brick.api.core.celery.celery_app worker --loglevel=INFO
     volumes:
       - work:/tmp
+      - databases:/data
     env_file: docker/brick.env
     environment:
       CORS_ORIGINS: http://app:5173
@@ -151,6 +156,7 @@ services:
       - api
       - redis
       - mongodb
+      - databases
     secrets:
       - brick_db_user
       - brick_db_pwd
@@ -167,6 +173,7 @@ services:
     command: celery -A brick.api.core.celery.celery_app worker --loglevel=INFO
     volumes:
       - work:/tmp
+      - databases:/data
     env_file: docker/brick.env
     environment:
       CORS_ORIGINS: http://app-dev:5174
@@ -179,6 +186,7 @@ services:
       - api-dev
       - redis
       - mongodb
+      - databases
     secrets:
       - brick_db_user
       - brick_db_pwd     
@@ -295,6 +303,30 @@ services:
     networks:
       - internal
 
+  # ================
+  # DATABASE STORAGE
+  # ================
+
+  # Specification of the image tag will cause the 
+  # image to not rebuild when using --build. This
+  # is intended as we want to update the storage
+  # volume with the database manually, rather than
+  # downloading on each --build
+
+  databases:
+    profiles:
+      - prod
+      - dev
+    build: 
+      context: .
+      dockerfile: docker/Dockerfile.dbs
+      image: brick-database-storage:latest
+    tty: true
+    volumes:
+      - databases:/data  # /data/genomad_db
+    networks:
+      - internal
+
   # ============
   # UNIT TESTING
   # ============
@@ -334,6 +366,8 @@ volumes:
   mongo_db:
     driver: local
   mongo_db_cfg:
+    driver: local
+  databases:
     driver: local
 
 secrets:
