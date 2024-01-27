@@ -5,7 +5,8 @@ from ..schemas import BlastRingSchema, BlastRingResponse
 from ..schemas import AnnotationRingSchema, AnnotationRingResponse
 from ..schemas import LabelRingSchema, LabelRingResponse
 from ..schemas import ReferenceRingSchema, ReferenceRingResponse
-from ..tasks import process_blast_ring, process_annotation_ring, process_label_ring, process_reference_ring
+from ..schemas import GenomadRingSchema, GenomadRingResponse
+from ..tasks import process_blast_ring, process_annotation_ring, process_label_ring, process_reference_ring, process_genomad_ring
 
 
 router = APIRouter(
@@ -90,6 +91,27 @@ def create_label_ring(ring_config: LabelRingSchema):
     return JSONResponse(
         status_code=202, 
         content=LabelRingResponse(
+            task_id=task.id
+        ).model_dump()
+    )
+
+
+@router.post("/genomad", response_model=GenomadRingResponse)
+def create_label_ring(ring_config: GenomadRingSchema):
+    
+    _, reference_file = ring_config.get_file_paths()
+
+    try:
+        task = process_genomad_ring.delay(
+            str(reference_file), 
+            ring_config.model_dump()
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error initiating task: {str(e)}")
+
+    return JSONResponse(
+        status_code=202, 
+        content=GenomadRingResponse(
             task_id=task.id
         ).model_dump()
     )

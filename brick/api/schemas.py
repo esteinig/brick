@@ -6,7 +6,7 @@ from uuid import UUID
 import shutil
 
 from .core.config import settings
-from ..rings import BlastRing, AnnotationRing, LabelRing, RingSegment, RingReference, Ring, ReferenceRing
+from ..rings import BlastRing, AnnotationRing, LabelRing, RingSegment, RingReference, Ring, ReferenceRing, RingType, GenomadPredictionClass
 
 SessionID = Annotated[str, "Session UUID used as directory name of the session directory"]
 SessionFileID = Annotated[str, "Uploaded file assigned UUID used as filename in session directory"]
@@ -35,6 +35,7 @@ class RingSchema(BaseModel):
     def check_session_directory(cls, v: RingReference):
         if not (settings.WORK_DIRECTORY / v.session_id).exists():
             raise ValueError(f"session directory '{v}' does not exist")
+        
         return v
 
 
@@ -321,9 +322,58 @@ class LabelRingResponse(BaseModel):
 class ReferenceRingSchema(RingSchema):
     pass
 
-
 class ReferenceRingResponse(BaseModel):
     task_id: CeleryTaskID
+
+
+# Genomad ring
+
+class GenomadRingSchema(RingSchema):
+    
+    window_size: int = 3000
+    min_probability: float = 0.
+    min_segment_length: int = 0
+
+    prediction_classes: List[GenomadPredictionClass] = [
+        GenomadPredictionClass.PLASMID, 
+        GenomadPredictionClass.VIRUS
+    ]
+    
+    ring_type: RingType = RingType.LABEL
+
+
+    @model_validator(mode='after')
+    def check_reference_file(self):
+        if not (settings.WORK_DIRECTORY / self.reference.session_id / self.reference.reference_id).exists():
+            raise ValueError(f"reference sequence file '{self.reference.reference_id}' does not exist")
+        
+        if self.window_size < 3000:
+            raise ValueError("Window size must be at least 3000 bp")
+        if self.window_size > self.reference.sequence.length:
+            raise ValueError(f"Window size cannot be larger than the reference sequence ({self.reference.sequence.length} bp)")
+
+        if self.ring_type not in (RingType.LABEL, RingType.ANNOTATION, RingType.PROBABILITY):
+            raise ValueError(f"Ring type must be one of: {RingType.LABEL}, {RingType.ANNOTATION}, {RingType.PROBABILITY}")
+
+        if not 0 <= self.min_probability <= 1:
+            raise ValueError(f"Minimum probability threshold must be between 0 and 1")
+
+        if self.min_segment_length < 0:
+            raise ValueError(f"Minimum segment length must be at least 0")
+
+        return self
+
+    def get_file_paths(self) -> Tuple[Path, Path]:
+
+        return (
+            settings.WORK_DIRECTORY / self.reference.session_id, 
+            settings.WORK_DIRECTORY / self.reference.session_id / self.reference.reference_id
+        )
+
+class GenomadRingResponse(BaseModel):
+    task_id: CeleryTaskID
+
+# Ring Update
 
 # Ring identifiers to update other indices for the 
 # current ring view (filtered by reference sequence

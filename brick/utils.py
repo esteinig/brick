@@ -68,7 +68,14 @@ LAPUTA_MEDIUM.reverse()
 YESTERDAY_MEDIUM.reverse()
 
 
-def slice_fasta_sequences(fasta_file, slice_size=10000) -> Dict[str, List[SeqRecord]]:
+def slice_fasta_sequences(
+    fasta_file: Path,
+    slice_size: int = 10000, 
+    sequence_subset: List[str] = None, 
+    name_split: str = "__", 
+    range_split: str = "..", 
+    outfile: Path = None
+) -> Dict[str, List[SeqRecord]]:
     """
     Takes a FASTA file and returns slices of each sequence with slice coordinates in the header.
     
@@ -78,16 +85,30 @@ def slice_fasta_sequences(fasta_file, slice_size=10000) -> Dict[str, List[SeqRec
     """
     sliced_sequences = {}
 
-    for seq_record in SeqIO.parse(fasta_file, "fasta"):
+    for seq_record in SeqIO.parse(str(fasta_file), "fasta"):
+        if sequence_subset is None:
+            pass
+        else:
+            if seq_record.id not in sequence_subset:
+                continue 
+
         slices = []
         for i in range(0, len(seq_record), slice_size):
             slice_seq = seq_record.seq[i:i+slice_size]
-            slice_id = f"{seq_record.id}_{i}:{i+slice_size}"
+            slice_id = f"{seq_record.id}{name_split}{i}{range_split}{i+slice_size}"
             slice_description = f"Slice {i}-{i+slice_size} of {seq_record.id}"
             slices.append(SeqRecord(Seq(slice_seq), id=slice_id, description=slice_description))
 
         sliced_sequences[seq_record.id] = slices
 
+    if outfile:
+        with outfile.open('w') as sliced_fasta:
+            for _, slices in sliced_sequences.items():
+                for record in slices:
+                    sliced_fasta.write(
+                        f">{record.id} {record.description}\n{record.seq}\n"
+                    )
+                    
     return sliced_sequences
 
 

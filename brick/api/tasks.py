@@ -12,13 +12,16 @@ from Bio import SeqIO
 from typing import Tuple, Annotated, Optional
 from pathlib import Path
 from datetime import datetime
+from Bio import SeqRecord
+
 
 from .core.config import settings
 from .core.celery import celery_app
 from .core.db import get_session_collection_pymongo
 from .schemas import Session, FileFormat, FileType, SessionFile, Sequence, Selections, FileConfig
-from .schemas import AnnotationRingSchema, LabelRingSchema, BlastRingSchema, ReferenceRingSchema, RingReference
-from ..rings import Ring, RingSegment, RingType, BlastRing, AnnotationRing, LabelRing, ReferenceRing
+from .schemas import AnnotationRingSchema, LabelRingSchema, BlastRingSchema, ReferenceRingSchema, GenomadRingSchema, RingReference
+from ..rings import Ring, RingSegment, RingType, BlastRing, AnnotationRing, LabelRing, ReferenceRing, GenomadRing
+from ..utils import slice_fasta_sequences
 
 # Uploaded file validation and session file storage
 @celery_app.task
@@ -260,9 +263,87 @@ def process_label_ring(
         return {"success": False, "error": str(e)}
 
 
+# Genomad subprocess execution and parsing
+    
+@celery_app.task
+def process_genomad_ring(
+    reference_file_path: Annotated[str, "Path to reference file in the session directory"], 
+    genomad_ring_schema: Annotated[dict, "Model dump of GenomadRingSchema"]
+):
+
+    try:
+        ring_schema = GenomadRingSchema(**genomad_ring_schema)
+
+        with create_tmp_directory(root_dir=settings.WORK_DIRECTORY) as working_directory:
+            
+            output_file = run_genomad(
+                fasta=Path(reference_file_path), 
+                sequence=ring_schema.reference.sequence,
+                window_size=ring_schema.window_size,
+                working_directory=working_directory
+            )
+
+            if ring_schema.ring_type == RingType.LABEL:
+                ring: LabelRing = LabelRing.from_genomad_output(
+                    file=output_file,
+                    reference=ring_schema.reference,
+                    min_probability=ring_schema.min_probability,
+                    min_segment_length=ring_schema.min_segment_length,
+                    prediction_classes=ring_schema.prediction_classes
+                )
+            elif ring_schema.ring_type == RingType.ANNOTATION:
+                pass
+            else:
+                pass
+        
+        if not ring.data:
+            raise ValueError("geNomad executed correctly but no outputs were found")
+        
+        # Ring index is modified for database in this function
+        ring = update_rings_or_create_session(session_id=ring_schema.reference.session_id, ring=ring)      
+
+        return {
+            "success": True, 
+            "result": ring.model_dump()
+        }
+
+    except Exception as e:
+        return {"success": False, "error": str(e)}
 
 # Subprocess helpers
+
+def run_genomad(fasta: Path, seq_id: str, window_size: int, working_directory: Path) -> Path:
+
+    """ Slices the reference into non overlapping sequences (window_size) and runs geNomad"""
+
+    # Database is downloaded as part of the Docker build stage in Dockerfile.server
+
+    if not fasta.exists():
+        raise FileNotFoundError(f"Reference file not found: {fasta}")
+
+    sliced_fasta = working_directory / 'sliced.fasta'
+
+    seq_slices = slice_fasta_sequences(
+        fasta_file=fasta, 
+        slice_size=window_size,
+        sequence_subset=[seq_id],
+        name_split='__',
+        range_split='..',
+        outfile=sliced_fasta
+    )
+
+    if not seq_slices:
+        raise ValueError("No sequence slices produced")
     
+    # Run geNomad
+    subprocess.run(["genomad", "end-to-end", "--cleanup", "--relaxed", str(sliced_fasta), "genomad_output", settings.GENOMAD_DATABASE], check=True)
+
+    # Check that the output exists
+    aggregated_output = working_directory / 'genomad_output' / 'sliced_aggregated_classification' / 'sliced_aggregated_classification.tsv'
+    if not aggregated_output.exists() and not aggregated_output.is_file():
+        raise ValueError("Could not find geNomad aggegated output file")
+
+    return aggregated_output
 
 def run_blast(query_fasta: Path, reference_fasta: Path, working_directory: Path):
     """
@@ -287,6 +368,10 @@ def run_blast(query_fasta: Path, reference_fasta: Path, working_directory: Path)
 
     # Run BLASTn
     subprocess.run(["blastn", "-query", str(query_fasta), "-db", str(db_file), "-out", str(output_file), "-outfmt", "6"], check=True)
+
+    if not output_file.exists() and not output_file.is_file():
+        raise ValueError("Could not find BLAST aggegated output file")
+
 
     return output_file
 
