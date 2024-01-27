@@ -12,7 +12,6 @@ services:
     build:
       context: .
       dockerfile: docker/Dockerfile.app
-    restart: unless-stopped
     expose:
       - "5173"
     ports:
@@ -35,7 +34,6 @@ services:
     build:
       context: .
       dockerfile: docker/Dockerfile.app.dev
-    restart: unless-stopped
     volumes:
       - ./app:/usr/src/app
       - /usr/src/app/node_modules
@@ -66,7 +64,6 @@ services:
     build: 
       context: .
       dockerfile: docker/Dockerfile.server
-    restart: unless-stopped
     command: uvicorn brick.api.main:app --host 0.0.0.0 --port 8080
     volumes:
       - api:/data
@@ -98,7 +95,6 @@ services:
     build: 
       context: .
       dockerfile: docker/Dockerfile.server
-    restart: unless-stopped
     command: uvicorn brick.api.main:app --host 0.0.0.0 --port 8080
     volumes:
       - api_dev:/data
@@ -139,7 +135,6 @@ services:
     build: 
       context: .
       dockerfile: docker/Dockerfile.server
-    restart: unless-stopped
     command: celery -A brick.api.core.celery.celery_app worker --loglevel=INFO
     volumes:
       - work:/tmp
@@ -169,7 +164,6 @@ services:
     build: 
       context: .
       dockerfile: docker/Dockerfile.server
-    restart: unless-stopped
     command: celery -A brick.api.core.celery.celery_app worker --loglevel=INFO
     volumes:
       - work:/tmp
@@ -208,7 +202,6 @@ services:
       - dev
       - test
     image: redis:7.0.12-alpine
-    restart: unless-stopped
     expose:
       - "6379"
     volumes:
@@ -224,7 +217,6 @@ services:
       - dev
       - test
     image: mongo:7.0.0-rc10
-    restart: unless-stopped
     command: mongod --auth --quiet --logpath /dev/null
     expose:
       - "27017"
@@ -253,7 +245,6 @@ services:
   # ================================================
 
   data-cleaner:
-    restart: unless-stopped
     profiles:
       - server
     build: 
@@ -279,7 +270,6 @@ services:
   
 
   data-cleaner-dev:
-    restart: unless-stopped
     profiles:
       - server-dev
     build: 
@@ -314,13 +304,13 @@ services:
   # downloading on each --build
 
   databases:
+    image: brick-database-storage:latest
     profiles:
       - prod
       - dev
     build: 
       context: .
       dockerfile: docker/Dockerfile.dbs
-      image: brick-database-storage:latest
     tty: true
     volumes:
       - databases:/data  # /data/genomad_db
