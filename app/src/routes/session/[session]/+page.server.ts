@@ -70,7 +70,7 @@ export const actions: Actions = {
                 try {
                     return await checkCeleryResults(
                         `${env.PRIVATE_DOCKER_API_URL}/tasks/result/${fileUploadResponseData.task_id}`, 
-                        env.PRIVATE_CELERY_TASK_CHECK_TIMEOUT, env.PRIVATE_CELERY_TASK_CHECK_INTERVAL
+                        env.PRIVATE_CELERY_TASK_CHECK_TIMEOUT, env.PRIVATE_CELERY_TASK_CHECK_INTERVAL, 5000
                     );
                 } catch (error) {
                     return fail(500, { 
@@ -114,7 +114,7 @@ export const actions: Actions = {
                 try {
                     return await checkCeleryResults(
                         `${env.PRIVATE_DOCKER_API_URL}/tasks/result/${createRingResponseData.task_id}`, 
-                        env.PRIVATE_CELERY_TASK_CHECK_TIMEOUT, env.PRIVATE_CELERY_TASK_CHECK_INTERVAL
+                        env.PRIVATE_CELERY_TASK_CHECK_TIMEOUT, env.PRIVATE_CELERY_TASK_CHECK_INTERVAL, 15000
                     );
                 } catch (error) {
                     return fail(500, { 

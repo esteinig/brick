@@ -22,6 +22,7 @@
 	import RingIndex from "../helpers/RingIndex.svelte";
 
 	import { createEventDispatcher } from "svelte";
+	import NewGenomadRing from "../rings/NewGenomadRing.svelte";
 
     const dispatch = createEventDispatcher();
 
@@ -157,7 +158,7 @@
                             <span>abritAMR</span>
                         </div>
                     </button>
-                    <button class="btn variant-outline-surface" disabled={selectedReference ? true : true} on:click={() => newRing = RingType.REFERENCE}>
+                    <button class="btn {newRing === RingType.GENOMAD ? 'variant-ghost-primary' : 'variant-ringed-primary'}" disabled={!selectedReference || $requestInProgress ? true : false} on:click={() => newRing = RingType.GENOMAD}>
                         <div class="flex items-center align-center truncate">
                             <span>geNomad</span>
                         </div>
@@ -180,6 +181,8 @@
                 <NewAnnotationRing on:submitAction={(event) => handleCreateRingRequest(event.detail)}></NewAnnotationRing>
             {:else if newRing == RingType.LABEL}
                 <NewLabelRing on:submitAction={(event) => handleCreateRingRequest(event.detail)}></NewLabelRing>
+            {:else if newRing == RingType.GENOMAD}
+                <NewGenomadRing on:submitAction={(event) => handleCreateRingRequest(event.detail)}></NewGenomadRing>
             {/if}
         </div>
 

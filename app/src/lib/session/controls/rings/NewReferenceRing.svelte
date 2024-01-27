@@ -35,8 +35,7 @@
         
     </p>
     <p class="opacity-20 mb-2 text-xs w-full">
-        Reference rings are simple continuous segments representing the 
-        reference genome against which other sequences are compared.
+        Reference rings are simple continuous segments representing the reference genome against which other sequences are compared.
         Reference rings are usually shown on the inner track and can be omitted entirely.
     </p>
     
@@ -44,7 +43,7 @@
         <form id="createReferenceRingForm" action="?/createRing" method="POST" on:submit|preventDefault={handleSubmit}>
             
             <div class="flex justify-right mt-4">
-                <button class="btn variant-outline-surface" type="submit"  disabled={!$ringReferenceStore}>
+                <button class="btn variant-outline-surface" type="submit" disabled={!$ringReferenceStore}>
                     <div class="flex items-center align-center">
                         <span>Construct</span>
                     </div>

@@ -12,7 +12,8 @@ export enum RingType {
     REFERENCE = "reference",
     BLAST = "blast",
     ANNOTATION = "annotation",
-    LABEL = "label"
+    LABEL = "label",
+    GENOMAD = "genomad"
 }
 
 
@@ -210,6 +211,13 @@ export enum BlastMethod {
     BLASTN = "blastn"
 }
 
+
+export enum GenomadPredictionClass {
+    CHROMOSOME = "chromosome",
+    PLASMID = "plasmid",
+    VIRUS = "virus"
+}
+
 // Ring reference can be null in this schema
 // but is required at endpoint, this is so
 // that the $ringReferenceStore can be null
@@ -227,6 +235,16 @@ export type BlastRingSchema = {
     min_identity: number
     min_alignment: number
     min_evalue: number
+} & RingSchema
+
+
+export type GenomadRingSchema = {
+    window_size: number
+    min_window_score: number
+    min_segment_score: number
+    min_segment_length: number
+    prediction_classes: GenomadPredictionClass[]
+    ring_type: RingType.LABEL | RingType.ANNOTATION | RingType.GENOMAD
 } & RingSchema
 
 export type AnnotationRingSchema = {
