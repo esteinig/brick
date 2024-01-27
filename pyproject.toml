@@ -26,8 +26,8 @@ dependencies = [
   "pytest-asyncio==0.23.3",
   "httpx==0.26.0",
   "asgi-lifespan==2.1.0",
-  "apscheduler",
-  "strenum"
+  "apscheduler==3.10.4",
+  "strenum==0.4.15"
 ]
 
 [tool.setuptools.packages.find]
@@ -46,7 +46,6 @@ testpaths = [
 addopts = "-v"
 
 [tool.black]
-line-length = 79
 include = '\.pyi?$'
 exclude = '''
 /(
@@ -55,10 +54,15 @@ exclude = '''
   | \.mypy_cache
   | \.tox
   | \.venv
+  | \.github
+  | \.secrets
   | _build
   | buck-out
   | build
   | dist
+  | app
+  | docker
+  | scripts
 )/
 '''
 

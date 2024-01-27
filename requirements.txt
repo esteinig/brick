@@ -1,10 +1,14 @@
+# Python dependencies for install via `mamba install --file requirements.txt`
+# in the Docker container, do not use to via `pip install` due to different
+# Redis database packages [redis==5.0.1]
+
 typer==0.9.0
 biopython==1.83
 pandas==2.1.4
 requests==2.31.0
 pre-commit==3.6.0
 fastapi==0.109.0
-redis-py==5.0.1  # conda distribution do not use to install via pip [redis==5.0.1]
+redis-py==5.0.1             
 celery[redis]==5.3.6
 uvicorn==0.25.0
 pydantic-settings==2.1.0
@@ -14,5 +18,5 @@ pytest==7.4.4
 pytest-asyncio==0.23.3
 httpx==0.26.0
 asgi-lifespan==2.1.0
-apscheduler
-strenum
+apscheduler==3.10.4
+strenum==0.4.15
