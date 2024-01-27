@@ -2,7 +2,7 @@ from __future__ import annotations
 from pydantic import BaseModel, Field
 from pathlib import Path
 from typing import List
-from enum import StrEnum
+from strenum import StrEnum
 from Bio import SeqIO
 
 from statistics import mean
@@ -19,7 +19,7 @@ class RingType(StrEnum):
     ANNOTATION = 'annotation'
     LABEL = 'label'
     REFERENCE = 'reference'
-    PROBABILITY = 'probability'
+    GENOMAD = 'genomad'
 
 class RingSegment(BaseModel):
     start: int = 0
@@ -229,7 +229,7 @@ class GenomadEntry(BaseModel):
     plasmid_score: float
     virus_score: float
     
-    def to_probability_segment(self, prediction_classes: List[GenomadPredictionClass], min_probability: float = 0.7):
+    def to_segment(self, prediction_classes: List[GenomadPredictionClass], min_probability: float = 0.7):
 
         label = ""
         if self.chromosome_score >= min_probability and GenomadPredictionClass.CHROMOSOME in prediction_classes:
@@ -264,8 +264,9 @@ def parse_aggregated_genomad_output(file: Path) -> GenomadEntry:
 
 def extract_genomad_contiguous_segments(
     file: Path,
-    min_probability: float, 
-    min_segment_length: int,  # should be a multiple of slice length 
+    min_segment_score: float,  # minimum mean score of a contiguous segment to consider returning a segment
+    min_window_score: float,         # minimum score to consider slice as part of contiguous segment for prediction class
+    min_segment_length: int,        # should be a multiple of slice length 
     prediction_classes: List[GenomadPredictionClass]
 ) -> List[RingSegment]:
 
@@ -276,7 +277,7 @@ def extract_genomad_contiguous_segments(
     genomad_output = pandas.read_csv(file, sep="\t", header=0)
 
     def process_column(column: str):
-        column_name = column.replace('_score', '')
+        prediction_class = column.replace('_score', '')
 
         current_probabilities = []
         current_segment = None
@@ -287,10 +288,10 @@ def extract_genomad_contiguous_segments(
             except ValueError:
                 raise ValueError("Probability could not be converted to float type")
 
-            start, end = get_start_end_from_seq_name(seq_name=row['seq_name'])
+            start, end, _ = get_start_end_from_seq_name(seq_name=row['seq_name'])
 
             # Contiguous segment checks and dictionary insertions
-            if probability > min_probability:
+            if probability >= min_window_score:
                 if current_segment is None:
                     current_segment = RingSegment(start=start, end=end)
                     current_probabilities = [probability]
@@ -299,27 +300,32 @@ def extract_genomad_contiguous_segments(
                     current_probabilities.append(probability)
             else:
                 if current_segment and (current_segment.end - current_segment.start > min_segment_length):
-                    current_segment.text = f"{column_name.capitalize()}: {mean(current_probabilities):.2f}"
-                    segments[column_name].append(current_segment)
+                    
+                    prediction_class_label = "Phage" if prediction_class == GenomadPredictionClass.VIRUS else prediction_class.capitalize() 
+                    current_segment.text = f"{prediction_class_label} ({mean(current_probabilities):.2f})"
+                    
+                    mean_segment_score = mean(current_probabilities)
+                    if prediction_class in prediction_classes and mean_segment_score >= min_segment_score:
+                        segments[prediction_class].append(current_segment)
 
                 current_segment = None
         
         # Check for a segment at the end
         if current_segment and (current_segment.end - current_segment.start > min_segment_length):
-            segments[column_name].append(current_segment)
+            if prediction_class in prediction_classes:
+                segments[prediction_class].append(current_segment)
 
     process_column('chromosome_score')
     process_column('plasmid_score')
     process_column('virus_score')
 
     # Collect all segments if they are in the list of requested prediction classes
-    all_segments = []
-    for prediction_class, segmented in segments.items():
+    
+    for _, segmented in segments.items():
         for segment in segmented:
-            if prediction_class in prediction_classes:
-                all_segments.append(segment)
+            yield segment
 
-    return segments
+       
 
 def get_start_end_from_seq_name(seq_name: str, name_split: str = "__", range_split: str = "..") -> tuple(int, int, str):
 
@@ -334,16 +340,16 @@ def get_start_end_from_seq_name(seq_name: str, name_split: str = "__", range_spl
         raise ValueError("Could not extract start and end positions from sequence range in sequence name - was the file sliced?")
 
     try:
-        start, end = map(int, start_end)
+        start, end = [int(v) for v in start_end]
     except ValueError:
         raise ValueError("Start or end value could not be converted to integer type - is the range format correct?")
 
     return start, end, seq_id
 
 
-class ProbabilityRing(Ring):
-    type: RingType = RingType.PROBABILITY
-    title: str = "Probability Ring"
+class GenomadRing(Ring):
+    type: RingType = RingType.GENOMAD
+    title: str = "Genomad Ring"
     
     @staticmethod
     def from_genomad_output(
@@ -351,11 +357,11 @@ class ProbabilityRing(Ring):
         reference: RingReference | None = None, 
         min_probability: float = 0, 
         prediction_classes: List[GenomadPredictionClass] = [GenomadPredictionClass.VIRUS, GenomadPredictionClass.PLASMID]
-    ) -> ProbabilityRing:
-        return ProbabilityRing(
+    ) -> GenomadRing:
+        return GenomadRing(
             id=str(uuid.uuid4()), 
             data=[
-                entry.to_probability_segment(prediction_classes=prediction_classes, min_probability=min_probability) 
+                entry.to_segment(prediction_classes=prediction_classes, min_probability=min_probability) 
                 for entry in parse_aggregated_genomad_output(file_path=file)
             ],
             reference=reference
@@ -407,18 +413,20 @@ class LabelRing(Ring):
     @staticmethod
     def from_genomad_output(
         file: Path,
-        reference: RingReference | None = None, 
-        min_probability: float = 0, 
-        min_segment_length: int = 12000,  # should be a multiple of GenomadRingSchema.window_size
+        reference: RingReference | None = None,
+        min_window_score: float = 0.5, 
+        min_segment_score: float = 0.7,
+        min_segment_length: int = 10000,  # should be a multiple of GenomadRingSchema.window_size
         prediction_classes: List[GenomadPredictionClass] = [GenomadPredictionClass.VIRUS, GenomadPredictionClass.PLASMID]
     ) -> LabelRing:
         return LabelRing(
             id=str(uuid.uuid4()), 
             data=[
-                entry for entry in extract_genomad_contiguous_segments(
-                    file_path=file,
+                segment for segment in extract_genomad_contiguous_segments(
+                    file=file,
                     min_segment_length=min_segment_length,
-                    min_probability=min_probability,
+                    min_window_score=min_window_score,
+                    min_segment_score=min_segment_score,
                     prediction_classes=prediction_classes
                 )
             ],
@@ -443,5 +451,28 @@ class AnnotationRing(Ring):
         return AnnotationRing(
             id=str(uuid.uuid4()), 
             data=[segment for segment in parse_tsv_segments(file_path=file, sanitize=sanitize)],
+            reference=reference
+        )
+    
+    @staticmethod
+    def from_genomad_output(
+        file: Path,
+        reference: RingReference | None = None,
+        min_window_score: float = 0.5, 
+        min_segment_score: float = 0.7,
+        min_segment_length: int = 10000,  # should be a multiple of GenomadRingSchema.window_size
+        prediction_classes: List[GenomadPredictionClass] = [GenomadPredictionClass.VIRUS, GenomadPredictionClass.PLASMID]
+    ) -> AnnotationRing:
+        return AnnotationRing(
+            id=str(uuid.uuid4()), 
+            data=[
+                segment for segment in extract_genomad_contiguous_segments(
+                    file=file,
+                    min_segment_length=min_segment_length,
+                    min_window_score=min_window_score,
+                    min_segment_score=min_segment_score,
+                    prediction_classes=prediction_classes
+                )
+            ],
             reference=reference
         )

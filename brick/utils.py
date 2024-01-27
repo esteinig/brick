@@ -86,12 +86,10 @@ def slice_fasta_sequences(
     sliced_sequences = {}
 
     for seq_record in SeqIO.parse(str(fasta_file), "fasta"):
-        if sequence_subset is None:
-            pass
-        else:
-            if seq_record.id not in sequence_subset:
-                continue 
-
+         
+        if sequence_subset and seq_record.id not in sequence_subset:
+            continue 
+        
         slices = []
         for i in range(0, len(seq_record), slice_size):
             slice_seq = seq_record.seq[i:i+slice_size]
@@ -108,7 +106,7 @@ def slice_fasta_sequences(
                     sliced_fasta.write(
                         f">{record.id} {record.description}\n{record.seq}\n"
                     )
-                    
+
     return sliced_sequences
 
 

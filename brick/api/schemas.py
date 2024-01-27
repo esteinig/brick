@@ -1,7 +1,7 @@
 from pydantic import BaseModel, field_validator, model_validator
 from typing import Optional, Annotated, Tuple, List
 from pathlib import Path
-from enum import StrEnum
+from strenum import StrEnum
 from uuid import UUID
 import shutil
 
@@ -330,15 +330,16 @@ class ReferenceRingResponse(BaseModel):
 
 class GenomadRingSchema(RingSchema):
     
-    window_size: int = 3000
-    min_probability: float = 0.
+    window_size: int = 2500
+    min_window_score: float = 0.
+    min_segment_score: float = 0.
     min_segment_length: int = 0
 
     prediction_classes: List[GenomadPredictionClass] = [
         GenomadPredictionClass.PLASMID, 
         GenomadPredictionClass.VIRUS
     ]
-    
+
     ring_type: RingType = RingType.LABEL
 
 
@@ -347,16 +348,19 @@ class GenomadRingSchema(RingSchema):
         if not (settings.WORK_DIRECTORY / self.reference.session_id / self.reference.reference_id).exists():
             raise ValueError(f"reference sequence file '{self.reference.reference_id}' does not exist")
         
-        if self.window_size < 3000:
+        if self.window_size < 2500:
             raise ValueError("Window size must be at least 3000 bp")
         if self.window_size > self.reference.sequence.length:
             raise ValueError(f"Window size cannot be larger than the reference sequence ({self.reference.sequence.length} bp)")
 
-        if self.ring_type not in (RingType.LABEL, RingType.ANNOTATION, RingType.PROBABILITY):
-            raise ValueError(f"Ring type must be one of: {RingType.LABEL}, {RingType.ANNOTATION}, {RingType.PROBABILITY}")
+        if self.ring_type not in (RingType.LABEL, RingType.ANNOTATION, RingType.GENOMAD):
+            raise ValueError(f"Return ring type must be one of: {RingType.LABEL}, {RingType.ANNOTATION}, {RingType.GENOMAD}")
 
-        if not 0 <= self.min_probability <= 1:
-            raise ValueError(f"Minimum probability threshold must be between 0 and 1")
+        if not 0 <= self.min_segment_score <= 1:
+            raise ValueError(f"Minimum segment score threshold must be between 0 and 1")
+
+        if not 0 <= self.min_window_score <= 1:
+            raise ValueError(f"Minimum segment score threshold must be between 0 and 1")
 
         if self.min_segment_length < 0:
             raise ValueError(f"Minimum segment length must be at least 0")

@@ -20,7 +20,7 @@ from .core.celery import celery_app
 from .core.db import get_session_collection_pymongo
 from .schemas import Session, FileFormat, FileType, SessionFile, Sequence, Selections, FileConfig
 from .schemas import AnnotationRingSchema, LabelRingSchema, BlastRingSchema, ReferenceRingSchema, GenomadRingSchema, RingReference
-from ..rings import Ring, RingSegment, RingType, BlastRing, AnnotationRing, LabelRing, ReferenceRing, GenomadRing
+from ..rings import Ring, RingSegment, RingType, BlastRing, AnnotationRing, LabelRing, ReferenceRing
 from ..utils import slice_fasta_sequences
 
 # Uploaded file validation and session file storage
@@ -213,6 +213,9 @@ def process_annotation_ring(
     except Exception as e:
         return {"success": False, "error": str(e)}
 
+
+# Label annotations
+
 @celery_app.task
 def process_label_ring(
     tsv_file_path: Optional[Annotated[str, "Path to genome file in the session directory"]], 
@@ -263,7 +266,7 @@ def process_label_ring(
         return {"success": False, "error": str(e)}
 
 
-# Genomad subprocess execution and parsing
+# Genomad computation
     
 @celery_app.task
 def process_genomad_ring(
@@ -278,7 +281,7 @@ def process_genomad_ring(
             
             output_file = run_genomad(
                 fasta=Path(reference_file_path), 
-                sequence=ring_schema.reference.sequence,
+                seq_id=ring_schema.reference.sequence.id,
                 window_size=ring_schema.window_size,
                 working_directory=working_directory
             )
@@ -287,14 +290,22 @@ def process_genomad_ring(
                 ring: LabelRing = LabelRing.from_genomad_output(
                     file=output_file,
                     reference=ring_schema.reference,
-                    min_probability=ring_schema.min_probability,
+                    min_window_score=ring_schema.min_window_score, 
+                    min_segment_score=ring_schema.min_segment_score,
                     min_segment_length=ring_schema.min_segment_length,
                     prediction_classes=ring_schema.prediction_classes
                 )
             elif ring_schema.ring_type == RingType.ANNOTATION:
-                pass
+                ring: AnnotationRing = AnnotationRing.from_genomad_output(
+                    file=output_file,
+                    reference=ring_schema.reference,
+                    min_window_score=ring_schema.min_window_score, 
+                    min_segment_score=ring_schema.min_segment_score,
+                    min_segment_length=ring_schema.min_segment_length,
+                    prediction_classes=ring_schema.prediction_classes
+                )
             else:
-                pass
+                raise ValueError("Genomad ring not yet implemented for geNomad")
         
         if not ring.data:
             raise ValueError("geNomad executed correctly but no outputs were found")
@@ -336,11 +347,11 @@ def run_genomad(fasta: Path, seq_id: str, window_size: int, working_directory: P
         raise ValueError("No sequence slices produced")
     
     # Run geNomad
-    subprocess.run(["genomad", "end-to-end", "--cleanup", "--relaxed", str(sliced_fasta), "genomad_output", settings.GENOMAD_DATABASE], check=True)
+    subprocess.run(["genomad", "end-to-end", "--threads", settings.CELERY_THREADS_PER_WORKER, "--cleanup", "--relaxed", str(sliced_fasta), str(working_directory / "genomad_output"), settings.GENOMAD_DATABASE], check=True)
 
     # Check that the output exists
     aggregated_output = working_directory / 'genomad_output' / 'sliced_aggregated_classification' / 'sliced_aggregated_classification.tsv'
-    if not aggregated_output.exists() and not aggregated_output.is_file():
+    if not aggregated_output.exists() or not aggregated_output.is_file():
         raise ValueError("Could not find geNomad aggegated output file")
 
     return aggregated_output
@@ -367,7 +378,7 @@ def run_blast(query_fasta: Path, reference_fasta: Path, working_directory: Path)
     subprocess.run(["makeblastdb", "-in", str(reference_fasta), "-dbtype", "nucl", "-out", str(db_file)], check=True)
 
     # Run BLASTn
-    subprocess.run(["blastn", "-query", str(query_fasta), "-db", str(db_file), "-out", str(output_file), "-outfmt", "6"], check=True)
+    subprocess.run(["blastn", "-num_threads", settings.CELERY_THREADS_PER_WORKER, "-query", str(query_fasta), "-db", str(db_file), "-out", str(output_file), "-outfmt", "6"], check=True)
 
     if not output_file.exists() and not output_file.is_file():
         raise ValueError("Could not find BLAST aggegated output file")
