@@ -8,7 +8,7 @@ version = "0.3.0"
 authors = [{name="Eike Steinig", email="eike.steinig@unimelb.edu.au"}]
 description = "BRICK implements BRIG-like interactive figures in D3 for bacterial genome visualization, annotation, comparison and exploration using a Python scripting API, CLI, REST API or UI."
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.10"
 dependencies = [
   "typer==0.9.0",
   "biopython==1.83",
@@ -27,6 +27,7 @@ dependencies = [
   "httpx==0.26.0",
   "asgi-lifespan==2.1.0",
   "apscheduler",
+  "strenum"
 ]
 
 [tool.setuptools.packages.find]
