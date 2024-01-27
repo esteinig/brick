@@ -347,7 +347,7 @@ def run_genomad(fasta: Path, seq_id: str, window_size: int, working_directory: P
         raise ValueError("No sequence slices produced")
     
     # Run geNomad
-    subprocess.run(["genomad", "end-to-end", "--threads", settings.CELERY_THREADS_PER_WORKER, "--cleanup", "--relaxed", str(sliced_fasta), str(working_directory / "genomad_output"), settings.GENOMAD_DATABASE], check=True)
+    subprocess.run(["genomad", "end-to-end", "--threads", str(settings.CELERY_THREADS_PER_WORKER), "--cleanup", "--relaxed", str(sliced_fasta), str(working_directory / "genomad_output"), str(settings.GENOMAD_DATABASE)], check=True)
 
     # Check that the output exists
     aggregated_output = working_directory / 'genomad_output' / 'sliced_aggregated_classification' / 'sliced_aggregated_classification.tsv'
@@ -378,7 +378,7 @@ def run_blast(query_fasta: Path, reference_fasta: Path, working_directory: Path)
     subprocess.run(["makeblastdb", "-in", str(reference_fasta), "-dbtype", "nucl", "-out", str(db_file)], check=True)
 
     # Run BLASTn
-    subprocess.run(["blastn", "-num_threads", settings.CELERY_THREADS_PER_WORKER, "-query", str(query_fasta), "-db", str(db_file), "-out", str(output_file), "-outfmt", "6"], check=True)
+    subprocess.run(["blastn", "-num_threads", str(settings.CELERY_THREADS_PER_WORKER), "-query", str(query_fasta), "-db", str(db_file), "-out", str(output_file), "-outfmt", "6"], check=True)
 
     if not output_file.exists() and not output_file.is_file():
         raise ValueError("Could not find BLAST aggegated output file")
