@@ -125,9 +125,13 @@ services:
   # TASK QUEUE WORKERS
   # ==================
 
-  # Celery workers have access to some API settings
-  # and update the session model in the database and therefore
-  # need access to the API config and secrets
+  # Celery workers have access to some API settings and update 
+  # the session model in the database and therefore need access 
+  # to the API config and secrets
+
+  # The environment variable CELERY_THREADS_PER_WORKER specifies
+  # concurrency of both the threads assigned to each worker and
+  # the maximum threads for all software in API (BLAST, GENOMAD)
 
   worker:
     profiles:
@@ -135,7 +139,8 @@ services:
     build: 
       context: .
       dockerfile: docker/Dockerfile.server
-    command: celery -A brick.api.core.celery.celery_app worker --loglevel=INFO
+    # Note the $$ variable to access environment variable from env file [default: 8, fallback: 4]
+    command: sh -c "celery -A brick.api.core.celery.celery_app worker --loglevel=INFO --concurrency $${CELERY_THREADS_PER_WORKER:-4}"
     volumes:
       - work:/tmp
       - databases:/data
@@ -164,7 +169,8 @@ services:
     build: 
       context: .
       dockerfile: docker/Dockerfile.server
-    command: celery -A brick.api.core.celery.celery_app worker --loglevel=INFO
+    # Note the $$ variable to access environment variable from env file [default: 8, fallback: 4]
+    command: sh -c "celery -A brick.api.core.celery.celery_app worker --loglevel=INFO --concurrency $${CELERY_THREADS_PER_WORKER:-4}"
     volumes:
       - work:/tmp
       - databases:/data

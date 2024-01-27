@@ -33,6 +33,7 @@ class Settings(BaseSettings):
     # Celery configuration
     CELERY_BROKER_URL: str = "redis://redis:6379/0"
     CELERY_RESULT_BACKEND: str = "redis://redis:6379/1"
+    CELERY_THREADS_PER_WORKER: int = 4
 
     # CORS configuration
     CORS_ORIGINS: List[str] | str = ['http://app:5173']
@@ -74,7 +75,7 @@ class Settings(BaseSettings):
     
 
     @field_validator('GENOMAD_DATABASE', mode="after")
-    def get_mongodb_secret_pwd(cls, v: Path):      
+    def check_genomad_database(cls, v: Path):      
         if v and not v.exists():
             logging.warn(f"geNomad database directory not found! ({v})")
             logging.warn(f"Attempts to execute `genomad` will fail in the `process_genomad_ring` worker!")
