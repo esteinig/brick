@@ -102,9 +102,9 @@
                     <label class="label text-xs">
                         <p class="opacity-40">Ring type</p>
                         <select id="genomadRingType" class="select text-xs" bind:value={ringConfig.ring_type}>
-                            <option value={RingType.LABEL}>{capitalize(RingType.LABEL)}</option>
                             <option value={RingType.ANNOTATION}>{capitalize(RingType.ANNOTATION)}</option>
-                            <option value={RingType.GENOMAD}>{capitalize(RingType.GENOMAD)}</option>
+                            <option value={RingType.LABEL}>{capitalize(RingType.LABEL)}</option>
+                            <option value={RingType.GENOMAD}>Probability</option>
                         </select>
                     </label>
                 </div>
