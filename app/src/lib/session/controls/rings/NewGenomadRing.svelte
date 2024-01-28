@@ -128,12 +128,13 @@
                 </label>
             </div>
             
-            <div class="flex justify-right mt-6">
-                <button class="btn variant-outline-surface" type="submit" disabled={!$ringReferenceStore}>
+            <div class="flex items-center mt-6">
+                <button class="btn variant-outline-surface" type="submit" disabled={!$ringReferenceStore || $requestInProgress}>  
                     <div class="flex items-center align-center">
                         <span>Construct</span>
                     </div>
                 </button>
+               <div class="text-xs opacity-40 ml-6">Initital computation may take a few minutes depending on server load <span class="icon ml-1">❤️</span></div> 
             </div>
         </form>
     {/if}

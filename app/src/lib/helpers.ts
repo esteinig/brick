@@ -27,14 +27,14 @@ export async function checkCeleryResults(
   let attempts = 0;
 
   const timeoutPromise = new Promise<TaskStatusResponse>((_, reject) => 
-      setTimeout(() => reject(new Error('Operation timed out')), timeout)
+      setTimeout(() => reject(new Error('Task result requests timed out')), timeout)
   );
 
   const statusCheck = async (): Promise<TaskStatusResponse> => {
       while (true) {
           const currentTime = new Date().getTime();
           if (currentTime - startTime > timeout) {
-              throw new Error('File processing timed out');
+              throw new Error('Task result requests timed out');
           }
 
           const response = await fetch(url);

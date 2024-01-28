@@ -128,12 +128,12 @@
             <p class="opacity-60 mb-2">Basic rings</p>
             <div class="p-2">
                 <div class="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-4 gap-4 my-3">
-                    <button class="btn {newRing === RingType.REFERENCE ? 'variant-ghost-primary' : 'variant-ringed-primary'}" disabled={!selectedReference || $requestInProgress ? true : false} on:click={() => newRing = RingType.REFERENCE}>
+                    <button class="btn {newRing === RingType.REFERENCE ? 'variant-ghost-primary' : 'variant-ringed-primary'}" disabled={!selectedReference} on:click={() => newRing = RingType.REFERENCE}>
                         <div class="flex items-center align-center truncate">
                             <span>Reference</span>
                         </div>
                     </button>
-                    <button class="btn {newRing === RingType.ANNOTATION ? 'variant-ghost-primary' : 'variant-ringed-primary'}" disabled={!selectedReference || $requestInProgress ? true : false}  on:click={() => newRing = RingType.ANNOTATION}>
+                    <button class="btn {newRing === RingType.ANNOTATION ? 'variant-ghost-primary' : 'variant-ringed-primary'}" disabled={!selectedReference}  on:click={() => newRing = RingType.ANNOTATION}>
                         <div class="flex items-center align-center truncate">
                             <span>Annotations</span>
                         </div>
@@ -143,7 +143,7 @@
                             <span>BLAST</span>
                         </div>
                     </button>
-                    <button class="btn {newRing === RingType.LABEL ? 'variant-ghost-secondary' : 'variant-ringed-secondary'}" disabled={!selectedReference || $requestInProgress ? true : false}  on:click={() => newRing = RingType.LABEL}>
+                    <button class="btn {newRing === RingType.LABEL ? 'variant-ghost-secondary' : 'variant-ringed-secondary'}" disabled={!selectedReference}  on:click={() => newRing = RingType.LABEL}>
                         <div class="flex items-center align-center truncate">
                             <span>Labels</span>
                         </div>

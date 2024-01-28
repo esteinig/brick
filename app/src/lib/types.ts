@@ -117,6 +117,22 @@ export class BlastRing extends Ring {
     }
 }
 
+
+export class GenomadRing extends Ring {
+    constructor(
+        reference: RingReference,
+        index: number,
+        visible: boolean = true,
+        type: RingType = RingType.GENOMAD, 
+        color: string = "#d3d3d3", 
+        height: number = 20, 
+        title: string = "geNomad Ring"
+    ) {
+        super(reference, index, visible, type, color, height, title)
+        this.id = createUuid()
+    }
+}
+
 export class LabelRing extends Ring {
     constructor(
         reference: RingReference,
@@ -310,7 +326,8 @@ export enum TaskResultType {
     BLAST_RING = 'BLAST_RING',
     ANNOTATION_RING = 'ANNOTATION_RING',
     LABEL_RING = 'LABEL_RING',
-    REFERENCE_RING = 'REFERENCE_RING'
+    REFERENCE_RING = 'REFERENCE_RING',
+    GENOMAD_RING = 'GENOMAD_RING'
 }
 
 export type TaskStatusResponse = {

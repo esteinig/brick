@@ -33,3 +33,4 @@ ENV PATH=/opt/conda/envs/brick/bin:$PATH
 # Download geNomad database to /data/genomad_db
 RUN genomad download-database .
 
+# Profiling => 18G RAM without --splits, 6GB with --split 4(geNomad v1.7)

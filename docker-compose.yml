@@ -139,8 +139,8 @@ services:
     build: 
       context: .
       dockerfile: docker/Dockerfile.server
-    # Note the $$ variable to access environment variable from env file [default: 8, fallback: 4]
-    command: sh -c "celery -A brick.api.core.celery.celery_app worker --loglevel=INFO --concurrency $${CELERY_THREADS_PER_WORKER:-4}"
+    # Concurrency is set at the application with CELERY_THREADS_PER_WORKER [default: all, fallback: 1]
+    command: celery -A brick.api.core.celery.celery_app worker --loglevel=INFO
     volumes:
       - work:/tmp
       - databases:/data
@@ -162,6 +162,20 @@ services:
       - brick_db_pwd
     networks:
       - internal
+    
+    # Not necessary for local deployment, unless explicitly needed, 
+    # resource limits in this deployment are meant to evaluate and
+    # test resource use for the web application. Variables do not 
+    # seem to work, so values must be explicitly set
+
+    # deploy:
+    #   resources:
+    #     limits:            # process is killed
+    #       cpus: 8          # either number of cores or fraction
+    #       memory: 42G
+    #     reservations:      # resources reserved for container
+    #       cpus: 8
+    #       memory: 20G      # determined by the largest database 
 
   worker-dev:
     profiles:
@@ -169,8 +183,8 @@ services:
     build: 
       context: .
       dockerfile: docker/Dockerfile.server
-    # Note the $$ variable to access environment variable from env file [default: 8, fallback: 4]
-    command: sh -c "celery -A brick.api.core.celery.celery_app worker --loglevel=INFO --concurrency $${CELERY_THREADS_PER_WORKER:-4}"
+    # Concurrency is set at the application with CELERY_THREADS_PER_WORKER [default: all, fallback: 1]
+    command: celery -A brick.api.core.celery.celery_app worker --loglevel=INFO
     volumes:
       - work:/tmp
       - databases:/data
@@ -192,6 +206,20 @@ services:
       - brick_db_pwd     
     networks:
       - internal 
+
+    # Not necessary for local deployment, unless explicitly needed, 
+    # resource limits in this deployment are meant to evaluate and
+    # test resource use for the web application. Variables do not 
+    # seem to work, so values must be explicitly set
+
+    # deploy:
+    #   resources:
+    #     limits:            
+    #       cpus: 8          # either number of cores or fraction
+    #       memory: 42G      # process is killed
+    #     reservations:      
+    #       cpus: 8
+    #       memory: 20G      # determined by the largest database 
 
 
   # ========= 

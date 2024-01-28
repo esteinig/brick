@@ -1,6 +1,5 @@
-
 import json
-import logging 
+import logging
 
 from fastapi import FastAPI
 from typing import Dict
@@ -10,6 +9,9 @@ from pydantic import AnyHttpUrl, field_validator, model_validator
 from pydantic_settings import BaseSettings
 from typing import List, Optional
 from pathlib import Path
+
+from ...utils import get_cpu_count, get_process_threads
+
 
 class Settings(BaseSettings):
 
@@ -33,10 +35,13 @@ class Settings(BaseSettings):
     # Celery configuration
     CELERY_BROKER_URL: str = "redis://redis:6379/0"
     CELERY_RESULT_BACKEND: str = "redis://redis:6379/1"
-    CELERY_THREADS_PER_WORKER: int = 4
+    CELERY_THREADS_PER_WORKER: int = get_cpu_count()
+    CELERY_THREADS_PER_PROCESS: int = get_process_threads()
+    CELERY_TASK_SOFT_TIMEOUT: int = 12000
+    CELERY_TASK_HARD_TIMEOUT: int = 18000
 
     # CORS configuration
-    CORS_ORIGINS: List[str] | str = ['http://app:5173']
+    CORS_ORIGINS: List[str] | str = ["http://app:5173"]
 
     # Database configuration
     MONGODB_URL: str = ""
@@ -47,11 +52,12 @@ class Settings(BaseSettings):
 
     # Local database in the database:/data volume
     GENOMAD_DATABASE: Path = Path("/data/genomad_db")
+    GENOMAD_SPLITS_ARG: int = 4
 
     class ConfigDict:
         case_sensitive = True
 
-    @field_validator('CORS_ORIGINS', mode="before")
+    @field_validator("CORS_ORIGINS", mode="before")
     def assemble_cors_origins(cls, v: Optional[str]) -> List[AnyHttpUrl]:
         if isinstance(v, str) and not v.startswith("["):
             return [i.strip() for i in v.split(",")]
@@ -59,37 +65,40 @@ class Settings(BaseSettings):
             return v
         return []
 
-    @field_validator('MONGODB_USERNAME', mode="before")
-    def get_mongodb_secret_username(cls, v: str):   
+    @field_validator("MONGODB_USERNAME", mode="before")
+    def get_mongodb_secret_username(cls, v: str):
         if v:
-            path = Path(v)     
+            path = Path(v)
             if path.is_file() and path.exists():
-                v = path.read_text().strip('\n')
+                v = path.read_text().strip("\n")
         return v
-    
-    @field_validator('MONGODB_PASSWORD', mode="before")
-    def get_mongodb_secret_pwd(cls, v: str):      
-        if v and Path(v).exists():
-            v = Path(v).read_text().strip('\n')
-        return v
-    
 
-    @field_validator('GENOMAD_DATABASE', mode="after")
-    def check_genomad_database(cls, v: Path):      
+    @field_validator("MONGODB_PASSWORD", mode="before")
+    def get_mongodb_secret_pwd(cls, v: str):
+        if v and Path(v).exists():
+            v = Path(v).read_text().strip("\n")
+        return v
+
+    @field_validator("GENOMAD_DATABASE", mode="after")
+    def check_genomad_database(cls, v: Path):
         if v and not v.exists():
             logging.warn(f"geNomad database directory not found! ({v})")
-            logging.warn(f"Attempts to execute `genomad` will fail in the `process_genomad_ring` worker!")
+            logging.warn(
+                f"Attempts to execute `genomad` will fail in the `process_genomad_ring` worker!"
+            )
         return v
 
     @model_validator(mode="after")
-    def get_default_mongodb_url(self) -> 'Settings':
+    def get_default_mongodb_url(self) -> "Settings":
         if not self.MONGODB_URL:
             self.MONGODB_URL = f"mongodb://{self.MONGODB_USERNAME}:{self.MONGODB_PASSWORD}@mongodb:27017?authSource=admin"
         return self
 
+
 def get_settings():
     logging.info("Initiating settings for FastAPI")
     return Settings()
+
 
 # Global settings intitiation note that this will initiate
 # settings for any execution of tasks in the CLI
@@ -99,6 +108,7 @@ settings = get_settings()
 # Default session for session endpoint
 DEFAULT_SESSIONS: Dict[str, dict] = {}
 
+
 def read_default_session(path: Path) -> dict or None:
     session_data = None
     if path.exists() and path.is_file():
@@ -107,13 +117,14 @@ def read_default_session(path: Path) -> dict or None:
         logging.info("Loaded default session for session endpoint")
     else:
         logging.info(f"Could not find default session for session endpoint ({path})")
-        
+
     return session_data
+
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    DEFAULT_SESSIONS['default'] = read_default_session(
+    DEFAULT_SESSIONS["default"] = read_default_session(
         path=Path("default.json")  # /app in container
-    ) 
+    )
     yield
     DEFAULT_SESSIONS.clear()
