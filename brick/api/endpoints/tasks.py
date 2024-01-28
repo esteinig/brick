@@ -5,7 +5,14 @@ from fastapi import APIRouter, HTTPException
 from ..schemas import TaskStatus, TaskStatusResponse, TaskResultResponse
 from ..core.celery import celery_app
 from ..schemas import Session, SessionFile, FileFormat, TaskResultType
-from ...rings import ReferenceRing, BlastRing, AnnotationRing, LabelRing, RingType
+from ...rings import (
+    ReferenceRing,
+    BlastRing,
+    AnnotationRing,
+    LabelRing,
+    GenomadRing,
+    RingType,
+)
 
 router = APIRouter(
     prefix="/tasks",
@@ -51,7 +58,10 @@ def get_task_result(task_id: str):
         else:
             raise TypeError("Output of the requested task was not a dictionary")
 
-        result_model = get_result_model(result_data=result_data)
+        try:
+            result_model = get_result_model(result_data=result_data)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
 
         return JSONResponse(
             status_code=200,
@@ -87,6 +97,8 @@ def get_result_model(
         return LabelRing(**result_data)
     elif "type" in result_data and result_data["type"] == RingType.REFERENCE:
         return ReferenceRing(**result_data)
+    elif "type" in result_data and result_data["type"] == RingType.GENOMAD:
+        return GenomadRing(**result_data)
     elif "date" in result_data:
         return Session(**result_data)
     else:

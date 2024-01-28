@@ -34,11 +34,17 @@ class GenomadPredictionClass(StrEnum):
     PLASMID = "plasmid"
 
 
+class SegmentMeta(BaseModel):
+    plasmid: float
+    virus: float
+    chromosome: float
+
+
 class RingSegment(BaseModel):
     start: int = 0
     end: int = 0
-    color: str = "#d3d3d3"
     text: str = ""
+    meta: SegmentMeta | None = None
 
 
 class RingReferenceSequence(BaseModel):
@@ -116,27 +122,44 @@ class GenomadEntry(BaseModel):
     def to_segment(
         self,
         prediction_classes: List[GenomadPredictionClass],
-        min_probability: float = 0.7,
+        min_window_score: float = 0.7,
     ):
 
         label = ""
         if (
-            self.chromosome_score >= min_probability
+            self.chromosome_score >= min_window_score
             and GenomadPredictionClass.CHROMOSOME in prediction_classes
         ):
-            label += f"Chromosome: {self.chromosome_score:.2f} "
+            label += f"Chromosome ({self.chromosome_score:.2f}) "
+        else:
+            self.chromosome_score = 0
+
         if (
-            self.plasmid_score >= min_probability
+            self.plasmid_score >= min_window_score
             and GenomadPredictionClass.PLASMID in prediction_classes
         ):
-            label += f"Plasmid: {self.plasmid_score:.2f} "
+            label += f"Plasmid ({self.plasmid_score:.2f}) "
+        else:
+            self.plasmid_score = 0
+
         if (
-            self.virus_score >= min_probability
+            self.virus_score >= min_window_score
             and GenomadPredictionClass.VIRUS in prediction_classes
         ):
-            label += f"Virus: {self.virus_score:.2f} "
+            label += f"Virus ({self.virus_score:.2f}) "
+        else:
+            self.virus_score = 0
 
-        return RingSegment(start=self.start, end=self.end, text=label)
+        return RingSegment(
+            start=self.start,
+            end=self.end,
+            text=label,
+            meta=SegmentMeta(
+                plasmid=self.plasmid_score,
+                chromosome=self.chromosome_score,
+                virus=self.virus_score,
+            ),
+        )
 
 
 ##################
@@ -197,10 +220,11 @@ def parse_blastn_output(
 
 # Generator function
 def parse_aggregated_genomad_output(file: Path) -> GenomadEntry:
-    """Parses the aggregated_classification output from a sliced genome file where sequence names are in format {id}__{start}..{end}"""
+    """
+    Parses the aggregated_classification output from a sliced genome file
+    """
 
     genomad_output = pandas.read_csv(file, sep="\t", header=0)
-
     for _, row in genomad_output.iterrows():
 
         start, end, seq_id = get_start_end_from_seq_name(seq_name=row["seq_name"])
@@ -472,9 +496,6 @@ class LabelRing(Ring):
                 segment.text = sanitize_input(
                     input_string=segment.text, is_for_db=True, is_for_svg=True
                 )
-                segment.color = sanitize_input(
-                    input_string=segment.color, is_for_db=True, is_for_svg=True
-                )
             self.data.append(segment)
 
     @staticmethod
@@ -574,7 +595,7 @@ class GenomadRing(Ring):
     def from_genomad_output(
         file: Path,
         reference: RingReference | None = None,
-        min_probability: float = 0,
+        min_window_score: float = 0,
         prediction_classes: List[GenomadPredictionClass] = [
             GenomadPredictionClass.VIRUS,
             GenomadPredictionClass.PLASMID,
@@ -585,9 +606,9 @@ class GenomadRing(Ring):
             data=[
                 entry.to_segment(
                     prediction_classes=prediction_classes,
-                    min_probability=min_probability,
+                    min_window_score=min_window_score,
                 )
-                for entry in parse_aggregated_genomad_output(file_path=file)
+                for entry in parse_aggregated_genomad_output(file=file)
             ],
             reference=reference,
         )

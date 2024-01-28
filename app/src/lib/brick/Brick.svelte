@@ -10,6 +10,7 @@
   import { ringReferenceStore } from '$lib/stores/RingReferenceStore';
   import { createEventDispatcher } from 'svelte';
 	import { removeTooltip, setTooltip } from '$lib/stores/TooltipStore';
+	import RingSegment from '$lib/session/controls/helpers/RingSegment.svelte';
 
   $: rings = createFilteredRingsStore($ringReferenceStore)
 
@@ -295,7 +296,38 @@
     return baseY;
   }
 
+
+  function calculateGenomadPointRadius(d: RingSegment, index: number, height: number, gap: number): number {
+    const ringHeight = getRingHeight($rings, 0, index);
+    const innerRadius = $plotConfigStore.rings.radius + (index * gap) + ringHeight;
+    const outerRadius = innerRadius + height;
+    const score = d.meta?.plasmid ?? 0;
+
+    // Interpolate the radius based on the score
+    return innerRadius + (outerRadius - innerRadius) * score;
+  }
+
+  function generateLinePath(ringSegments: RingSegment[], index: number, height: number, gap: number, smoothing: boolean): string {
+    let lineGenerator = d3.lineRadial()
+        .angle((d: RingSegment) => calculateGenomadMidpoint(d))
+        .radius((d: RingSegment) => calculateGenomadPointRadius(d, index, height, gap))
+
+    if (smoothing){
+      lineGenerator = lineGenerator.curve(d3.curveNatural)
+    }
+
+    return lineGenerator(ringSegments);
+  }
+
+  function calculateGenomadMidpoint(d: RingSegment): number {
+      const midpointAngle = degreeScale((d.start + d.end) / 2);
+      return midpointAngle * (Math.PI / 180); // Convert to radians
+  }
+
+
   let referencePosition: number | undefined = undefined;
+
+  $: outerRingIsGenomad = $rings[-1] && $rings[-1].type === RingType.GENOMAD;
 
 </script>
 
@@ -324,34 +356,39 @@
           {#each $rings as ring}
             {#if ring.type === RingType.LABEL}
               {#each ring.data as ringAnnotation}
-              <line 
-                x1={calculateOuterArcPointX1(ringAnnotation, $plotConfigStore.rings.gap)} 
-                y1={calculateOuterArcPointY1(ringAnnotation, $plotConfigStore.rings.gap)} 
-                x2={calculateOuterArcPointX2(ringAnnotation, $plotConfigStore.labels.lineLength, $plotConfigStore.rings.gap)} 
-                y2={calculateOuterArcPointY2(ringAnnotation, $plotConfigStore.labels.lineLength, $plotConfigStore.rings.gap)}
-                style="stroke: {$plotConfigStore.labels.lineColor}; stroke-width: {$plotConfigStore.labels.lineWidth/100}rem; opacity: {$plotConfigStore.labels.lineOpacity/100};"
-                class="brickAnnotationLine"
-                visibility={ring.visible ? 'visible': 'hidden'}
-              />
-            {/each}
-            {#each ring.data as ringAnnotation}
-              <text 
-                x={calculateOuterArcPointX2(ringAnnotation, $plotConfigStore.labels.lineLength, $plotConfigStore.rings.gap)} 
-                y={calculateOuterArcPointY2(ringAnnotation, $plotConfigStore.labels.lineLength, $plotConfigStore.rings.gap)}
-                style="fill: {$plotConfigStore.labels.textColor}; opacity: {$plotConfigStore.labels.textOpacity/100}; font-size: {$plotConfigStore.labels.textSize}%"
-                text-anchor={getTextAnchor(degreeScale(ringAnnotation.start))}
-                dominant-baseline={getDominantBaseline(degreeScale(ringAnnotation.start))}
-                class="brickAnnotationText"
-                visibility={ring.visible ? 'visible': 'hidden'}
-              >
-              <tspan
-              x={calculateTspanX(ringAnnotation, $plotConfigStore.labels.lineLength, $plotConfigStore.rings.gap, $plotConfigStore.labels.textGap)} 
-              y={calculateTspanY(ringAnnotation, $plotConfigStore.labels.lineLength, $plotConfigStore.rings.gap, $plotConfigStore.labels.textGap)}
-              >
-                {ringAnnotation.text}
-              </tspan>
-              </text>
-            {/each}
+                <line 
+                  x1={calculateOuterArcPointX1(ringAnnotation, $plotConfigStore.rings.gap)} 
+                  y1={calculateOuterArcPointY1(ringAnnotation, $plotConfigStore.rings.gap)} 
+                  x2={calculateOuterArcPointX2(ringAnnotation, $plotConfigStore.labels.lineLength, $plotConfigStore.rings.gap)} 
+                  y2={calculateOuterArcPointY2(ringAnnotation, $plotConfigStore.labels.lineLength, $plotConfigStore.rings.gap)}
+                  style="stroke: {$plotConfigStore.labels.lineColor}; stroke-width: {$plotConfigStore.labels.lineWidth/100}rem; opacity: {$plotConfigStore.labels.lineOpacity/100};"
+                  class="brickAnnotationLine"
+                  visibility={ring.visible ? 'visible': 'hidden'}
+                />
+              {/each}
+              {#each ring.data as ringAnnotation}
+                <text 
+                  x={calculateOuterArcPointX2(ringAnnotation, $plotConfigStore.labels.lineLength, $plotConfigStore.rings.gap)} 
+                  y={calculateOuterArcPointY2(ringAnnotation, $plotConfigStore.labels.lineLength, $plotConfigStore.rings.gap)}
+                  style="fill: {$plotConfigStore.labels.textColor}; opacity: {$plotConfigStore.labels.textOpacity/100}; font-size: {$plotConfigStore.labels.textSize}%"
+                  text-anchor={getTextAnchor(degreeScale(ringAnnotation.start))}
+                  dominant-baseline={getDominantBaseline(degreeScale(ringAnnotation.start))}
+                  class="brickAnnotationText"
+                  visibility={ring.visible ? 'visible': 'hidden'}
+                >
+                <tspan
+                x={calculateTspanX(ringAnnotation, $plotConfigStore.labels.lineLength, $plotConfigStore.rings.gap, $plotConfigStore.labels.textGap)} 
+                y={calculateTspanY(ringAnnotation, $plotConfigStore.labels.lineLength, $plotConfigStore.rings.gap, $plotConfigStore.labels.textGap)}
+                >
+                  {ringAnnotation.text}
+                </tspan>
+                </text>
+              {/each}
+          {:else if ring.type === RingType.GENOMAD}
+          <path 
+              d={generateLinePath(ring.data, ring.index, $plotConfigStore.rings.height, $plotConfigStore.rings.gap, $plotConfigStore.rings.lineSmoothing)}
+              style="fill: none; stroke: {ring.color}; stroke-width: 1"
+          />
           {:else}
             {#each ring.data as ringSegment, idx}
               <path 

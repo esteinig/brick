@@ -43,7 +43,10 @@ const DEFAULT_PLOTCONFIG: PlotConfig = {
     rings: { 
         radius: 200, 
         height: 20, 
-        gap: 5 
+        gap: 5, 
+        lineGap: 10,
+        lineHeight: 40,
+        lineSmoothing: false
     },
     labels: {
       lineColor: "#d3d3d3",
@@ -54,7 +57,7 @@ const DEFAULT_PLOTCONFIG: PlotConfig = {
       textSize: 90,
       textOpacity: 80,
       textGap: 5
-    }
+    },
 };
 
 export const plotConfigStore = writable<PlotConfig>(DEFAULT_PLOTCONFIG);

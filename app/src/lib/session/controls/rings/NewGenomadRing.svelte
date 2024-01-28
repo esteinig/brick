@@ -54,14 +54,9 @@
         data.append('ring_type', RingType.GENOMAD)
 
         ringConfig = {
+            ...ringConfig,
             reference: null,
-            window_size: 10000,
-            min_window_score: 0.5,
-            min_segment_score: 0.7,
-            min_segment_length: 10000,
-            prediction_classes: [GenomadPredictionClass.PLASMID, GenomadPredictionClass.VIRUS],
-            ring_type: RingType.LABEL
-        } // reset
+        } // reset reference only
 
         startRequestState();
 
@@ -76,6 +71,9 @@
 
 	}
 
+    $: segmentOptionDisabled = ringConfig.ring_type === RingType.GENOMAD;
+
+
 </script>
 
 <div class="border border-gray-300 rounded-2xl border-opacity-10 p-4">
@@ -87,10 +85,12 @@
         geNomad rings visualize predictions for plasmid or phage regions in contiguous segments of non-overlapping windows along a reference sequence. 
         Scores between 0 and 1 are computed for each origin prediction and can be added as a label, annotation or probability ring. 
     </p>
+    <p class="opacity-20 mb-2 text-xs w-full">
+        Labels are added to the midpoint of the contiguous segment identified, usually a combination of labels and annotation segments can be helpful to show this.
+        Final scores are averaged over the identified contiguous segment if it meets the length threshold.
+    </p>
     <p class="opacity-20 mb-4 text-xs w-full">
-        Labels are be added to the midpoint of the contiguous segment identified as mobile element, a combination of labels and annotation segments can be helpful.
-        Minimum window score may need to be relaxed to allow for longer contiguous segments if interrupted by low confidence predictions. Final scores are averaged
-        over the identified contiguous segment if it meets the length threshold.
+        Minimum window score may need to be relaxed to allow for longer contiguous segments if interrupted by low confidence predictions. Changing window parameters will recompute the predictions.
     </p>
     
     {#if $ringReferenceStore}
@@ -125,11 +125,11 @@
                 </label>
                 <label class="label text-xs">
                     <p class="opacity-40">Minimum total segment length (bp)</p>
-                    <input id="genomadSegmentLength" class="input text-xs {segmentLengthInputValidationClass}" type="text" bind:value={ringConfig.min_segment_length} />
+                    <input id="genomadSegmentLength" class="input text-xs {segmentLengthInputValidationClass}" type="text" bind:value={ringConfig.min_segment_length} disabled={segmentOptionDisabled} />
                 </label>
                 <label class="label text-xs">
                     <p class="opacity-40">Minimum average segment score</p>
-                    <input id="genomadProbability" class="input text-xs {segmentScoreInputValidationClass}" type="text" bind:value={ringConfig.min_segment_score} />
+                    <input id="genomadProbability" class="input text-xs {segmentScoreInputValidationClass}" type="text" bind:value={ringConfig.min_segment_score} disabled={segmentOptionDisabled} />
                 </label>
             </div>
             

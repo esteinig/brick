@@ -325,7 +325,7 @@ def process_genomad_ring(
         )
         storage_file = (
             storage_path
-            / f"{ring_schema.reference.reference_id}__{ring_schema.reference.sequence.id}.tsv"
+            / f"{ring_schema.reference.reference_id}__{ring_schema.reference.sequence.id}__{ring_schema.window_size}__{ring_schema.min_window_score}.tsv"
         )
 
         with create_tmp_directory(
@@ -370,7 +370,11 @@ def process_genomad_ring(
                     prediction_classes=ring_schema.prediction_classes,
                 )
             else:
-                ring: GenomadRing = GenomadRing.from_genomad_output()
+                ring: GenomadRing = GenomadRing.from_genomad_output(
+                    file=output_file,
+                    reference=ring_schema.reference,
+                    min_window_score=ring_schema.min_window_score,
+                )
 
         if not ring.data:
             raise ValueError("geNomad executed correctly but no outputs were found")

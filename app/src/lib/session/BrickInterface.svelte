@@ -28,7 +28,8 @@
         TaskResultType.REFERENCE_RING,
         TaskResultType.BLAST_RING,
         TaskResultType.LABEL_RING,
-        TaskResultType.ANNOTATION_RING
+        TaskResultType.ANNOTATION_RING,
+        TaskResultType.GENOMAD_RING,
     ]
 
     function handleRingActionResult(taskResultType: TaskResultType, ringResponse: TaskStatusResponse) {
@@ -41,6 +42,8 @@
         } else if (taskResultType === TaskResultType.ANNOTATION_RING) {
             addRing(ringResponse.result as AnnotationRing)
         } else if (taskResultType === TaskResultType.LABEL_RING) {
+            addRing(ringResponse.result as LabelRing)
+        } else if (taskResultType === TaskResultType.GENOMAD_RING) {
             addRing(ringResponse.result as LabelRing)
         }
 

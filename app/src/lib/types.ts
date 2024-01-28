@@ -16,12 +16,17 @@ export enum RingType {
     GENOMAD = "genomad"
 }
 
+export type SegmentMeta = {
+    plasmid: number
+    chromosome: number
+    virus: number
+}
 
 export type RingSegment = {
     start: number
     end: number
-    color: string
     text: string
+    meta: SegmentMeta | null
 }
 
 export type RingReference = {
@@ -81,7 +86,7 @@ export class ReferenceRing extends Ring {
         this.id = createUuid()
         this.size = size;
         this.data = [
-            {start: 0, end: size, color: color, text: title}
+            {start: 0, end: size, meta: null, text: title}
         ]
     }
 
@@ -427,6 +432,9 @@ export type RingConfig = {
     radius: number
     height: number
     gap: number
+    lineSmoothing: boolean
+    lineGap: number
+    lineHeight: number
 }
 
 
