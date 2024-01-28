@@ -8,7 +8,14 @@ from pydantic import ValidationError
 from fastapi.responses import JSONResponse
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException
 
-from ..schemas import FileConfig, UploadFileResponse, FileFormat, FileType, Session, SessionFile
+from ..schemas import (
+    FileConfig,
+    UploadFileResponse,
+    FileFormat,
+    FileType,
+    Session,
+    SessionFile,
+)
 
 from ..core.config import settings
 
@@ -50,27 +57,27 @@ async def upload_file(file: UploadFile = File(...), config: str = Form(...)):
         raise HTTPException(status_code=400, detail="No file uploaded")
 
     # Session directory checks
-    session_directory: Path = settings.WORK_DIRECTORY / config_data.session_id    
+    session_directory: Path = settings.WORK_DIRECTORY / config_data.session_id
 
     if not session_directory.exists():
         session_directory.mkdir(parents=True)
-        
+
     try:
         if not is_safe_to_add_files(
-            directory_path=session_directory, 
-            max_files_allowed=settings.SESSION_MAX_FILES, 
-            max_dir_size_mb=settings.SESSION_MAX_SIZE_MB
+            directory_path=session_directory,
+            max_files_allowed=settings.SESSION_MAX_FILES,
+            max_dir_size_mb=settings.SESSION_MAX_SIZE_MB,
         ):
-            raise HTTPException(status_code=500, detail=f"Error uploading file: session has reached capacity")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error uploading file: session has reached capacity",
+            )
     except NotADirectoryError as e:
         raise HTTPException(status_code=500, detail=f"Error uploading file: {str(e)}")
 
-
     # Sanitize filename
     sanitized_filename = sanitize_input(
-        input_string=file.filename,
-        is_for_db=True,
-        is_for_svg=False
+        input_string=file.filename, is_for_db=True, is_for_svg=False
     )
 
     # Save file and initate processing
@@ -80,24 +87,26 @@ async def upload_file(file: UploadFile = File(...), config: str = Form(...)):
         with file_path.open("wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
     except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Error saving file: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error saving file: {str(e)}")
 
     # JSON re-hydration of session or processing of files
 
     try:
-        if config_data.file_format == FileFormat.JSON and config_data.file_type == FileType.SESSION:
+        if (
+            config_data.file_format == FileFormat.JSON
+            and config_data.file_type == FileType.SESSION
+        ):
             task = rehydrate_session.delay(str(file_path), config_data.model_dump())
         else:
-            task = process_file.delay(str(file_path), config_data.model_dump(), sanitized_filename)
+            task = process_file.delay(
+                str(file_path), config_data.model_dump(), sanitized_filename
+            )
     except Exception as e:
-        file_path.unlink() # delete the file since the task failed to initiate
+        file_path.unlink()  # delete the file since the task failed to initiate
         raise HTTPException(status_code=500, detail=f"Error initiating task: {str(e)}")
 
     return JSONResponse(
-        status_code=202, 
-        content=UploadFileResponse(
-            task_id=task.id
-        ).model_dump()
+        status_code=202, content=UploadFileResponse(task_id=task.id).model_dump()
     )
 
 
@@ -107,12 +116,16 @@ async def delete_file(session_id: str, file_id: str):
     try:
         uuid.UUID(session_id, version=4)
     except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid session identifier format - expected UUID4")
+        raise HTTPException(
+            status_code=400, detail="Invalid session identifier format - expected UUID4"
+        )
 
     try:
         uuid.UUID(file_id, version=4)
     except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid file identifier format - expected UUID4")
+        raise HTTPException(
+            status_code=400, detail="Invalid file identifier format - expected UUID4"
+        )
 
     # Get the collection from the database
     collection = await get_session_collection_motor()
@@ -130,12 +143,11 @@ async def delete_file(session_id: str, file_id: str):
     if not file_to_delete:
         raise HTTPException(status_code=404, detail="File not found in session")
 
-    # Delete from database first - no consequences  
+    # Delete from database first - no consequences
     # on file path in case of failure
 
     await collection.update_one(
-        {"id": session_id},
-        {"$pull": {"files": {"id": file_id}}}
+        {"id": session_id}, {"$pull": {"files": {"id": file_id}}}
     )
 
     # Define the file path
@@ -148,18 +160,17 @@ async def delete_file(session_id: str, file_id: str):
         raise HTTPException(status_code=404, detail="File not found on disk")
 
     return JSONResponse(
-        status_code=200, 
+        status_code=200,
         content={
             "message": "File deleted sucessfully",
             "session_id": session_id,
-            "file_id": file_id
-        }
+            "file_id": file_id,
+        },
     )
-    
-
 
 
 # Helpers
+
 
 def safe_filename() -> str:
     """
@@ -168,7 +179,9 @@ def safe_filename() -> str:
     return str(uuid.uuid4())
 
 
-def is_safe_to_add_files(directory_path: Path, max_files_allowed: int, max_dir_size_mb: int) -> bool:
+def is_safe_to_add_files(
+    directory_path: Path, max_files_allowed: int, max_dir_size_mb: int
+) -> bool:
     """
     Check if the number of files and the total size of a directory do not exceed specified limits
     """
@@ -177,8 +190,10 @@ def is_safe_to_add_files(directory_path: Path, max_files_allowed: int, max_dir_s
     if not directory.is_dir():
         raise NotADirectoryError(f"{directory_path} is not a directory.")
 
-    file_count = sum(1 for file in directory.glob('**/*') if file.is_file())
-    total_size = sum(file.stat().st_size for file in directory.glob('**/*') if file.is_file())
+    file_count = sum(1 for file in directory.glob("**/*") if file.is_file())
+    total_size = sum(
+        file.stat().st_size for file in directory.glob("**/*") if file.is_file()
+    )
     total_size_mb = total_size / (1024 * 1024)
 
     return file_count < max_files_allowed and total_size_mb < max_dir_size_mb

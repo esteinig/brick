@@ -1,5 +1,5 @@
 import logging
-import json 
+import json
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -22,41 +22,50 @@ def init_working_directory(settings: Settings):
     try:
         settings.WORK_DIRECTORY = settings.WORK_DIRECTORY.resolve()
     except Exception as _:
-        logging.error(f"Working directory path could not be resolved: {settings.WORK_DIRECTORY}")
+        logging.error(
+            f"Working directory path could not be resolved: {settings.WORK_DIRECTORY}"
+        )
         exit(1)
 
     # Create working directory
     if not settings.WORK_DIRECTORY.exists():
         logging.warn(f"Working directory does not exist: {settings.WORK_DIRECTORY}")
-        logging.warn(f"Attempting to create working directory path for server operations...")
+        logging.warn(
+            f"Attempting to create working directory path for server operations..."
+        )
 
         try:
             settings.WORK_DIRECTORY.mkdir(parents=True)
             logging.info(f"Working directory created at: {settings.WORK_DIRECTORY}")
 
         except Exception as _:
-            logging.error(f"Working directory could not be created: {settings.WORK_DIRECTORY}")
+            logging.error(
+                f"Working directory could not be created: {settings.WORK_DIRECTORY}"
+            )
             exit(1)
 
     # Disk space check
-    if not enough_disk_space(path=settings.WORK_DIRECTORY, disk_space_limit_gb=settings.WORK_DISK_SPACE_GB):
+    if not enough_disk_space(
+        path=settings.WORK_DIRECTORY, disk_space_limit_gb=settings.WORK_DISK_SPACE_GB
+    ):
         logging.error("Not enough disk space for working directory")
-        logging.error(f"Application requires at least {settings.WORK_DISK_SPACE_GB} gigabytes free disk space at {settings.WORK_DIRECTORY}")
+        logging.error(
+            f"Application requires at least {settings.WORK_DISK_SPACE_GB} gigabytes free disk space at {settings.WORK_DIRECTORY}"
+        )
         exit(1)
     else:
-        logging.info(f"Sufficient disk space (>= {settings.WORK_DISK_SPACE_GB} GB) at working directory: {settings.WORK_DIRECTORY}")
+        logging.info(
+            f"Sufficient disk space (>= {settings.WORK_DISK_SPACE_GB} GB) at working directory: {settings.WORK_DIRECTORY}"
+        )
 
 
 def init_api():
-    
+
     logging.info("Initiating FastAPI")
 
     init_working_directory(settings=settings)
 
-    app = FastAPI(
-        title="BRICK API", 
-        lifespan=lifespan
-    )
+    app = FastAPI(title="BRICK API", lifespan=lifespan)
 
     app.include_router(files.router)
     app.include_router(sessions.router)
@@ -81,7 +90,7 @@ def init_api():
             "Access-Control-Allow-Headers",
             "Accept-Encoding",
             "Accept-Language",
-        ]
+        ],
     )
 
     return app

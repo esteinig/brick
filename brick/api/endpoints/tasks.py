@@ -15,7 +15,7 @@ router = APIRouter(
 
 @router.get("/status/{task_id}", response_model=TaskStatusResponse)
 def get_task_status(task_id: str):
-    """ 
+    """
     Query file upload processing status
     """
     task_result = AsyncResult(task_id, app=celery_app)
@@ -25,26 +25,26 @@ def get_task_status(task_id: str):
 
 @router.get("/result/{task_id}")
 def get_task_result(task_id: str):
-    """ 
+    """
     Query file upload processing result
     """
     task_result = AsyncResult(task_id, app=celery_app)
 
     if not task_result.ready():
         return JSONResponse(
-            status_code=202, 
+            status_code=202,
             content=TaskResultResponse(
-                task_id=task_id, 
-                status=TaskStatus.PROCESSING, 
+                task_id=task_id,
+                status=TaskStatus.PROCESSING,
                 result=None,
-                result_type=None
-            ).model_dump()
+                result_type=None,
+            ).model_dump(),
         )
-    
+
     result = task_result.get()
 
     if result["success"]:
-        
+
         # Task result outputs are always dictionaries
         if isinstance(result["result"], dict):
             result_data = result["result"]
@@ -54,33 +54,40 @@ def get_task_result(task_id: str):
         result_model = get_result_model(result_data=result_data)
 
         return JSONResponse(
-            status_code=200, 
+            status_code=200,
             content=TaskResultResponse(
-                task_id=task_id, 
-                status=TaskStatus.SUCCESS, 
+                task_id=task_id,
+                status=TaskStatus.SUCCESS,
                 result=result_model,
-                result_type=TaskResultType.from_model(model=result_model)  # add types here if adding new tasks
-            ).model_dump()
+                result_type=TaskResultType.from_model(
+                    model=result_model
+                ),  # add types here if adding new tasks
+            ).model_dump(),
         )
     else:
         raise HTTPException(status_code=500, detail=result["error"])
-    
-def get_result_model(result_data: dict) -> Session | SessionFile | BlastRing | AnnotationRing | ReferenceRing:
+
+
+def get_result_model(
+    result_data: dict,
+) -> Session | SessionFile | BlastRing | AnnotationRing | ReferenceRing:
     """
     Identification of result models from a common result endpoint for tasks exceuted with Celery
     """
 
-    if 'format' in result_data and any(result_data['format'] == item.value for item in FileFormat):
+    if "format" in result_data and any(
+        result_data["format"] == item.value for item in FileFormat
+    ):
         return SessionFile(**result_data)
-    elif 'type' in result_data and result_data["type"] == RingType.BLAST:
+    elif "type" in result_data and result_data["type"] == RingType.BLAST:
         return BlastRing(**result_data)
-    elif 'type' in result_data and result_data["type"] == RingType.ANNOTATION:
+    elif "type" in result_data and result_data["type"] == RingType.ANNOTATION:
         return AnnotationRing(**result_data)
-    elif 'type' in result_data and result_data["type"] == RingType.LABEL:
+    elif "type" in result_data and result_data["type"] == RingType.LABEL:
         return LabelRing(**result_data)
-    elif 'type' in result_data and result_data["type"] == RingType.REFERENCE:
+    elif "type" in result_data and result_data["type"] == RingType.REFERENCE:
         return ReferenceRing(**result_data)
-    elif 'date' in result_data:
+    elif "date" in result_data:
         return Session(**result_data)
-    else: 
+    else:
         raise TypeError("Task result did not match a known model")
