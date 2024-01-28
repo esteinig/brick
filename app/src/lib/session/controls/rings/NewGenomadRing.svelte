@@ -84,8 +84,13 @@
         
     </p>
     <p class="opacity-20 mb-2 text-xs w-full">
-        geNomad rings visualize predictions for chromsomal, plasmid or viral origin on non-overlapping windows along a reference sequence. 
-        Scores between 0 and 1 are computed for each origin prediction and can be added as a label, annotation or probability ring.
+        geNomad rings visualize predictions for plasmid or phage regions in contiguous segments of non-overlapping windows along a reference sequence. 
+        Scores between 0 and 1 are computed for each origin prediction and can be added as a label, annotation or probability ring. 
+    </p>
+    <p class="opacity-20 mb-4 text-xs w-full">
+        Labels are be added to the midpoint of the contiguous segment identified as mobile element, a combination of labels and annotation segments can be helpful.
+        Minimum window score may need to be relaxed to allow for longer contiguous segments if interrupted by low confidence predictions. Final scores are averaged
+        over the identified contiguous segment if it meets the length threshold.
     </p>
     
     {#if $ringReferenceStore}

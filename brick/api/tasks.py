@@ -320,20 +320,36 @@ def process_genomad_ring(
     try:
         ring_schema = GenomadRingSchema(**genomad_ring_schema)
 
+        storage_path = (
+            settings.WORK_DIRECTORY / ring_schema.reference.session_id / "storage"
+        )
+        storage_file = (
+            storage_path
+            / f"{ring_schema.reference.reference_id}__{ring_schema.reference.sequence.id}.tsv"
+        )
+
         with create_tmp_directory(
             root_dir=settings.WORK_DIRECTORY
         ) as working_directory:
 
-            try:
-                output_file = run_genomad(
-                    fasta=Path(reference_file_path),
-                    seq_id=ring_schema.reference.sequence.id,
-                    window_size=ring_schema.window_size,
-                    working_directory=working_directory,
-                )
-            except:  # fails with generic message from subcommand exception even during timeout
-                shutil.rmtree(working_directory)
-                raise
+            # Check if we have stored the output data already for this reference sequence
+
+            if storage_file.exists():
+                output_file = storage_file
+            else:
+                try:
+                    output_file = run_genomad(
+                        fasta=Path(reference_file_path),
+                        seq_id=ring_schema.reference.sequence.id,
+                        window_size=ring_schema.window_size,
+                        working_directory=working_directory,
+                    )
+                except:  # fails with generic message from subcommand exception even during timeout
+                    shutil.rmtree(working_directory)
+                    raise
+
+                storage_path.mkdir(exist_ok=True)
+                shutil.copy(str(output_file), str(storage_file))
 
             if ring_schema.ring_type == RingType.LABEL:
                 ring: LabelRing = LabelRing.from_genomad_output(
