@@ -212,8 +212,8 @@
         {#if selectedRing  && selectedRing.type === RingType.LABEL}
         <ListBox>
             {#each selectedRing.data.sort((a, b) => a.start - b.start) as labelSegment, idx}
-                <div class="my-4" >
-                        <ListBoxItem bind:group={selectedLabelIndex} name="labels" value="{idx}" active="variant-soft">
+                <div class="my-4">
+                        <ListBoxItem bind:group={selectedLabelIndex} name="labels" value="{idx}" active="">
                             <RingLabelEdit 
                                 bind:segment={labelSegment} 
                                 on:changeText={(event) => changeLabelText(selectedRingId, event.detail.text, idx)}
@@ -222,8 +222,6 @@
                                 on:changePosition={(event) => changeLabelPosition(selectedRingId, event.detail.position, idx)}
                                 on:changeLineAngle={(event) => changeLineAngle(selectedRingId, event.detail.lineAngle, idx)}
                                 on:changeTextColor={(event) => changeLabelTextColor(selectedRingId, event.detail.textColor, idx)}
-                                on:mouseover={(event) => {}}
-                                on:mouseout={(event) => {}}
                             >
                             </RingLabelEdit>
                     </ListBoxItem>

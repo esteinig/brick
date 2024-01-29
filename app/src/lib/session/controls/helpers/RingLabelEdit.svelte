@@ -59,10 +59,11 @@ import ColorPicker from '$lib/session/palette/ColorPicker.svelte';
     let textColor: string = segment.textColor ?? $plotConfigStore.labels.textColor;
     
     let labelUuid: string = createUuid();
+    let labelEditOpacity: number = 20;
     
 </script>
 
-<div role="presentation" class="grid grid-rows-2 gap-2 items-center align-center p-1 " on:mouseover={handleMouseover} on:mouseout={handleMouseout} on:focus={handleMouseover} on:blur={handleMouseout}>
+<div role="presentation" class="grid grid-rows-2 gap-2 items-center align-center p-1 opacity-{labelEditOpacity}" on:mouseover={() => labelEditOpacity = 100} on:mouseout={() => labelEditOpacity = 20}>
     <div class="grid grid-cols-4 gap-2">
 
         <div class="col-span-1">
