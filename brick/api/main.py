@@ -48,6 +48,12 @@ def init_working_directory(settings: Settings):
     if not enough_disk_space(
         path=settings.WORK_DIRECTORY, disk_space_limit_gb=settings.WORK_DISK_SPACE_GB
     ):
+        # Print to docker log for immediate warning rather than logging error to file only
+        print(
+            f"Not enough disk space for working directory at {settings.WORK_DIRECTORY} (< {settings.WORK_DISK_SPACE_GB})",
+            flush=True,
+        )
+
         logging.error("Not enough disk space for working directory")
         logging.error(
             f"Application requires at least {settings.WORK_DISK_SPACE_GB} gigabytes free disk space at {settings.WORK_DIRECTORY}"
