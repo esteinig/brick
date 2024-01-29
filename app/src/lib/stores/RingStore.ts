@@ -51,12 +51,122 @@ function toggleRingVisibility(id: string) {
     });
 }
 
-// Function to toggle visibility of a ring
+// Function to change ring color
 function changeRingColor(id: string, color: string) {
     rings.update(currentRings => {
         return currentRings.map(ring => {
             if (ring.id === id) {
                 ring.color = color
+            }
+            return ring;
+        });
+    });
+}
+
+
+// Function to change text of a label segment
+function changeLabelText(ring_id: string, text: string, segment_index: number) {
+    rings.update(currentRings => {
+        return currentRings.map(ring => {
+            if (ring.id === ring_id) {
+                ring.data.map((segment, i) => {
+                    if (i === segment_index) {
+                        segment.text = text
+                    }
+                }) 
+            }
+            return ring;
+        });
+    });
+}
+
+
+
+// Function to change line length
+function changeLabelLineLength(ring_id: string, lineLength: number, segment_index: number) {
+    rings.update(currentRings => {
+        return currentRings.map(ring => {
+            if (ring.id === ring_id) {
+                ring.data.map((segment, i) => {
+                    if (i === segment_index) {
+                        segment.lineLength = lineLength
+                    }
+                }) 
+            }
+            return ring;
+        });
+    });
+}
+
+
+// Function to change line length
+function changeLabelTextSize(ring_id: string, textSize: number, segment_index: number) {
+    rings.update(currentRings => {
+        return currentRings.map(ring => {
+            if (ring.id === ring_id) {
+                ring.data.map((segment, i) => {
+                    if (i === segment_index) {
+                        segment.textSize = textSize
+                    }
+                }) 
+            }
+            return ring;
+        });
+    });
+}
+
+
+// Function to change line length
+function changeLabelPosition(ring_id: string, position: number, segment_index: number) {
+    rings.update(currentRings => {
+        return currentRings.map(ring => {
+            if (ring.id === ring_id) {
+                ring.data.map((segment, i) => {
+                    if (i === segment_index) {
+                        // Because this is specific to labels, we can
+                        // simply set the start and end values of the
+                        // segment to the actual position
+                        segment.start = position
+                        segment.end = position
+                    }
+                }) 
+            }
+            return ring;
+        });
+    });
+}
+
+
+// Function to change line length
+function changeLabelTextColor(ring_id: string, color: string, segment_index: number) {
+    rings.update(currentRings => {
+        return currentRings.map(ring => {
+            if (ring.id === ring_id) {
+                ring.data.map((segment, i) => {
+                    if (i === segment_index) {
+                        segment.textColor = color
+                    }
+                }) 
+            }
+            return ring;
+        });
+    });
+}
+
+
+
+// Function to change line length
+function changeLineAngle(ring_id: string, lineAngle: number, segment_index: number) {
+    rings.update(currentRings => {
+        return currentRings.map(ring => {
+            if (ring.id === ring_id) {
+                ring.data.map((segment, i) => {
+                    if (i === segment_index) {
+                        console.log("Changed line angle position")
+                        segment.lineAngle = lineAngle
+                        console.log(segment.lineAngle)
+                    }
+                }) 
             }
             return ring;
         });
@@ -160,8 +270,22 @@ function createFilteredRingsStore(ringReference: RingReference | null) {
     });
 }
 
+// Helpers
+
+// Function to get a ring by its identifier
+function getRingById(ringId: string): Ring | null {
+    let ring: Ring | null = null;
+
+    rings.subscribe(currentRings => {
+        const foundRing = currentRings.find(ring => ring.id === ringId);
+        ring = foundRing ? foundRing : null;
+    })();
+
+    return ring;
+}
+
 // Export the store and functions
-export { rings, addRing, removeRing, clearRings, toggleRingVisibility, moveRingInside, moveRingOutside, changeRingTitle, isRingTypePresent, createFilteredRingsStore, changeRingColor};
+export { rings, addRing, removeRing, clearRings, toggleRingVisibility, moveRingInside, moveRingOutside, changeRingTitle, isRingTypePresent, createFilteredRingsStore, changeRingColor, changeLabelText, getRingById, changeLabelLineLength, changeLabelTextSize, changeLabelPosition, changeLineAngle, changeLabelTextColor};
 
 // Helper to compute index for insertion and add/merge the new ring
 function addNewRing(rings: Ring[], newRing: Ring): Ring[] {

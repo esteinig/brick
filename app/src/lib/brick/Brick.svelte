@@ -10,7 +10,6 @@
   import { ringReferenceStore } from '$lib/stores/RingReferenceStore';
   import { createEventDispatcher } from 'svelte';
 	import { removeTooltip, setTooltip } from '$lib/stores/TooltipStore';
-	import RingSegment from '$lib/session/controls/helpers/RingSegment.svelte';
 
   $: rings = createFilteredRingsStore($ringReferenceStore)
 
@@ -224,26 +223,38 @@
 
   // Function to calculate the midpoint of an arc segment
   function calculateMidpoint(d: RingSegment): number {
-      return (degreeScale((d.start + d.end) / 2)-annotationSegmentRotation) * (Math.PI / 180);
+      const position = d.start === d.end ? d.start : (d.start + d.end) / 2
+      return (degreeScale(position)-annotationSegmentRotation) * (Math.PI / 180);
+  }
+
+  // Function to calculate the midpoint of an arc segment
+  function calculateAdjustedOuterPosition(positionOuter: number): number {
+      return (degreeScale(positionOuter)-annotationSegmentRotation) * (Math.PI / 180);
   }
 
   // Function to calculate the coordinates of the point on the outer edge of the arc
   function calculateOuterArcPointX1(d: RingSegment, gap: number): number {
-      return Math.cos(calculateMidpoint(d)) * getOuterRingHeight($rings, gap)
+      const radius = getOuterRingHeight($rings, gap); 
+      return Math.cos(calculateMidpoint(d)) * radius
   }
 
   // Function to calculate the coordinates of the point on the outer edge of the arc
   function calculateOuterArcPointY1(d: RingSegment, gap: number): number {
-      return Math.sin(calculateMidpoint(d)) * getOuterRingHeight($rings, gap);
+      const radius = getOuterRingHeight($rings, gap); 
+      return Math.sin(calculateMidpoint(d)) * radius
   }
 
   // Function to calculate the coordinates of the point on the outer edge of the arc
   function calculateOuterArcPointX2(d: RingSegment, lineLength: number, gap: number): number {
-      return calculateOuterArcPointX1(d, gap) + lineLength * Math.cos(calculateMidpoint(d))
+      const adjustedLineLength = d.lineLength ?? lineLength;
+      const angleRadians = (d.lineAngle ?? 0) * (Math.PI / 180);
+      return calculateOuterArcPointX1(d, gap) + adjustedLineLength * Math.cos(calculateMidpoint(d)+angleRadians) 
   }
   // Function to calculate the coordinates of the point on the outer edge of the arc
   function calculateOuterArcPointY2(d: RingSegment, lineLength: number, gap: number): number {
-      return calculateOuterArcPointY1(d, gap) + lineLength * Math.sin(calculateMidpoint(d))
+      const adjustedLineLength = d.lineLength ?? lineLength;
+      const angleRadians = (d.lineAngle ?? 0) * (Math.PI / 180);
+      return calculateOuterArcPointY1(d, gap) + adjustedLineLength * Math.sin(calculateMidpoint(d)+angleRadians)
   }
 
   function addAlphaToHexColor(hex: string, opacity: number) {
@@ -277,7 +288,8 @@
 
   function calculateTspanX(ringAnnotation: RingSegment, lineLength: number, gap: number, textGap: number) {
     const angle = degreeScale(ringAnnotation.start);
-    const x = calculateOuterArcPointX2(ringAnnotation, lineLength, gap);
+    const x =  calculateOuterArcPointX2(ringAnnotation, lineLength, gap);
+
     if ((angle > labelZoneAngleLimitBottomRight && angle < labelZoneAngleLimitBottomLeft) || (angle > labelZoneAngleLimitTopLeft || angle < labelZoneAngleLimitTopRight)) {
       return x; 
     }
@@ -325,9 +337,20 @@
   }
 
 
+
   let referencePosition: number | undefined = undefined;
 
-  $: outerRingIsGenomad = $rings[-1] && $rings[-1].type === RingType.GENOMAD;
+  // $: outerRingIsGenomad = $rings[-1] && $rings[-1].type === RingType.GENOMAD;
+
+  // Function to calculate distance between label end points
+  // function labelLineEndpointDistance(label1: RingSegment, label2: RingSegment, lineLength: number, gap: number): number {
+  //   const x1 = calculateOuterArcPointX2(label1, lineLength, gap);
+  //   const y1 = calculateOuterArcPointY2(label1, lineLength, gap);
+  //   const x2 = calculateOuterArcPointX2(label2, lineLength, gap);
+  //   const y2 = calculateOuterArcPointY2(label2, lineLength, gap);
+
+  //   return Math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2);
+  // }
 
 </script>
 
@@ -370,18 +393,18 @@
                 <text 
                   x={calculateOuterArcPointX2(ringAnnotation, $plotConfigStore.labels.lineLength, $plotConfigStore.rings.gap)} 
                   y={calculateOuterArcPointY2(ringAnnotation, $plotConfigStore.labels.lineLength, $plotConfigStore.rings.gap)}
-                  style="fill: {$plotConfigStore.labels.textColor}; opacity: {$plotConfigStore.labels.textOpacity/100}; font-size: {$plotConfigStore.labels.textSize}%"
+                  style="fill: {ringAnnotation.textColor ?? $plotConfigStore.labels.textColor}; opacity: {$plotConfigStore.labels.textOpacity/100}; font-size: {ringAnnotation.textSize ?? $plotConfigStore.labels.textSize}%"
                   text-anchor={getTextAnchor(degreeScale(ringAnnotation.start))}
                   dominant-baseline={getDominantBaseline(degreeScale(ringAnnotation.start))}
                   class="brickAnnotationText"
                   visibility={ring.visible ? 'visible': 'hidden'}
                 >
-                <tspan
-                x={calculateTspanX(ringAnnotation, $plotConfigStore.labels.lineLength, $plotConfigStore.rings.gap, $plotConfigStore.labels.textGap)} 
-                y={calculateTspanY(ringAnnotation, $plotConfigStore.labels.lineLength, $plotConfigStore.rings.gap, $plotConfigStore.labels.textGap)}
-                >
-                  {ringAnnotation.text}
-                </tspan>
+                  <tspan
+                  x={calculateTspanX(ringAnnotation, $plotConfigStore.labels.lineLength, $plotConfigStore.rings.gap, $plotConfigStore.labels.textGap)} 
+                  y={calculateTspanY(ringAnnotation, $plotConfigStore.labels.lineLength, $plotConfigStore.rings.gap, $plotConfigStore.labels.textGap)}
+                  >
+                    {ringAnnotation.text}
+                  </tspan>
                 </text>
               {/each}
           {:else if ring.type === RingType.GENOMAD}

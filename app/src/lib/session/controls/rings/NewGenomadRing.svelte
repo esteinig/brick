@@ -21,7 +21,8 @@
 
     function isNumberInRange(value: string | number): boolean {
         const num = typeof value === 'string' ? parseFloat(value) : value;
-        return !isNaN(num) && num >= 0 && num <= $ringReferenceStore.sequence.length;
+        const maxRange = $ringReferenceStore ? $ringReferenceStore.sequence.length : 0;
+        return !isNaN(num) && num >= 0 && num <= maxRange;
     }
 
     function isNumberValidProbability(value: string | number): boolean {
@@ -82,8 +83,11 @@
         
     </p>
     <p class="opacity-20 mb-2 text-xs w-full">
-        geNomad rings visualize predictions for plasmid or phage regions in contiguous segments of non-overlapping windows along a reference sequence. 
-        Scores between 0 and 1 are computed for each origin prediction and can be added as a label, annotation or probability ring. 
+        geNomad rings visualize prediction scores for horizontal gene transfer (plasmid signature) or integrated phage (viral signature) regions in contiguous segments of non-overlapping windows along a reference sequence. 
+    </p>
+    <p class="opacity-20 mb-2 text-xs w-full">
+        Scores between 0 and 1 are computed for each window, and contiguous windows above the length threshold with an average score above the score threshold, and can be added as a label or annotations rings. Window scores
+        can also be added as a probability (line ring) with optional smoothing. 
     </p>
     <p class="opacity-20 mb-2 text-xs w-full">
         Labels are added to the midpoint of the contiguous segment identified, usually a combination of labels and annotation segments can be helpful to show this.

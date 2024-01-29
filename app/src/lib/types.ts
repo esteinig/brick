@@ -27,6 +27,10 @@ export type RingSegment = {
     end: number
     text: string
     meta: SegmentMeta | null
+    lineLength?: number
+    textSize?: number
+    textColor?: string
+    lineAngle?: number
 }
 
 export type RingReference = {

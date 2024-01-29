@@ -1,17 +1,13 @@
 <script lang="ts">
 
-    import RingSegment from "../helpers/RingSegment.svelte";
+    import RingLabelNew from "../helpers/RingLabelNew.svelte";
 
-    import { startRequestState, completeRequestState } from '$lib/stores/RequestInProgressStore';
+    import { startRequestState } from '$lib/stores/RequestInProgressStore';
     import { sessionFiles, sessionFileTypeAvailable } from "$lib/stores/SessionFileStore";
-	import { ToastType, handleEndpointErrorResponse, triggerToast } from "$lib/helpers";
     import { ringReferenceStore } from "$lib/stores/RingReferenceStore";
 	import { RingType, type LabelRingSchema } from "$lib/types";
-	import { applyAction, enhance } from "$app/forms";
-    import { addRing } from "$lib/stores/RingStore";
     import { createEventDispatcher } from "svelte";
     import { FileType } from "$lib/types";
-	import { page } from '$app/stores';
     
     const dispatch = createEventDispatcher();
     
@@ -69,7 +65,7 @@
                 </label>
 
                 {#each ringConfig.labels as segment, idx}
-                    <RingSegment index={idx} bind:segment={segment} on:delete={() => {ringConfig.labels.splice(idx, 1); ringConfig.labels = ringConfig.labels}}></RingSegment>
+                    <RingLabelNew index={idx} bind:segment={segment} on:delete={() => {ringConfig.labels.splice(idx, 1); ringConfig.labels = ringConfig.labels}}></RingLabelNew>
                 {/each}
 
             </div>
@@ -80,7 +76,7 @@
                         <span>Construct</span>
                     </div>
                 </button>
-                <button class="btn variant-outline-surface" type="button" on:click={() => ringConfig.labels = [...ringConfig.labels, { start: 0, end: 0, text: "", color: "#d3d3d3"}]}>
+                <button class="btn variant-outline-surface" type="button" on:click={() => ringConfig.labels = [...ringConfig.labels, { start: 0, end: 0, text: "", meta: null}]}>
                     <div class="flex items-center align-center">
                         <span>New label</span>
                     </div>

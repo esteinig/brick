@@ -1,12 +1,10 @@
 <script lang="ts">
     import { createEventDispatcher } from 'svelte';
 	import { page } from "$app/stores";
-    import { getToastStore } from '@skeletonlabs/skeleton';
 	import type { RingUpdateSchema } from "$lib/types";
 	import { startRequestState } from "$lib/stores/RequestInProgressStore";
     
     const dispatch = createEventDispatcher();
-    const toastStore = getToastStore();
 
     type RingId = string;
 
@@ -16,6 +14,8 @@
     // Color of ring - reactive to selection from picker
     // dispatches color as event accessible `on:selectColor`
     export let color: string = "#d3d3d3";
+
+    export let size: number = 0.9;
 
     // Whether to update the color in the database session
     export let updateDatabase: boolean = true;
@@ -80,7 +80,7 @@
 <div id="colorPicker-{id}">
     <div class="grid grid-cols-[auto_1fr] gap- align-center items-center">
         <form id="updateRingColorPaletteForm" bind:this={formElement} action="?/updateSessionRing" method="POST" on:submit|preventDefault={handleSubmit}>
-            <input id="colorPickerInput-{id}" class="input" style="height: 0.9rem; width: 0.9rem;" type="color" value={color} on:change={(event) => selectColor(event)}/>
+            <input id="colorPickerInput-{id}" class="input" style="height: {size}rem; width: {size}rem;" type="color" value={color} on:change={(event) => selectColor(event)}/>
         </form>
     </div>
 </div>
