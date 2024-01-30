@@ -3,42 +3,34 @@
 import ColorPicker from '$lib/session/palette/ColorPicker.svelte';
 	import PalettePopup from '$lib/session/palette/PalettePopup.svelte';
     import { plotConfigStore } from '$lib/stores/PlotConfigStore';
-
-	
-	import type { RingSegment } from '$lib/types';
+	import type { ActionRequestDataUpdate, RingSegment } from '$lib/types';
     import { createEventDispatcher } from 'svelte';
 
     export let segment: RingSegment;
+    export let labelEditOpacity: number = 20;
 
 
     const dispatch = createEventDispatcher();
 
+    function handleSubmitAction(data: ActionRequestDataUpdate) {
+        dispatch('submitAction', data)
+    }
+
     function handleDelete() {
         dispatch('delete', { segment: segment });
-    }
-
-    function handleMouseover() {
-        dispatch('mouseover', { segment: segment });
-    }
-
-    function handleMouseout() {
-        dispatch('mouseout', { segment: segment });
     }
 
     function handlePosition() {
         dispatch('changePosition', { position: position });
     }
 
-
     function handleLineAngle() {
         dispatch('changeLineAngle', { lineAngle: lineAngle });
     }
 
-
     function handleText() {
         dispatch('changeText', { text: segment.text });
     }
-
 
     function handleTextColor(color: string) {
         dispatch('changeTextColor', { textColor: color });
@@ -59,11 +51,10 @@ import ColorPicker from '$lib/session/palette/ColorPicker.svelte';
     let textColor: string = segment.textColor ?? $plotConfigStore.labels.textColor;
     
     let labelUuid: string = createUuid();
-    let labelEditOpacity: number = 20;
     
 </script>
 
-<div role="presentation" class="grid grid-rows-2 gap-2 items-center align-center p-1 opacity-{labelEditOpacity}" on:mouseover={() => labelEditOpacity = 100} on:mouseout={() => labelEditOpacity = 20}>
+<div role="form" class="grid grid-rows-2 gap-2 items-center align-center p-1 opacity-{labelEditOpacity}" on:mouseover={() => labelEditOpacity = 100} on:mouseout={() => labelEditOpacity = 20} on:focus={() => labelEditOpacity = 100} on:blur={() => labelEditOpacity = 20}>
     <div class="grid grid-cols-4 gap-2">
 
         <div class="col-span-1">

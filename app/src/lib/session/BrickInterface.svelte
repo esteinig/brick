@@ -300,6 +300,9 @@
         }
     }
 
+    let showEditRingMenu: boolean = false;
+    let showNewRingMenu: boolean = false;
+
 </script>
 
 <div class="h-full w-full p-2">
@@ -308,7 +311,7 @@
         <Tab bind:group={$tabIndexStore} name="tab1" value={0}>
             <span>Data<span>
         </Tab>
-        <Tab bind:group={$tabIndexStore} name="tab2" value={1}>
+        <Tab bind:group={$tabIndexStore} name="tab2" value={1} on:click={() => { showEditRingMenu = false; showNewRingMenu = false }}>
             <span>Rings</span>
         </Tab>
         <Tab bind:group={$tabIndexStore} name="tab3" value={2}>
@@ -332,9 +335,12 @@
                 ></DataControlPanel>
             {:else if $tabIndexStore === 1}
                 <RingControlPanel 
+                    bind:showNewRingMenu={showNewRingMenu}
+                    bind:showEditRingMenu={showEditRingMenu}
                     on:createRingAction={(event) => handleCreateRingAction(event.detail)} 
                     on:updateRingAction={(event) => handleUpdateRingAction(event.detail)}
                     on:deleteRingAction={(event) => handleDeleteRingAction(event.detail)}
+                    
                 ></RingControlPanel>
             {:else if $tabIndexStore === 2}
                 <PlotControlPanel></PlotControlPanel>

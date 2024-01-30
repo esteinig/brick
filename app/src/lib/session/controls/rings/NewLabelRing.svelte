@@ -76,7 +76,7 @@
                         <span>Construct</span>
                     </div>
                 </button>
-                <button class="btn variant-outline-surface" type="button" on:click={() => ringConfig.labels = [...ringConfig.labels, { start: 0, end: 0, text: "", meta: null}]}>
+                <button class="btn variant-outline-surface" type="button" on:click={() => ringConfig.labels = [...ringConfig.labels, { start: 0, end: 0, text: ""}]}>
                     <div class="flex items-center align-center">
                         <span>New label</span>
                     </div>

@@ -80,7 +80,15 @@ def get_task_result(task_id: str):
 
 def get_result_model(
     result_data: dict,
-) -> Session | SessionFile | BlastRing | AnnotationRing | ReferenceRing:
+) -> (
+    Session
+    | SessionFile
+    | BlastRing
+    | AnnotationRing
+    | ReferenceRing
+    | GenomadRing
+    | LabelRing
+):
     """
     Identification of result models from a common result endpoint for tasks exceuted with Celery
     """

@@ -34,17 +34,29 @@ class GenomadPredictionClass(StrEnum):
     PLASMID = "plasmid"
 
 
-class SegmentMeta(BaseModel):
-    plasmid: float
-    virus: float
-    chromosome: float
+class RingSegmentType(StrEnum):
+    LABEL = "label"
+    SEGMENT = "segment"
+    GENOMAD = "genomad"
 
 
 class RingSegment(BaseModel):
     start: int = 0
     end: int = 0
     text: str = ""
-    meta: SegmentMeta | None = None
+
+
+class GenomadSegment(RingSegment):
+    plasmid: float | None = None
+    virus: float | None = None
+    chromosome: float | None = None
+
+
+class LabelSegment(RingSegment):
+    lineLength: float | None = None
+    textSize: float | None = None
+    textColor: str | None = None
+    lineAngle: float | None = None
 
 
 class RingReferenceSequence(BaseModel):
@@ -97,18 +109,37 @@ class GenBankFeatureEntry(BaseModel):
     end: int
     annotation: str
 
-    def to_segment(self, sanitize: bool = True) -> RingSegment:
-        return RingSegment(
-            start=self.start,
-            end=self.end,
-            text=(
-                sanitize_input(
-                    input_string=self.annotation, is_for_db=True, is_for_svg=True
-                )
-                if sanitize
-                else self.annotation
-            ),
-        )
+    def to_segment(
+        self,
+        sanitize: bool = True,
+        segment_type: RingSegmentType = RingSegmentType.SEGMENT,
+    ) -> RingSegment | LabelSegment:
+        if segment_type == RingSegmentType.SEGMENT:
+            return RingSegment(
+                start=self.start,
+                end=self.end,
+                text=(
+                    sanitize_input(
+                        input_string=self.annotation, is_for_db=True, is_for_svg=True
+                    )
+                    if sanitize
+                    else self.annotation
+                ),
+            )
+        elif segment_type == RingSegmentType.GENOMAD:
+            return LabelRing(
+                start=self.start,
+                end=self.end,
+                text=(
+                    sanitize_input(
+                        input_string=self.annotation, is_for_db=True, is_for_svg=True
+                    )
+                    if sanitize
+                    else self.annotation
+                ),
+            )
+        else:
+            raise ValueError(f"Ring segment type {RingSegmentType.LABEL} not supported")
 
 
 class GenomadEntry(BaseModel):
@@ -150,15 +181,13 @@ class GenomadEntry(BaseModel):
         else:
             self.virus_score = 0
 
-        return RingSegment(
+        return GenomadSegment(
             start=self.start,
             end=self.end,
             text=label,
-            meta=SegmentMeta(
-                plasmid=self.plasmid_score,
-                chromosome=self.chromosome_score,
-                virus=self.virus_score,
-            ),
+            plasmid=self.plasmid_score,
+            chromosome=self.chromosome_score,
+            virus=self.virus_score,
         )
 
 
@@ -245,7 +274,8 @@ def extract_genomad_contiguous_segments(
     min_window_score: float,  # minimum score to consider slice as part of contiguous segment for prediction class
     min_segment_length: int,  # should be a multiple of slice length
     prediction_classes: List[GenomadPredictionClass],
-) -> List[RingSegment]:
+    segment_type: RingSegmentType,
+) -> List[RingSegment] | List[LabelSegment]:
     """Extracts segments of high probabilty for each prediction class with a minimum total length for label or annotation rings"""
 
     segments = {"chromosome": [], "plasmid": [], "virus": []}
@@ -269,7 +299,15 @@ def extract_genomad_contiguous_segments(
             # Contiguous segment checks and dictionary insertions
             if probability >= min_window_score:
                 if current_segment is None:
-                    current_segment = RingSegment(start=start, end=end)
+                    if segment_type == RingSegmentType.SEGMENT:
+                        current_segment = RingSegment(start=start, end=end)
+                    elif segment_type == RingSegmentType.LABEL:
+                        current_segment = LabelSegment(start=start, end=end)
+                    else:
+                        raise ValueError(
+                            f"Segment type {segment_type} not supported for extracting contiguous segment annotations from Genomad"
+                        )
+
                     current_probabilities = [probability]
                 else:
                     current_segment.end = end
@@ -372,33 +410,45 @@ def parse_genbank_features(
     return entries
 
 
-def parse_tsv_segments(file_path: Path, sanitize: bool = True) -> List[RingSegment]:
-    segments = []
+def parse_tsv_segments(
+    file_path: Path,
+    sanitize: bool = True,
+    segment_type: RingSegmentType = RingSegmentType.SEGMENT,
+) -> List[LabelSegment] | List[RingSegment]:
 
+    segments = []
     with file_path.open(mode="r", encoding="utf-8") as file:
         reader = csv.DictReader(file, delimiter="\t")
 
         for row in reader:
-            segment = RingSegment(
-                start=int(row["start"]),
-                end=int(row["end"]),
-                text=(
-                    sanitize_input(
-                        input_string=row["text"], is_for_db=True, is_for_svg=True
-                    )
-                    if sanitize
-                    else row["text"]
-                ),
-                color=(
-                    sanitize_input(
-                        input_string=row["color"], is_for_db=True, is_for_svg=True
-                    )
-                    if sanitize
-                    else row["color"]
-                ),
-            )
-            segments.append(segment)
+            if segment_type == RingSegmentType.SEGMENT:
+                segment = RingSegment(
+                    start=int(row["start"]),
+                    end=int(row["end"]),
+                    text=(
+                        sanitize_input(
+                            input_string=row["text"], is_for_db=True, is_for_svg=True
+                        )
+                        if sanitize
+                        else row["text"]
+                    ),
+                )
+            elif segment_type == RingSegmentType.LABEL:
+                segment = LabelSegment(
+                    start=int(row["start"]),
+                    end=int(row["end"]),
+                    text=(
+                        sanitize_input(
+                            input_string=row["text"], is_for_db=True, is_for_svg=True
+                        )
+                        if sanitize
+                        else row["text"]
+                    ),
+                )
+            else:
+                raise ValueError(f"Segment type {segment_type} not supported")
 
+            segments.append(segment)
     return segments
 
 
@@ -453,6 +503,7 @@ class BlastRing(Ring):
 
 
 class LabelRing(Ring):
+    data: List[LabelSegment] = Field(default_factory=list)
     type: RingType = RingType.LABEL
     title: str = "Label Ring"
 
@@ -466,7 +517,7 @@ class LabelRing(Ring):
         return LabelRing(
             id=str(uuid.uuid4()),
             data=[
-                entry.to_segment(sanitize=sanitize)
+                entry.to_segment(sanitize=sanitize, segment_type=RingSegmentType.LABEL)
                 for entry in parse_genbank_features(
                     file_path=str(file), feature_types=features
                 )
@@ -482,13 +533,17 @@ class LabelRing(Ring):
             id=str(uuid.uuid4()),
             data=[
                 segment
-                for segment in parse_tsv_segments(file_path=file, sanitize=sanitize)
+                for segment in parse_tsv_segments(
+                    file_path=file,
+                    sanitize=sanitize,
+                    segment_type=RingSegmentType.LABEL,
+                )
             ],
             reference=reference,
         )
 
     def add_custom_labels(
-        self, labels: List[RingSegment], sanitize: bool = True
+        self, labels: List[LabelSegment], sanitize: bool = True
     ) -> None:
 
         for segment in labels:
@@ -520,6 +575,7 @@ class LabelRing(Ring):
                     min_window_score=min_window_score,
                     min_segment_score=min_segment_score,
                     prediction_classes=prediction_classes,
+                    segment_type=RingSegmentType.LABEL,
                 )
             ],
             reference=reference,
@@ -539,7 +595,9 @@ class AnnotationRing(Ring):
         return AnnotationRing(
             id=str(uuid.uuid4()),
             data=[
-                entry.to_segment(sanitize=sanitize)
+                entry.to_segment(
+                    sanitize=sanitize, segment_type=RingSegmentType.SEGMENT
+                )
                 for entry in parse_genbank_features(
                     file_path=str(file), feature_types=features
                 )
@@ -554,7 +612,11 @@ class AnnotationRing(Ring):
             id=str(uuid.uuid4()),
             data=[
                 segment
-                for segment in parse_tsv_segments(file_path=file, sanitize=sanitize)
+                for segment in parse_tsv_segments(
+                    file_path=file,
+                    sanitize=sanitize,
+                    segment_type=RingSegmentType.SEGMENT,
+                )
             ],
             reference=reference,
         )
@@ -581,6 +643,7 @@ class AnnotationRing(Ring):
                     min_window_score=min_window_score,
                     min_segment_score=min_segment_score,
                     prediction_classes=prediction_classes,
+                    segment_type=RingSegmentType.SEGMENT,
                 )
             ],
             reference=reference,
@@ -588,6 +651,7 @@ class AnnotationRing(Ring):
 
 
 class GenomadRing(Ring):
+    data: List[GenomadSegment] = Field(default_factory=list)
     type: RingType = RingType.GENOMAD
     title: str = "Genomad Ring"
 

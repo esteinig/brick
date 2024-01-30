@@ -34,14 +34,14 @@
     const dispatch = createEventDispatcher();
 
     function updateTitle() {
-        dispatch('update', { title: title });
+        dispatch('updateTitle', { title: title });
         editing = false; 
         if (updateDatabase) formElement.requestSubmit();
     }
 
     function updateTitleWithEnter(event: any) {
         if (event.key === 'Enter'){
-            dispatch('update', { title: title });
+            dispatch('updateTitle', { title: title });
             editing = false;
             if (updateDatabase) formElement.requestSubmit();
         }

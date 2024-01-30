@@ -1,9 +1,9 @@
 <script lang="ts">
-    import { RingType, type Sequence, RingDirection, Ring, FileFormat, type ActionRequestData, type ActionRequestDataUpdate } from "$lib/types";
+    import { RingType, type Sequence, Ring, type ActionRequestData, type ActionRequestDataUpdate } from "$lib/types";
 	import { FileType, type SessionFile } from "$lib/types";
     import { sessionFiles } from "$lib/stores/SessionFileStore";
     import { ringReferenceStore } from "$lib/stores/RingReferenceStore";
-    import { changeRingTitle, moveRingInside, moveRingOutside, removeRing, isRingTypePresent, toggleRingVisibility, changeRingColor, rings, getRingById, changeLabelText, changeLabelLineLength, changeLabelTextSize, changeLabelPosition, changeLineAngle, changeLabelTextColor} from "$lib/stores/RingStore";
+    import { changeRingTitle, moveRingInside, moveRingOutside, removeRing, toggleRingVisibility, changeRingColor, getRingById, changeLabelText, changeLabelLineLength, changeLabelTextSize, changeLabelPosition, changeLineAngle, changeLabelTextColor} from "$lib/stores/RingStore";
 
 	import NewReferenceRing from "$lib/session/controls/rings/NewReferenceRing.svelte";
 	import NewBlastRing from "$lib/session/controls/rings/NewBlastRing.svelte";
@@ -11,30 +11,24 @@
 
     import { tooltip } from "$lib/stores/TooltipStore";
 	import NewLabelRing from "../rings/NewLabelRing.svelte";
-	import RingTitle from "../helpers/RingTitle.svelte";
-	import PalettePopup from "$lib/session/palette/PalettePopup.svelte";
 
     import { createFilteredRingsStore } from '$lib/stores/RingStore';
     import { requestInProgress } from '$lib/stores/RequestInProgressStore';
-	import ColorPicker from "$lib/session/palette/ColorPicker.svelte";
-	import RingVisibility from "$lib/session/controls/helpers/RingVisibility.svelte";
-	import DeleteRing from "../helpers/DeleteRing.svelte";
-	import RingIndex from "../helpers/RingIndex.svelte";
-
 	import { createEventDispatcher } from "svelte";
 	import NewGenomadRing from "../rings/NewGenomadRing.svelte";
 	import { ListBox, ListBoxItem } from "@skeletonlabs/skeleton";
 	import RingLabelEdit from "../helpers/RingLabelEdit.svelte";
-	import { DEFAULT_COLOR } from "$lib/data";
+	import RingSettings from "../helpers/RingSettings.svelte";
+    
+    export let showNewRingMenu: boolean = false;
+    export let showEditRingMenu: boolean = false;
+
 
     const dispatch = createEventDispatcher();
 
     $: ringData = createFilteredRingsStore($ringReferenceStore) // reactive so it updates on changes to reference sequence
 
     let newRing: RingType;
-    let showNewRingMenu: boolean = false;
-    let showEditRingMenu: boolean = false;
-
     let selectedReference: SessionFile | null;
     let selectedSequence: Sequence | null;
     
@@ -83,7 +77,7 @@
     }
 
     async function handleUpdateLabelRequest(data: ActionRequestDataUpdate) {
-        dispatch("updateLabeAction", data)
+        dispatch("updateLabelAction", data)
     }
 
     const editableRingTypes: RingType[] = [
@@ -98,7 +92,6 @@
     $: selectedRing = getRingById(selectedRingId)
     $: editButtonDisabled = selectedRing ? !editableRingTypes.includes(selectedRing.type) : true;
 
-    let selectedLabelIndex: number;
 
 </script>
 
@@ -209,13 +202,13 @@
     
     {:else if showEditRingMenu}
         
-        {#if selectedRing  && selectedRing.type === RingType.LABEL}
-        <ListBox>
+        {#if selectedRing && selectedRing.type === RingType.LABEL}
             {#each selectedRing.data.sort((a, b) => a.start - b.start) as labelSegment, idx}
-                <div class="my-4">
-                        <ListBoxItem bind:group={selectedLabelIndex} name="labels" value="{idx}" active="">
+                    <div class="my-4">
                             <RingLabelEdit 
                                 bind:segment={labelSegment} 
+                                labelEditOpacity={idx === 0 ? 100 : 20}
+                                on:submitAction={(event) => handleUpdateLabelRequest(event.detail.requestData)}
                                 on:changeText={(event) => changeLabelText(selectedRingId, event.detail.text, idx)}
                                 on:changeLineLength={(event) => changeLabelLineLength(selectedRingId, event.detail.lineLength, idx)}
                                 on:changeTextSize={(event) => changeLabelTextSize(selectedRingId, event.detail.textSize, idx)}
@@ -224,10 +217,8 @@
                                 on:changeTextColor={(event) => changeLabelTextColor(selectedRingId, event.detail.textColor, idx)}
                             >
                             </RingLabelEdit>
-                    </ListBoxItem>
-            </div>
+                </div>
             {/each}
-        </ListBox>
         {/if}
 
 
@@ -239,33 +230,19 @@
                 <ListBox>
                     {#each $ringData as ring}
                         <ListBoxItem bind:group={selectedRingId} name="rings" value="{ring.id}" active="variant-soft">
-                            <div class="grid grid-cols-8 gap-x-2 items-center align-center">
-                                <div class="flex items-center gap-x-2 col-span-7">
-                                    <span class="text-black ml-2">
-                                        <ColorPicker id={ring.id} color={ring.color} on:submitAction={(event) => handleUpdateRingRequest(event.detail) } on:selectColor={(event) => changeRingColor(ring.id, event.detail.color)}></ColorPicker>
-                                    </span>
-                                    <div class="mt-0.5">
-                                        <PalettePopup id={ring.id} color={ring.color} on:submitAction={(event) => handleUpdateRingRequest(event.detail) } on:selectColor={(event) => changeRingColor(ring.id, event.detail.color)}></PalettePopup>
-                                    </div>
-                                    <RingVisibility id={ring.id} visible={ring.visible} on:submitAction={(event) => handleUpdateRingRequest(event.detail) } on:toggleVisibility={(_) => toggleRingVisibility(ring.id)}></RingVisibility>
-                                    <RingTitle id={ring.id} title={ring.title} titleColor={ring.color} on:submitAction={(event) => handleUpdateRingRequest(event.detail) } on:update={(event) => changeRingTitle(ring.id, event.detail.title)} />
-                                </div>
-                                <div class="flex justify-end gap-x-2 col-span-1">
-                                    {#if ring.type !== RingType.LABEL}
-                                        {#if ring.index !== 0}
-                                            <RingIndex id={ring.id} direction={RingDirection.IN} currentIndex={ring.index} on:submitAction={(event) => handleUpdateRingRequest(event.detail) } on:update={(_) => moveRingInside(ring.id)} indexGroup={indexGroup}></RingIndex>
-                                        {:else}
-                                            <RingIndex placeholder id={ring.id} direction={RingDirection.IN} currentIndex={ring.index} indexGroup={indexGroup}></RingIndex>
-                                        {/if}
-                                        {#if !((isRingTypePresent(RingType.LABEL) && ring.index === $ringData.length-2) || ring.index === $ringData.length-1)}
-                                            <RingIndex id={ring.id} direction={RingDirection.OUT} currentIndex={ring.index} on:submitAction={(event) => handleUpdateRingRequest(event.detail) } on:update={(_) => moveRingOutside(ring.id, $ringData.length-1)} indexGroup={indexGroup}></RingIndex>
-                                        {:else}
-                                            <RingIndex placeholder id={ring.id} direction={RingDirection.OUT} currentIndex={ring.index} indexGroup={indexGroup}></RingIndex>
-                                        {/if}
-                                    {/if}
-                                    <DeleteRing id={ring.id} indexGroup={indexGroup} on:submitAction={(event) => handleDeleteRingRequest(event.detail)} on:delete={() => removeRing(ring.id, indexGroup)}></DeleteRing>
-                                </div>
-                            </div>
+                            <RingSettings 
+                                ring={ring}
+                                ringData={$ringData}
+                                indexGroup={indexGroup}
+                                on:submitAction={(event) => handleUpdateRingRequest(event.detail.requestData)} 
+                                on:selectColor={(event) => changeRingColor(ring.id, event.detail.color)}
+                                on:toggleVisibility={(_) => toggleRingVisibility(ring.id)}
+                                on:updateTitle={(event) => changeRingTitle(ring.id, event.detail.title)}
+                                on:moveRingInside={(_) => moveRingInside(ring.id)}
+                                on:moveRingOutside={(_) => moveRingOutside(ring.id, $ringData.length-1)}
+                                on:delete={() => removeRing(ring.id, indexGroup)}
+                            >
+                        </RingSettings>
                         </ListBoxItem>
                     
                         

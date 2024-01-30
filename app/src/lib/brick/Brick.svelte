@@ -3,7 +3,7 @@
   import * as d3 from 'd3';
 
   import { getDefaultScaleFactor } from './helpers';
-	import { RingType, type Ring, type RingSegment } from '$lib/types';
+	import { RingType, Ring, type RingSegment } from '$lib/types';
 	import { plotConfigStore } from '$lib/stores/PlotConfigStore';
 	import { fade, type FadeParams } from 'svelte/transition';
   import { createFilteredRingsStore } from '$lib/stores/RingStore';
@@ -227,11 +227,6 @@
       return (degreeScale(position)-annotationSegmentRotation) * (Math.PI / 180);
   }
 
-  // Function to calculate the midpoint of an arc segment
-  function calculateAdjustedOuterPosition(positionOuter: number): number {
-      return (degreeScale(positionOuter)-annotationSegmentRotation) * (Math.PI / 180);
-  }
-
   // Function to calculate the coordinates of the point on the outer edge of the arc
   function calculateOuterArcPointX1(d: RingSegment, gap: number): number {
       const radius = getOuterRingHeight($rings, gap); 
@@ -245,15 +240,17 @@
   }
 
   // Function to calculate the coordinates of the point on the outer edge of the arc
-  function calculateOuterArcPointX2(d: RingSegment, lineLength: number, gap: number): number {
+  function calculateOuterArcPointX2(d: RingSegment | LabelSegment, lineLength: number, gap: number): number {
       const adjustedLineLength = d.lineLength ?? lineLength;
-      const angleRadians = (d.lineAngle ?? 0) * (Math.PI / 180);
+      const lineAngle = d.lineAngle ?? 0;
+      const angleRadians = (lineAngle ?? 0) * (Math.PI / 180);
       return calculateOuterArcPointX1(d, gap) + adjustedLineLength * Math.cos(calculateMidpoint(d)+angleRadians) 
   }
   // Function to calculate the coordinates of the point on the outer edge of the arc
-  function calculateOuterArcPointY2(d: RingSegment, lineLength: number, gap: number): number {
+  function calculateOuterArcPointY2(d: RingSegment | LabelSegment, lineLength: number, gap: number): number {
       const adjustedLineLength = d.lineLength ?? lineLength;
-      const angleRadians = (d.lineAngle ?? 0) * (Math.PI / 180);
+      const lineAngle = d.lineAngle ?? 0;
+      const angleRadians = (lineAngle ?? 0) * (Math.PI / 180);
       return calculateOuterArcPointY1(d, gap) + adjustedLineLength * Math.sin(calculateMidpoint(d)+angleRadians)
   }
 
@@ -309,20 +306,22 @@
   }
 
 
-  function calculateGenomadPointRadius(d: RingSegment, index: number, height: number, gap: number): number {
+  function calculateGenomadPointRadius(d: GenomadSegment, index: number, height: number, gap: number): number {
     const ringHeight = getRingHeight($rings, 0, index);
     const innerRadius = $plotConfigStore.rings.radius + (index * gap) + ringHeight;
     const outerRadius = innerRadius + height;
-    const score = d.meta?.plasmid ?? 0;
+
+    const score = d.plasmid ?? d.virus ?? 0;
 
     // Interpolate the radius based on the score
     return innerRadius + (outerRadius - innerRadius) * score;
   }
 
   function generateLinePath(ringSegments: RingSegment[], index: number, height: number, gap: number, smoothing: boolean): string {
+    
     let lineGenerator = d3.lineRadial()
-        .angle((d: RingSegment) => calculateGenomadMidpoint(d))
-        .radius((d: RingSegment) => calculateGenomadPointRadius(d, index, height, gap))
+        .angle((d: RingSegment) => calculateGenomadMidpoint(d as GenomadSegment)) // types enforced by RingType 
+        .radius((d: RingSegment) => calculateGenomadPointRadius(d  as GenomadSegment, index, height, gap))
 
     if (smoothing){
       lineGenerator = lineGenerator.curve(d3.curveNatural)
@@ -331,26 +330,12 @@
     return lineGenerator(ringSegments);
   }
 
-  function calculateGenomadMidpoint(d: RingSegment): number {
+  function calculateGenomadMidpoint(d: GenomadSegment): number {
       const midpointAngle = degreeScale((d.start + d.end) / 2);
       return midpointAngle * (Math.PI / 180); // Convert to radians
   }
 
-
-
   let referencePosition: number | undefined = undefined;
-
-  // $: outerRingIsGenomad = $rings[-1] && $rings[-1].type === RingType.GENOMAD;
-
-  // Function to calculate distance between label end points
-  // function labelLineEndpointDistance(label1: RingSegment, label2: RingSegment, lineLength: number, gap: number): number {
-  //   const x1 = calculateOuterArcPointX2(label1, lineLength, gap);
-  //   const y1 = calculateOuterArcPointY2(label1, lineLength, gap);
-  //   const x2 = calculateOuterArcPointX2(label2, lineLength, gap);
-  //   const y2 = calculateOuterArcPointY2(label2, lineLength, gap);
-
-  //   return Math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2);
-  // }
 
 </script>
 
@@ -408,10 +393,10 @@
                 </text>
               {/each}
           {:else if ring.type === RingType.GENOMAD}
-          <path 
-              d={generateLinePath(ring.data, ring.index, $plotConfigStore.rings.height, $plotConfigStore.rings.gap, $plotConfigStore.rings.lineSmoothing)}
-              style="fill: none; stroke: {ring.color}; stroke-width: 1"
-          />
+            <path 
+                d={generateLinePath(ring.data, ring.index, $plotConfigStore.rings.height, $plotConfigStore.rings.gap, $plotConfigStore.rings.lineSmoothing)}
+                style="fill: none; stroke: {ring.color}; stroke-width: 1"
+            />
           {:else}
             {#each ring.data as ringSegment, idx}
               <path 

@@ -26,11 +26,11 @@ export type RingSegment = {
     start: number
     end: number
     text: string
-    meta: SegmentMeta | null
     lineLength?: number
     textSize?: number
     textColor?: string
     lineAngle?: number
+    meta?: SegmentMeta 
 }
 
 export type RingReference = {
@@ -90,7 +90,7 @@ export class ReferenceRing extends Ring {
         this.id = createUuid()
         this.size = size;
         this.data = [
-            {start: 0, end: size, meta: null, text: title}
+            {start: 0, end: size, text: title}
         ]
     }
 
@@ -128,6 +128,7 @@ export class BlastRing extends Ring {
 
 
 export class GenomadRing extends Ring {
+
     constructor(
         reference: RingReference,
         index: number,
@@ -143,6 +144,7 @@ export class GenomadRing extends Ring {
 }
 
 export class LabelRing extends Ring {
+
     constructor(
         reference: RingReference,
         index: number,

@@ -144,7 +144,7 @@ function changeLabelTextColor(ring_id: string, color: string, segment_index: num
             if (ring.id === ring_id) {
                 ring.data.map((segment, i) => {
                     if (i === segment_index) {
-                        segment.textColor = color
+                       segment.textColor = color
                     }
                 }) 
             }
@@ -162,9 +162,7 @@ function changeLineAngle(ring_id: string, lineAngle: number, segment_index: numb
             if (ring.id === ring_id) {
                 ring.data.map((segment, i) => {
                     if (i === segment_index) {
-                        console.log("Changed line angle position")
                         segment.lineAngle = lineAngle
-                        console.log(segment.lineAngle)
                     }
                 }) 
             }

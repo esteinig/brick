@@ -56,12 +56,30 @@ def process_file(
         total_length = 0
         selections = Selections()
 
-        if config.file_format == FileFormat.FASTA:
+        if config.file_format == FileFormat.FASTA and (
+            config.file_type == FileType.GENOME
+            or config.file_type == FileType.REFERENCE
+        ):
             total_length, records, selections = validate_fasta(path=file)
-        elif config.file_format == FileFormat.GENBANK:
+        elif (
+            config.file_format == FileFormat.GENBANK
+            and config.file_type == FileType.ANNOTATION_GENBANK
+        ):
             records, selections = validate_genbank(path=file)
-        elif config.file_format == FileFormat.TSV:
+        elif (
+            config.file_format == FileFormat.TSV
+            and config.file_type == FileType.ANNOTATION_CUSTOM
+        ):
             records = validate_tsv(path=file, file_type=config.file_type)
+        elif (
+            config.file_format == FileFormat.JSON
+            and config.file_type == FileType.SESSION
+        ):
+            raise ValueError("Session file schema not allowed for this function")
+        else:
+            raise ValueError(
+                "Could not determine file format and file type combination for processing"
+            )
 
         session_file = SessionFile(
             session_id=config.session_id,
@@ -280,7 +298,9 @@ def process_label_ring(
 
         if tsv_file_path:
             ring: LabelRing = LabelRing.from_tsv_file(
-                file=Path(tsv_file_path), reference=ring_schema.reference, sanitize=True
+                file=Path(tsv_file_path),
+                reference=ring_schema.reference,
+                sanitize=True,
             )
         else:
             ring: LabelRing = LabelRing(
@@ -575,19 +595,16 @@ def validate_tsv(path: Path, file_type: FileType) -> int:
 
     data = pandas.read_csv(path, sep="\t", header=0)
 
-    if file_type == FileType.ANNOTATION_CUSTOM and len(data.columns) != 4:
+    if file_type == FileType.ANNOTATION_CUSTOM and len(data.columns) != 3:
         raise ValueError(
-            "Custom annotation files must have four columns (start, end, text, color)"
+            "Custom annotation files must have three columns (start, end, text)"
         )
-    if file_type == FileType.ANNOTATION_GENBANK and data.columns != [
-        "start",
-        "end",
-        "text",
-        "color",
-    ]:
-        raise ValueError(
-            "Custom annotation files must have four column headers in order (start, end, text, color)"
-        )
+
+    for c in ("start", "end", "text"):
+        if c not in data.columns:
+            raise ValueError(
+                f"Custom annotation files must have a column with header {c}"
+            )
 
     for i, row in data.iterrows():
         if row["start"] > row["end"]:
