@@ -240,14 +240,14 @@
   }
 
   // Function to calculate the coordinates of the point on the outer edge of the arc
-  function calculateOuterArcPointX2(d: RingSegment | LabelSegment, lineLength: number, gap: number): number {
+  function calculateOuterArcPointX2(d: RingSegment, lineLength: number, gap: number): number {
       const adjustedLineLength = d.lineLength ?? lineLength;
       const lineAngle = d.lineAngle ?? 0;
       const angleRadians = (lineAngle ?? 0) * (Math.PI / 180);
       return calculateOuterArcPointX1(d, gap) + adjustedLineLength * Math.cos(calculateMidpoint(d)+angleRadians) 
   }
   // Function to calculate the coordinates of the point on the outer edge of the arc
-  function calculateOuterArcPointY2(d: RingSegment | LabelSegment, lineLength: number, gap: number): number {
+  function calculateOuterArcPointY2(d: RingSegment, lineLength: number, gap: number): number {
       const adjustedLineLength = d.lineLength ?? lineLength;
       const lineAngle = d.lineAngle ?? 0;
       const angleRadians = (lineAngle ?? 0) * (Math.PI / 180);
@@ -306,12 +306,12 @@
   }
 
 
-  function calculateGenomadPointRadius(d: GenomadSegment, index: number, height: number, gap: number): number {
+  function calculateGenomadPointRadius(d: RingSegment, index: number, height: number, gap: number): number {
     const ringHeight = getRingHeight($rings, 0, index);
     const innerRadius = $plotConfigStore.rings.radius + (index * gap) + ringHeight;
     const outerRadius = innerRadius + height;
 
-    const score = d.plasmid ?? d.virus ?? 0;
+    const score = d.meta?.plasmid ?? d.meta?.virus ?? 0;  // TODO
 
     // Interpolate the radius based on the score
     return innerRadius + (outerRadius - innerRadius) * score;
@@ -320,8 +320,8 @@
   function generateLinePath(ringSegments: RingSegment[], index: number, height: number, gap: number, smoothing: boolean): string {
     
     let lineGenerator = d3.lineRadial()
-        .angle((d: RingSegment) => calculateGenomadMidpoint(d as GenomadSegment)) // types enforced by RingType 
-        .radius((d: RingSegment) => calculateGenomadPointRadius(d  as GenomadSegment, index, height, gap))
+        .angle((d: RingSegment) => calculateGenomadMidpoint(d)) // types enforced by RingType 
+        .radius((d: RingSegment) => calculateGenomadPointRadius(d, index, height, gap))
 
     if (smoothing){
       lineGenerator = lineGenerator.curve(d3.curveNatural)
@@ -330,7 +330,7 @@
     return lineGenerator(ringSegments);
   }
 
-  function calculateGenomadMidpoint(d: GenomadSegment): number {
+  function calculateGenomadMidpoint(d: RingSegment): number {
       const midpointAngle = degreeScale((d.start + d.end) / 2);
       return midpointAngle * (Math.PI / 180); // Convert to radians
   }
