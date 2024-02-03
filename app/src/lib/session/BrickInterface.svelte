@@ -274,32 +274,7 @@
         }
         
     }
-    /**
-     * Handler for ring deletion
-     * @param data
-     */
-     async function handleDeleteRingAction(data: ActionRequestDataUpdate) {
-        
-        if (data.updateDatabase) {
-            const response = await fetch(data.action, {
-                method: 'POST',
-                body: data.body,
-                headers: {
-                    'x-sveltekit-action': 'true'
-                }
-            });
-
-            // Results from the server action function must
-            // be deserialized manually in this case
-            const result: ActionResult = deserialize(await response.text());
-
-            await applyAction(result);
-
-            if (data.updateVerbose) completeRequestState();
-            handleActionUpdateResult(result, data.updateVerbose, "Ring deleted successfully");
-        }
-    }
-
+    
     /**
      * Handler for file deletion
      * @param data
@@ -358,7 +333,7 @@
                 <DataControlPanel 
                     on:fileUploadAction={(event) => handleUploadFileAction(event.detail.data, event.detail.id)}
                     on:fileDeleteAction={(event) => handleDeleteFileAction(event.detail.data)}
-                ></DataControlPanel>
+                />
             {:else if $tabIndexStore === 1}
                 <RingControlPanel 
                     bind:showNewRingMenu={showNewRingMenu}
@@ -366,13 +341,11 @@
                     on:createRingAction={(event) => handleCreateRingAction(event.detail)} 
                     on:updateRingAction={(event) => handleUpdateRingAction(event.detail)}
                     on:updateLabelAction={(event) => handleUpdateLabelAction(event.detail)}
-                    on:deleteRingAction={(event) => handleDeleteRingAction(event.detail)}
-                    
-                ></RingControlPanel>
+                />
             {:else if $tabIndexStore === 2}
-                <PlotControlPanel></PlotControlPanel>
+                <PlotControlPanel />
             {:else if $tabIndexStore === 3}
-                <PaletteControlPanel></PaletteControlPanel>
+                <PaletteControlPanel />
             {:else if $tabIndexStore === 4}
                 <AboutPanel />
             {/if}

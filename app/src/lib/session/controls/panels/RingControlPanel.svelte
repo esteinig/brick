@@ -72,10 +72,6 @@
         dispatch("updateRingAction", data)
     }
     
-    async function handleDeleteRingRequest(data: ActionRequestDataUpdate) {
-        dispatch("deleteRingAction", data)
-    }
-
     async function handleUpdateLabelRequest(data: ActionRequestDataUpdate) {
         dispatch("updateLabelAction", data)
     }
