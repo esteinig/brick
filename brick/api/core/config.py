@@ -35,8 +35,8 @@ class Settings(BaseSettings):
     # Celery configuration
     CELERY_BROKER_URL: str = "redis://redis:6379/0"
     CELERY_RESULT_BACKEND: str = "redis://redis:6379/1"
-    CELERY_THREADS_PER_WORKER: int = get_cpu_count()
-    CELERY_THREADS_PER_PROCESS: int = get_process_threads()
+    CELERY_THREADS_PER_WORKER: int | None = None
+    CELERY_THREADS_PER_PROCESS: int | None = None
     CELERY_TASK_SOFT_TIMEOUT: int = 12000
     CELERY_TASK_HARD_TIMEOUT: int = 18000
 
@@ -52,7 +52,7 @@ class Settings(BaseSettings):
 
     # Local database in the database:/data volume
     GENOMAD_DATABASE: Path = Path("/data/genomad_db")
-    GENOMAD_SPLITS_ARG: int = 4
+    GENOMAD_SPLITS_ARG: int | None = None
 
     class ConfigDict:
         case_sensitive = True
@@ -94,6 +94,26 @@ class Settings(BaseSettings):
             self.MONGODB_URL = f"mongodb://{self.MONGODB_USERNAME}:{self.MONGODB_PASSWORD}@mongodb:27017?authSource=admin"
         return self
 
+    @model_validator(mode="after")
+    def get_resource_config(self) -> "Settings":
+        if not self.CELERY_THREADS_PER_WORKER:
+            self.CELERY_THREADS_PER_WORKER = get_cpu_count(
+                fallback=1
+            )  # if CPU count cannot be determined use 1 thread
+            print(
+                f"Set default threads per worker {self.CELERY_THREADS_PER_WORKER}",
+                flush=True,
+            )
+        if not self.CELERY_THREADS_PER_PROCESS:
+            self.CELERY_THREADS_PER_PROCESS = get_process_threads(
+                fraction=1, fallback=2
+            )  # if CPU counts <= 4 use 1 thread, else use fraction of total (all available)
+            print(
+                f"Set default threads per process {self.CELERY_THREADS_PER_PROCESS}",
+                flush=True,
+            )
+        return self
+
 
 def get_settings():
     logging.info("Initiating settings for FastAPI")
@@ -103,6 +123,8 @@ def get_settings():
 # Global settings intitiation note that this will initiate
 # settings for any execution of tasks in the CLI
 settings = get_settings()
+
+print(settings, flush=True)
 
 
 # Default session for session endpoint

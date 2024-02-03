@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator, ValidationError
 from statistics import mean
 from strenum import StrEnum
 from pathlib import Path
@@ -54,9 +54,13 @@ class GenomadSegment(RingSegment):
 
 class LabelSegment(RingSegment):
     lineLength: float | None = None
+    lineWidth: float | None = None
+    lineOpacity: float | None = None
+    lineAngle: float | None = None
+    lineColor: str | None = None
     textSize: float | None = None
     textColor: str | None = None
-    lineAngle: float | None = None
+    textOpacity: str | None = None
 
 
 class RingReferenceSequence(BaseModel):
@@ -79,7 +83,30 @@ class Ring(BaseModel):
     type: RingType = RingType.GENERIC
     title: str = "Ring"
     reference: RingReference | None = None
-    data: List[RingSegment] = Field(default_factory=list)
+    data: List[RingSegment | LabelSegment | GenomadSegment] = Field(
+        default_factory=list
+    )
+
+    # Transformation like Session(**data) will select the first suitable
+    # `data` field type, but we inherit LabelSegment and GenomadSegment
+    # from RingSegment so that transformation will always return RingSegment.
+
+    # Because the base RingSegment fields must be present even without inheritance
+    # and the special segment fields can be `None`, it will return RingSegment
+    # so we must use a validator to correct this based on presence of subclass
+    # specific fields
+    @validator("data", pre=True, each_item=True)
+    @classmethod
+    def set_correct_segment_type(cls, v):
+        # Only apply if this is a dict from e.g. a database query to transform e.g. Session(**data)
+        if type(v) == dict:
+            if "textSize" in v:  # assuming this field is unique to LabelSegment
+                return LabelSegment(**v)
+            elif "plasmid" in v:  # assuming this field is unique to GenomadSegment
+                return GenomadSegment(**v)
+            else:  # default if no unique fields are found is RingSegment
+                return RingSegment(**v)
+        return v
 
 
 class BlastnEntry(BaseModel):

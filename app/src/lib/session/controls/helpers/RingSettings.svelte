@@ -1,7 +1,7 @@
 <script lang="ts">
 	import ColorPicker from "$lib/session/palette/ColorPicker.svelte";
 	import PalettePopup from "$lib/session/palette/PalettePopup.svelte";
-	import { changeRingColor, changeRingTitle, isRingTypePresent, moveRingInside, moveRingOutside, removeRing, toggleRingVisibility } from "$lib/stores/RingStore";
+	import { isRingTypePresent } from "$lib/stores/RingStore";
 	import { RingDirection, type ActionRequestDataUpdate, type Ring, RingType } from "$lib/types";
 	import DeleteRing from "./DeleteRing.svelte";
 	import RingIndex from "./RingIndex.svelte";

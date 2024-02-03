@@ -27,10 +27,16 @@ export type RingSegment = {
     end: number
     text: string
     lineLength?: number
+    lineWidth?: number
+    lineOpacity?: number
+    lineColor?: string
     textSize?: number
     textColor?: string
+    textOpacity?: number
     lineAngle?: number
-    meta?: SegmentMeta 
+    plasmid?: number
+    chromosome?: number
+    virus?: number
 }
 
 export type RingReference = {
@@ -297,6 +303,17 @@ export type RingUpdateSchema = {
     index_group: string[] | null
 }
 
+export type LabelUpdateSchema = {
+    ring_id: string
+    label_index: number
+    lineLength: number | null
+    lineWidth: number | null 
+    lineAngle: number | null 
+    lineColor: string | null 
+    text: string | null
+    textSize: number | null 
+    textColor: string | null 
+}
 
 
 /*  =============

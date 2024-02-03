@@ -110,7 +110,7 @@
     }
 
     function handleActionUpdateResult(result: ActionResult, updateVerbose: boolean, successMessage: string) {
-
+        
         if (result.type === "success"){
             if (updateVerbose) triggerToast(successMessage, ToastType.SUCCESS, toastStore);         
         } else if (result.type === 'failure') {
@@ -247,7 +247,33 @@
         }
         
     }
+    
+    /**
+     * Handler for ring (style) updates
+     * @param data
+     */
+     async function handleUpdateLabelAction(data: ActionRequestDataUpdate) {
+        
+        if (data.updateDatabase) {
+            const response = await fetch(data.action, {
+                method: 'POST',
+                body: data.body,
+                headers: {
+                    'x-sveltekit-action': 'true'
+                }
+            });
 
+            // Results from the server action function must
+            // be deserialized manually in this case
+            const result: ActionResult = deserialize(await response.text());
+
+            await applyAction(result);
+
+            if (data.updateVerbose) completeRequestState();
+            handleActionUpdateResult(result, data.updateVerbose, "Label updated sucessfully");
+        }
+        
+    }
     /**
      * Handler for ring deletion
      * @param data
@@ -339,6 +365,7 @@
                     bind:showEditRingMenu={showEditRingMenu}
                     on:createRingAction={(event) => handleCreateRingAction(event.detail)} 
                     on:updateRingAction={(event) => handleUpdateRingAction(event.detail)}
+                    on:updateLabelAction={(event) => handleUpdateLabelAction(event.detail)}
                     on:deleteRingAction={(event) => handleDeleteRingAction(event.detail)}
                     
                 ></RingControlPanel>

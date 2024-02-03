@@ -113,7 +113,7 @@
                         <select id="genomadRingType" class="select text-xs" bind:value={ringConfig.ring_type}>
                             <option value={RingType.ANNOTATION}>{capitalize(RingType.ANNOTATION)}</option>
                             <option value={RingType.LABEL}>{capitalize(RingType.LABEL)}</option>
-                            <option value={RingType.GENOMAD}>Probability</option>
+                            <option value={RingType.GENOMAD}>geNomad Score</option>
                         </select>
                     </label>
                 </div>

@@ -310,8 +310,8 @@
     const ringHeight = getRingHeight($rings, 0, index);
     const innerRadius = $plotConfigStore.rings.radius + (index * gap) + ringHeight;
     const outerRadius = innerRadius + height;
-
-    const score = d.meta?.plasmid ?? d.meta?.virus ?? 0;  // TODO
+    
+    const score = d.plasmid ?? d.virus ?? 0;  // TODO
 
     // Interpolate the radius based on the score
     return innerRadius + (outerRadius - innerRadius) * score;
@@ -369,7 +369,7 @@
                   y1={calculateOuterArcPointY1(ringAnnotation, $plotConfigStore.rings.gap)} 
                   x2={calculateOuterArcPointX2(ringAnnotation, $plotConfigStore.labels.lineLength, $plotConfigStore.rings.gap)} 
                   y2={calculateOuterArcPointY2(ringAnnotation, $plotConfigStore.labels.lineLength, $plotConfigStore.rings.gap)}
-                  style="stroke: {$plotConfigStore.labels.lineColor}; stroke-width: {$plotConfigStore.labels.lineWidth/100}rem; opacity: {$plotConfigStore.labels.lineOpacity/100};"
+                  style="stroke: {ringAnnotation.lineColor ?? $plotConfigStore.labels.lineColor}; stroke-width: {ringAnnotation.lineWidth ? ringAnnotation.lineWidth/100 : $plotConfigStore.labels.lineWidth/100}rem; opacity: {ringAnnotation.lineOpacity ? ringAnnotation.lineOpacity/100 : $plotConfigStore.labels.lineOpacity/100};"
                   class="brickAnnotationLine"
                   visibility={ring.visible ? 'visible': 'hidden'}
                 />
@@ -378,7 +378,7 @@
                 <text 
                   x={calculateOuterArcPointX2(ringAnnotation, $plotConfigStore.labels.lineLength, $plotConfigStore.rings.gap)} 
                   y={calculateOuterArcPointY2(ringAnnotation, $plotConfigStore.labels.lineLength, $plotConfigStore.rings.gap)}
-                  style="fill: {ringAnnotation.textColor ?? $plotConfigStore.labels.textColor}; opacity: {$plotConfigStore.labels.textOpacity/100}; font-size: {ringAnnotation.textSize ?? $plotConfigStore.labels.textSize}%"
+                  style="fill: {ringAnnotation.textColor ?? $plotConfigStore.labels.textColor}; opacity: {ringAnnotation.textOpacity ? ringAnnotation.textOpacity/100 : $plotConfigStore.labels.textOpacity/100}; font-size: {ringAnnotation.textSize ?? $plotConfigStore.labels.textSize}%"
                   text-anchor={getTextAnchor(degreeScale(ringAnnotation.start))}
                   dominant-baseline={getDominantBaseline(degreeScale(ringAnnotation.start))}
                   class="brickAnnotationText"

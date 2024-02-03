@@ -221,5 +221,36 @@ export const actions: Actions = {
                 detail: getErrorMessage(error)
             })
         }
-    }
+    },
+    // Atomic updates to rings in database from user style selection
+    updateLabel: async ({ request }) => {
+
+        const formData = await request.formData();
+
+        const sessionId = formData.get("session_id") as string;
+        const labelUpdate = formData.get("label_update");
+        
+
+        const response = await fetch(`${env.PRIVATE_DOCKER_API_URL}/sessions/${sessionId}/label`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: labelUpdate
+        });
+        
+        try {
+            const sessionResponseData: SessionResponse = await response.json();
+    
+            if (response.ok) {
+                return { session: sessionResponseData }
+            } else {
+                return fail(response.status, sessionResponseData)
+            }
+        } catch(error) {
+            // Catch if something bad happens during validation with pydantic
+            // there is no JSON object returned (error only)
+            return fail(response.status, {
+                detail: getErrorMessage(error)
+            })
+        }
+    },
 };

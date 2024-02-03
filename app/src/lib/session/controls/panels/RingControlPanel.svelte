@@ -3,7 +3,7 @@
 	import { FileType, type SessionFile } from "$lib/types";
     import { sessionFiles } from "$lib/stores/SessionFileStore";
     import { ringReferenceStore } from "$lib/stores/RingReferenceStore";
-    import { changeRingTitle, moveRingInside, moveRingOutside, removeRing, toggleRingVisibility, changeRingColor, getRingById, changeLabelText, changeLabelLineLength, changeLabelTextSize, changeLabelPosition, changeLineAngle, changeLabelTextColor} from "$lib/stores/RingStore";
+    import { changeRingTitle, moveRingInside, moveRingOutside, removeRing, toggleRingVisibility, changeRingColor, getRingById, changeLabelText, changeLabelLineLength, changeLabelTextSize, changeLabelPosition, changeLabelTextColor, changeLabelLineWidth, changeLabelLineColor, changeLabelLineAngle, removeLabel} from "$lib/stores/RingStore";
 
 	import NewReferenceRing from "$lib/session/controls/rings/NewReferenceRing.svelte";
 	import NewBlastRing from "$lib/session/controls/rings/NewBlastRing.svelte";
@@ -89,7 +89,7 @@
     let selectedRing: Ring | null = null;
     let editButtonDisabled: boolean = true;
 
-    $: selectedRing = getRingById(selectedRingId)
+    $: selectedRing = getRingById(selectedRingId);
     $: editButtonDisabled = selectedRing ? !editableRingTypes.includes(selectedRing.type) : true;
 
 
@@ -204,20 +204,22 @@
         
         {#if selectedRing && selectedRing.type === RingType.LABEL}
             {#each selectedRing.data.sort((a, b) => a.start - b.start) as labelSegment, idx}
-                    <div class="my-4">
-                            <RingLabelEdit 
-                                bind:segment={labelSegment} 
-                                labelEditOpacity={idx === 0 ? 100 : 20}
-                                on:submitAction={(event) => handleUpdateLabelRequest(event.detail.requestData)}
-                                on:changeText={(event) => changeLabelText(selectedRingId, event.detail.text, idx)}
-                                on:changeLineLength={(event) => changeLabelLineLength(selectedRingId, event.detail.lineLength, idx)}
-                                on:changeTextSize={(event) => changeLabelTextSize(selectedRingId, event.detail.textSize, idx)}
-                                on:changePosition={(event) => changeLabelPosition(selectedRingId, event.detail.position, idx)}
-                                on:changeLineAngle={(event) => changeLineAngle(selectedRingId, event.detail.lineAngle, idx)}
-                                on:changeTextColor={(event) => changeLabelTextColor(selectedRingId, event.detail.textColor, idx)}
-                            >
-                            </RingLabelEdit>
-                </div>
+                <RingLabelEdit 
+                    bind:segment={labelSegment} 
+                    ringIdentifier={selectedRing.id}
+                    labelIndex={idx}
+                    labelEditOpacity={idx === 0 ? 100 : 40}
+                    on:submitAction={(event) => handleUpdateLabelRequest(event.detail)}
+                    on:delete={(_) => { removeLabel(selectedRingId, idx); selectedRing = getRingById(selectedRingId)}}
+                    on:changePosition={(event) => changeLabelPosition(selectedRingId, event.detail.position, idx)}
+                    on:changeText={(event) => changeLabelText(selectedRingId, event.detail.text, idx)}
+                    on:changeTextSize={(event) => changeLabelTextSize(selectedRingId, event.detail.textSize, idx)}
+                    on:changeTextColor={(event) => changeLabelTextColor(selectedRingId, event.detail.textColor, idx)}
+                    on:changeLineAngle={(event) => changeLabelLineAngle(selectedRingId, event.detail.lineAngle, idx)}
+                    on:changeLineLength={(event) => changeLabelLineLength(selectedRingId, event.detail.lineLength, idx)}
+                    on:changeLineWidth={(event) => changeLabelLineWidth(selectedRingId, event.detail.lineWidth, idx)}
+                    on:changeLineColor={(event) => changeLabelLineColor(selectedRingId, event.detail.lineColor, idx)}
+                />
             {/each}
         {/if}
 
@@ -241,11 +243,8 @@
                                 on:moveRingInside={(_) => moveRingInside(ring.id)}
                                 on:moveRingOutside={(_) => moveRingOutside(ring.id, $ringData.length-1)}
                                 on:delete={() => removeRing(ring.id, indexGroup)}
-                            >
-                        </RingSettings>
+                            />
                         </ListBoxItem>
-                    
-                        
                     {/each}
                 </ListBox>
             </div>

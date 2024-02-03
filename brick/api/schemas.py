@@ -486,3 +486,16 @@ class RingUpdate(BaseModel):
     height: int | None
     title: str | None
     index_group: List[str] | None
+
+
+# Label update schema for specific ring
+class LabelUpdate(BaseModel):
+    ring_id: str
+    label_index: int
+    lineLength: float | None = None
+    lineWidth: float | None = None
+    lineAngle: float | None = None
+    lineColor: str | None = None
+    text: str | None = None
+    textSize: float | None = None
+    textColor: str | None = None

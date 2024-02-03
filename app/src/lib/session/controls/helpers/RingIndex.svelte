@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { RingDirection, type RingUpdateSchema } from '$lib/types';
+	import { RingDirection, type ActionRequestDataUpdate, type RingUpdateSchema } from '$lib/types';
     import { createEventDispatcher } from 'svelte';
 	import { page } from "$app/stores";
 	import { startRequestState } from "$lib/stores/RequestInProgressStore";
@@ -62,7 +62,7 @@
         sessionRingUpdateSchema.index_group = null;
         sessionRingUpdateSchema.id = "";
 
-        dispatch('submitAction', { action: event.currentTarget.action, body: data, updateVerbose: updateVerbose, updateDatabase: updateDatabase });
+        dispatch('submitAction', { action: event.currentTarget.action, body: data, updateVerbose: updateVerbose, updateDatabase: updateDatabase } as ActionRequestDataUpdate);
 
 	}
 

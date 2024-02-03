@@ -436,24 +436,27 @@ def run_genomad(
     if not seq_slices:
         raise ValueError("No sequence slices produced")
 
-    # Run geNomad
+    base_command = [
+        "genomad",
+        "end-to-end",
+        "--threads",
+        str(settings.CELERY_THREADS_PER_PROCESS),
+        "--cleanup",
+        "--relaxed",
+    ]
+    if settings.GENOMAD_SPLITS_ARG is not None:
+        base_command += [
+            "--splits",
+            f"{settings.GENOMAD_SPLITS_ARG}",
+        ]
+    base_command += [
+        str(sliced_fasta),
+        str(working_directory / "genomad_output"),
+        str(settings.GENOMAD_DATABASE),
+    ]
+
     try:
-        subprocess.run(
-            [
-                "genomad",
-                "end-to-end",
-                "--threads",
-                str(settings.CELERY_THREADS_PER_PROCESS),
-                "--splits",
-                f"{settings.GENOMAD_SPLITS_ARG}",
-                "--cleanup",
-                "--relaxed",
-                str(sliced_fasta),
-                str(working_directory / "genomad_output"),
-                str(settings.GENOMAD_DATABASE),
-            ],
-            check=True,
-        )
+        subprocess.run(base_command, check=True)
     except:
         raise ValueError(
             "Failed to run `genomad` command on worker"

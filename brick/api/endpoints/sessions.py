@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import List
 
 from ...rings import Ring, RingType
-from ..schemas import Session, RingUpdate, SessionID
+from ..schemas import Session, RingUpdate, LabelUpdate, SessionID
 from ..core.config import DEFAULT_SESSIONS
 from ..core.db import get_session_collection_motor
 
@@ -113,6 +113,68 @@ async def update_session_ring(session_id: str, ring_update: RingUpdate):
             "message": "Ring updated successfully",
             "session_id": session_id,
             "ring_id": ring_update.id,
+        },
+    )
+
+
+@router.put("/{session_id}/label")
+async def update_label(session_id: str, label_update: LabelUpdate):
+
+    collection = await get_session_collection_motor()
+    existing_session: dict = await collection.find_one({"id": session_id})
+
+    if not existing_session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    else:
+        existing_session: Session = Session(**existing_session)
+
+    # Check that the label exists in the requested ring at the requested index
+    # and get the index for the update operation - for some reason array filter
+    # are not working?
+    ring_found, label_exists, ring_index = False, False, None
+    for i, ring in enumerate(existing_session.rings):
+        if ring.id == label_update.ring_id:
+            ring_found = True
+            ring_index = i
+            if 0 <= label_update.label_index < len(ring.data):
+                label_exists = True
+                break
+
+    if not label_exists or not ring_found:
+        raise HTTPException(status_code=404, detail="Requested ring or label not found")
+
+    update_document = {}
+    for field in label_update.model_dump(exclude_unset=True):
+        if (
+            field != "ring_id" and field != "label_index"
+        ):  # Exclude these fields from the update
+            update_document[
+                f"rings.{ring_index}.data.{label_update.label_index}.{field}"
+            ] = getattr(label_update, field)
+
+    if not update_document:
+        raise HTTPException(status_code=400, detail="No update data provided")
+
+    result = await collection.update_one(
+        {"id": session_id},
+        {"$set": update_document},
+    )
+
+    updated_session: dict = await collection.find_one({"id": session_id})
+
+    if not updated_session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    else:
+        updated_session: Session = Session(**updated_session)
+
+    # Return standard JSON response for application
+    return JSONResponse(
+        status_code=200,
+        content={
+            "message": "Label updated successfully",
+            "session_id": session_id,
+            "ring_id": label_update.ring_id,
+            "label_index": label_update.label_index,
         },
     )
 

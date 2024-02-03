@@ -98,6 +98,38 @@ function changeLabelLineLength(ring_id: string, lineLength: number, segment_inde
     });
 }
 
+function removeLabel(ring_id: string, segment_index: number) {
+    rings.update(currentRings => {
+        return currentRings.map(ring => {
+            if (ring.id === ring_id) {
+                // Filter out the segment at segment_index
+                const newData = ring.data.filter((_, index) => index !== segment_index);
+                // Update ring data with the filtered segments
+                return { ...ring, data: newData };
+            }
+            return ring;
+        });
+    });
+}
+
+
+// Function to change line width
+function changeLabelLineWidth(ring_id: string, lineWidth: number, segment_index: number) {
+    rings.update(currentRings => {
+        return currentRings.map(ring => {
+            if (ring.id === ring_id) {
+                ring.data.map((segment, i) => {
+                    if (i === segment_index) {
+                        segment.lineWidth = lineWidth
+                    }
+                }) 
+            }
+            return ring;
+        });
+    });
+}
+
+
 
 // Function to change line length
 function changeLabelTextSize(ring_id: string, textSize: number, segment_index: number) {
@@ -154,9 +186,25 @@ function changeLabelTextColor(ring_id: string, color: string, segment_index: num
 }
 
 
+// Function to change line length
+function changeLabelLineColor(ring_id: string, color: string, segment_index: number) {
+    rings.update(currentRings => {
+        return currentRings.map(ring => {
+            if (ring.id === ring_id) {
+                ring.data.map((segment, i) => {
+                    if (i === segment_index) {
+                       segment.lineColor = color
+                    }
+                }) 
+            }
+            return ring;
+        });
+    });
+}
+
 
 // Function to change line length
-function changeLineAngle(ring_id: string, lineAngle: number, segment_index: number) {
+function changeLabelLineAngle(ring_id: string, lineAngle: number, segment_index: number) {
     rings.update(currentRings => {
         return currentRings.map(ring => {
             if (ring.id === ring_id) {
@@ -283,7 +331,7 @@ function getRingById(ringId: string): Ring | null {
 }
 
 // Export the store and functions
-export { rings, addRing, removeRing, clearRings, toggleRingVisibility, moveRingInside, moveRingOutside, changeRingTitle, isRingTypePresent, createFilteredRingsStore, changeRingColor, changeLabelText, getRingById, changeLabelLineLength, changeLabelTextSize, changeLabelPosition, changeLineAngle, changeLabelTextColor};
+export { rings, addRing, removeRing, removeLabel, clearRings, toggleRingVisibility, moveRingInside, moveRingOutside, changeRingTitle, isRingTypePresent, createFilteredRingsStore, changeRingColor, changeLabelText, getRingById, changeLabelLineLength, changeLabelTextSize, changeLabelPosition, changeLabelLineAngle, changeLabelTextColor, changeLabelLineWidth, changeLabelLineColor};
 
 // Helper to compute index for insertion and add/merge the new ring
 function addNewRing(rings: Ring[], newRing: Ring): Ring[] {

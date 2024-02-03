@@ -2,6 +2,7 @@
     import { createEventDispatcher } from 'svelte';
 	import { page } from "$app/stores";
 	import { startRequestState } from "$lib/stores/RequestInProgressStore";
+	import type { ActionRequestDataUpdate } from '$lib/types';
     
     type FileId = string;
 
@@ -34,7 +35,7 @@
         data.append('session_id', $page.params.session);
         data.append('file_id', id);
 
-        dispatch('submitAction', { action: event.currentTarget.action, body: data, updateVerbose: updateVerbose, updateDatabase: updateDatabase });
+        dispatch('submitAction', { action: event.currentTarget.action, body: data, updateVerbose: updateVerbose, updateDatabase: updateDatabase } as ActionRequestDataUpdate);
 	}
 
     // Do reload the session data, so that the files 
