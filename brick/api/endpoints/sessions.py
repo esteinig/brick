@@ -131,41 +131,37 @@ async def update_label(session_id: str, label_update: LabelUpdate):
     # Check that the label exists in the requested ring at the requested index
     # and get the index for the update operation - for some reason array filter
     # are not working?
-    ring_found, label_exists, ring_index = False, False, None
+    ring_found, label_found, ring_index, label_index = False, False, None, None
     for i, ring in enumerate(existing_session.rings):
         if ring.id == label_update.ring_id:
             ring_found = True
             ring_index = i
-            if 0 <= label_update.label_index < len(ring.data):
-                label_exists = True
-                break
+            for j, segment in enumerate(ring.data):
+                if segment.labelIdentifier == label_update.label_id:
+                    label_found = True
+                    label_index = j
 
-    if not label_exists or not ring_found:
+    if not ring_found or not label_found:
         raise HTTPException(status_code=404, detail="Requested ring or label not found")
 
     update_document = {}
     for field in label_update.model_dump(exclude_unset=True):
         if (
-            field != "ring_id" and field != "label_index"
+            field != "ring_id" and field != "label_id"
         ):  # Exclude these fields from the update
-            update_document[
-                f"rings.{ring_index}.data.{label_update.label_index}.{field}"
-            ] = getattr(label_update, field)
+            update_document[f"rings.{ring_index}.data.{label_index}.{field}"] = getattr(
+                label_update, field
+            )
 
     if not update_document:
         raise HTTPException(status_code=400, detail="No update data provided")
 
-    result = await collection.update_one(
-        {"id": session_id},
-        {"$set": update_document},
-    )
+    result = await collection.update_one({"id": session_id}, {"$set": update_document})
 
-    updated_session: dict = await collection.find_one({"id": session_id})
-
-    if not updated_session:
-        raise HTTPException(status_code=404, detail="Session not found")
-    else:
-        updated_session: Session = Session(**updated_session)
+    if not result.matched_count:
+        raise HTTPException(
+            status_code=404, detail="Could not find the segment to update"
+        )
 
     # Return standard JSON response for application
     return JSONResponse(
@@ -173,8 +169,8 @@ async def update_label(session_id: str, label_update: LabelUpdate):
         content={
             "message": "Label updated successfully",
             "session_id": session_id,
-            "ring_id": label_update.ring_id,
-            "label_index": label_update.label_index,
+            "ring_index": ring_index,
+            "label_index": label_index,
         },
     )
 

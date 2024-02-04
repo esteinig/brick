@@ -52,7 +52,11 @@ class GenomadSegment(RingSegment):
     chromosome: float | None = None
 
 
+# Note camel-case need to change across
+# front-end since this class was initially
+# created due to changes in front-end
 class LabelSegment(RingSegment):
+    labelIdentifier: str
     lineLength: float | None = None
     lineWidth: float | None = None
     lineOpacity: float | None = None
@@ -305,7 +309,7 @@ def extract_genomad_contiguous_segments(
 ) -> List[RingSegment] | List[LabelSegment]:
     """Extracts segments of high probabilty for each prediction class with a minimum total length for label or annotation rings"""
 
-    segments = {"chromosome": [], "plasmid": [], "virus": []}
+    segments = []
 
     genomad_output = pandas.read_csv(file, sep="\t", header=0)
 
@@ -329,7 +333,9 @@ def extract_genomad_contiguous_segments(
                     if segment_type == RingSegmentType.SEGMENT:
                         current_segment = RingSegment(start=start, end=end)
                     elif segment_type == RingSegmentType.LABEL:
-                        current_segment = LabelSegment(start=start, end=end)
+                        current_segment = LabelSegment(
+                            start=start, end=end, labelIdentifier=str(uuid.uuid4())
+                        )
                     else:
                         raise ValueError(
                             f"Segment type {segment_type} not supported for extracting contiguous segment annotations from Genomad"
@@ -341,7 +347,7 @@ def extract_genomad_contiguous_segments(
                     current_probabilities.append(probability)
             else:
                 if current_segment and (
-                    current_segment.end - current_segment.start > min_segment_length
+                    current_segment.end - current_segment.start >= min_segment_length
                 ):
 
                     prediction_class_label = (
@@ -358,26 +364,23 @@ def extract_genomad_contiguous_segments(
                         prediction_class in prediction_classes
                         and mean_segment_score >= min_segment_score
                     ):
-                        segments[prediction_class].append(current_segment)
+                        segments.append(current_segment)
 
                 current_segment = None
 
         # Check for a segment at the end
         if current_segment and (
-            current_segment.end - current_segment.start > min_segment_length
+            current_segment.end - current_segment.start >= min_segment_length
         ):
             if prediction_class in prediction_classes:
-                segments[prediction_class].append(current_segment)
+                segments.append(current_segment)
 
     process_column("chromosome_score")
     process_column("plasmid_score")
     process_column("virus_score")
 
-    # Collect all segments if they are in the list of requested prediction classes
-
-    for _, segmented in segments.items():
-        for segment in segmented:
-            yield segment
+    for segment in sorted(segments, key=lambda segment: segment.start):
+        yield segment
 
 
 def get_start_end_from_seq_name(
@@ -471,6 +474,7 @@ def parse_tsv_segments(
                         if sanitize
                         else row["text"]
                     ),
+                    labelIdentifier=str(uuid.uuid4()),
                 )
             else:
                 raise ValueError(f"Segment type {segment_type} not supported")

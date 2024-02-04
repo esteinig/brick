@@ -26,6 +26,7 @@ export type RingSegment = {
     start: number
     end: number
     text: string
+    labelIdentifier?: string
     lineLength?: number
     lineWidth?: number
     lineOpacity?: number
@@ -56,6 +57,11 @@ export class Ring {
     title: string;
     data: RingSegment[]
 
+    // Special fields for subclasses
+    size?: number;
+    lineSmoothing?: boolean;
+    lineHeight?: number;
+
     constructor(
         reference: RingReference,
         index: number, 
@@ -72,9 +78,7 @@ export class Ring {
         this.color = color;
         this.height = height;
         this.type = type;
-
         this.title = title;
-
         this.data = [];
     }
 }
@@ -93,11 +97,11 @@ export class ReferenceRing extends Ring {
         title: string = "Reference Ring"
     ) {
         super(reference, index, visible, type, color, height, title)
-        this.id = createUuid()
+        this.id = createUuid();
         this.size = size;
         this.data = [
             {start: 0, end: size, text: title}
-        ]
+        ];
     }
 
 }
@@ -113,7 +117,7 @@ export class AnnotationRing extends Ring {
         title: string = "Annotation Ring"
     ) {
         super(reference, index, visible, type, color, height, title)
-        this.id = createUuid()
+        this.id = createUuid();
     }
 }
 
@@ -128,7 +132,7 @@ export class BlastRing extends Ring {
         title: string = "Blast Ring"
     ) {
         super(reference, index, visible, type, color, height, title)
-        this.id = createUuid()
+        this.id = createUuid();
     }
 }
 
@@ -142,10 +146,13 @@ export class GenomadRing extends Ring {
         type: RingType = RingType.GENOMAD, 
         color: string = "#d3d3d3", 
         height: number = 20, 
-        title: string = "geNomad Ring"
+        title: string = "geNomad Ring",
+        lineSmoothing: boolean = false,
     ) {
         super(reference, index, visible, type, color, height, title)
-        this.id = createUuid()
+        this.id = createUuid();
+        this.lineSmoothing = lineSmoothing;
+        this.lineHeight = height;
     }
 }
 
@@ -161,7 +168,7 @@ export class LabelRing extends Ring {
         title: string = "Label Ring"
     ) {
         super(reference, index, visible, type, color, height, title)
-        this.id = createUuid()
+        this.id = createUuid();
     }
 }
 
@@ -305,7 +312,7 @@ export type RingUpdateSchema = {
 
 export type LabelUpdateSchema = {
     ring_id: string
-    label_index: number
+    label_id: string
     lineLength: number | null
     lineWidth: number | null 
     lineAngle: number | null 
@@ -454,10 +461,10 @@ export type LabelConfig = {
 export type RingConfig = {
     radius: number
     height: number
+    outerHeight: number
     gap: number
+    labelGap: number
     lineSmoothing: boolean
-    lineGap: number
-    lineHeight: number
 }
 
 

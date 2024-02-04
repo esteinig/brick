@@ -19,6 +19,7 @@
 	import { ListBox, ListBoxItem } from "@skeletonlabs/skeleton";
 	import RingLabelEdit from "../helpers/RingLabelEdit.svelte";
 	import RingSettings from "../helpers/RingSettings.svelte";
+	import RingGenomadEdit from "../helpers/RingGenomadEdit.svelte";
     
     export let showNewRingMenu: boolean = false;
     export let showEditRingMenu: boolean = false;
@@ -77,7 +78,7 @@
     }
 
     const editableRingTypes: RingType[] = [
-        RingType.LABEL
+        RingType.LABEL, RingType.GENOMAD
     ]
 
     let selectedRingId: string = "";
@@ -200,23 +201,27 @@
         
         {#if selectedRing && selectedRing.type === RingType.LABEL}
             {#each selectedRing.data.sort((a, b) => a.start - b.start) as labelSegment, idx}
-                <RingLabelEdit 
-                    bind:segment={labelSegment} 
-                    ringIdentifier={selectedRing.id}
-                    labelIndex={idx}
-                    labelEditOpacity={idx === 0 ? 100 : 40}
-                    on:submitAction={(event) => handleUpdateLabelRequest(event.detail)}
-                    on:delete={(_) => { removeLabel(selectedRingId, idx); selectedRing = getRingById(selectedRingId)}}
-                    on:changePosition={(event) => changeLabelPosition(selectedRingId, event.detail.position, idx)}
-                    on:changeText={(event) => changeLabelText(selectedRingId, event.detail.text, idx)}
-                    on:changeTextSize={(event) => changeLabelTextSize(selectedRingId, event.detail.textSize, idx)}
-                    on:changeTextColor={(event) => changeLabelTextColor(selectedRingId, event.detail.textColor, idx)}
-                    on:changeLineAngle={(event) => changeLabelLineAngle(selectedRingId, event.detail.lineAngle, idx)}
-                    on:changeLineLength={(event) => changeLabelLineLength(selectedRingId, event.detail.lineLength, idx)}
-                    on:changeLineWidth={(event) => changeLabelLineWidth(selectedRingId, event.detail.lineWidth, idx)}
-                    on:changeLineColor={(event) => changeLabelLineColor(selectedRingId, event.detail.lineColor, idx)}
-                />
+                {#if labelSegment.labelIdentifier}
+                    <RingLabelEdit 
+                        bind:segment={labelSegment} 
+                        ringIdentifier={selectedRing.id}
+                        labelIdentifier={labelSegment.labelIdentifier}
+                        labelEditOpacity={idx === 0 ? 100 : 40}
+                        on:submitAction={(event) => handleUpdateLabelRequest(event.detail)}
+                        on:delete={(_) => { removeLabel(selectedRingId, labelSegment.labelIdentifier); selectedRing = getRingById(selectedRingId)}}
+                        on:changePosition={(event) => changeLabelPosition(selectedRingId, event.detail.position, labelSegment.labelIdentifier)}
+                        on:changeText={(event) => changeLabelText(selectedRingId, event.detail.text, labelSegment.labelIdentifier)}
+                        on:changeTextSize={(event) => changeLabelTextSize(selectedRingId, event.detail.textSize, labelSegment.labelIdentifier)}
+                        on:changeTextColor={(event) => changeLabelTextColor(selectedRingId, event.detail.textColor, labelSegment.labelIdentifier)}
+                        on:changeLineAngle={(event) => changeLabelLineAngle(selectedRingId, event.detail.lineAngle, labelSegment.labelIdentifier)}
+                        on:changeLineLength={(event) => changeLabelLineLength(selectedRingId, event.detail.lineLength, labelSegment.labelIdentifier)}
+                        on:changeLineWidth={(event) => changeLabelLineWidth(selectedRingId, event.detail.lineWidth, labelSegment.labelIdentifier)}
+                        on:changeLineColor={(event) => changeLabelLineColor(selectedRingId, event.detail.lineColor, labelSegment.labelIdentifier)}
+                    />
+                {/if}
             {/each}
+        {:else if selectedRing && selectedRing.type === RingType.GENOMAD}
+            <RingGenomadEdit bind:ring={selectedRing}></RingGenomadEdit>
         {/if}
 
 

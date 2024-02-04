@@ -203,7 +203,7 @@
   // heights based on radius, ring height and gap size
   function arcGenerator(d: RingSegment, index: number, height: number, radius: number, gap: number): string {
     
-    const ringHeight = getRingHeight($rings, 0, index);
+    const ringHeight = getRingHeight($rings, 0, index)
 
     return d3.arc()
       .innerRadius(radius+(index*gap)+ringHeight)
@@ -217,8 +217,12 @@
     return rings.slice(start_index, end_index+1).map(ring => ring.height).reduce((a, b) => a+b)
   }
 
+  // Labels
   function getOuterRingHeight(rings: Ring[], gap: number): number {
-    return rings.map(ring => ring.height+gap).reduce((a, b) => a+b)+$plotConfigStore.rings.radius-gap-(gap/1.5)
+    return rings.map((ring, i) => {
+      if (i == rings.length-1) return ring.height+$plotConfigStore.rings.labelGap;
+      return ring.height+$plotConfigStore.rings.gap
+    }).reduce((a, b) => a+b)+$plotConfigStore.rings.radius-$plotConfigStore.rings.gap
   }
 
   // Function to calculate the midpoint of an arc segment
@@ -306,9 +310,10 @@
   }
 
 
-  function calculateGenomadPointRadius(d: RingSegment, index: number, height: number, gap: number): number {
-    const ringHeight = getRingHeight($rings, 0, index);
-    const innerRadius = $plotConfigStore.rings.radius + (index * gap) + ringHeight;
+  function calculateGenomadPointRadius(d: RingSegment, index: number, height: number): number {
+
+    // Not sure why this works but ok
+    const innerRadius = $plotConfigStore.rings.radius + (index*$plotConfigStore.rings.gap) + getRingHeight($rings, 0, index)
     const outerRadius = innerRadius + height;
     
     const score = d.plasmid ?? d.virus ?? 0;  // TODO
@@ -317,11 +322,11 @@
     return innerRadius + (outerRadius - innerRadius) * score;
   }
 
-  function generateLinePath(ringSegments: RingSegment[], index: number, height: number, gap: number, smoothing: boolean): string {
+  function generateLinePath(ringSegments: RingSegment[], index: number, height: number, smoothing: boolean): string {
     
     let lineGenerator = d3.lineRadial()
         .angle((d: RingSegment) => calculateGenomadMidpoint(d)) // types enforced by RingType 
-        .radius((d: RingSegment) => calculateGenomadPointRadius(d, index, height, gap))
+        .radius((d: RingSegment) => calculateGenomadPointRadius(d, index, height))
 
     if (smoothing){
       lineGenerator = lineGenerator.curve(d3.curveNatural)
@@ -393,15 +398,16 @@
                 </text>
               {/each}
           {:else if ring.type === RingType.GENOMAD}
+            {console.log}
             <path 
-                d={generateLinePath(ring.data, ring.index, $plotConfigStore.rings.height, $plotConfigStore.rings.gap, $plotConfigStore.rings.lineSmoothing)}
+                d={generateLinePath(ring.data, ring.index, ring.index == $rings.length-2 ?  $plotConfigStore.rings.outerHeight : $plotConfigStore.rings.height, ring.lineSmoothing ?? $plotConfigStore.rings.lineSmoothing)}
                 style="fill: none; stroke: {ring.color}; stroke-width: 1"
             />
           {:else}
             {#each ring.data as ringSegment, idx}
               <path 
                 class="brickRingSegment" 
-                d={arcGenerator(ringSegment, ring.index, $plotConfigStore.rings.height, $plotConfigStore.rings.radius, $plotConfigStore.rings.gap)} 
+                d={arcGenerator(ringSegment, ring.index, ring.index == $rings.length-2 ?  $plotConfigStore.rings.outerHeight : $plotConfigStore.rings.height, $plotConfigStore.rings.radius, $plotConfigStore.rings.gap)} 
                 style="fill: {ring.color}; opacity: 1; cursor: pointer" 
                 visibility={ring.visible ? 'visible': 'hidden'} 
                 on:mouseover={() => handleMouseover(ringSegment)} 

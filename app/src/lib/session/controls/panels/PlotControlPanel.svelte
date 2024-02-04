@@ -170,14 +170,23 @@
                         <input type="range" bind:value={$plotConfigStore.rings.radius} min="0" max="1000" />
                     </label>
                     <label class="label text-xs mb-4">
-                        <p class="opacity-40">Height</p>
+                        <p class="opacity-40">Inner ring height</p>
                         <input type="range" bind:value={$plotConfigStore.rings.height} min="0" max="100" />
                     </label>
-                    <label class="label text-xs">
-                        <p class="opacity-40">Gap</p>
-                        <input type="range" bind:value={$plotConfigStore.rings.gap} min="0" max="100" />
+
+                    <label class="label text-xs mb-4">
+                        <p class="opacity-40">Outer ring height</p>
+                        <input type="range" bind:value={$plotConfigStore.rings.outerHeight} min="0" max="100" />
                     </label>
 
+                    <label class="label text-xs">
+                        <p class="opacity-40">Inner ring gap</p>
+                        <input type="range" bind:value={$plotConfigStore.rings.gap} min="0" max="100" />
+                    </label>
+                    <label class="label text-xs">
+                        <p class="opacity-40">Label ring gap</p>
+                        <input type="range" bind:value={$plotConfigStore.rings.labelGap} min="0" max="100" />
+                    </label>
                 </div>
             </div>
         {:else if selectedConfig === "labels"}

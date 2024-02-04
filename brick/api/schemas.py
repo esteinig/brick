@@ -9,7 +9,7 @@ from uuid import UUID
 from .core.config import settings
 
 from ..rings import BlastRing, AnnotationRing, LabelRing, ReferenceRing, GenomadRing
-from ..rings import RingSegment, RingReference, RingType, Ring
+from ..rings import LabelSegment, RingReference, RingType, Ring
 from ..rings import GenomadPredictionClass
 
 SessionID = Annotated[
@@ -351,7 +351,7 @@ class AnnotationRingResponse(BaseModel):
 
 class LabelRingSchema(RingSchema):
     tsv_id: SessionFileID | None = None
-    labels: List[RingSegment] = []
+    labels: List[LabelSegment] = []
 
     @field_validator("tsv_id")
     @classmethod
@@ -491,7 +491,7 @@ class RingUpdate(BaseModel):
 # Label update schema for specific ring
 class LabelUpdate(BaseModel):
     ring_id: str
-    label_index: int
+    label_id: str
     lineLength: float | None = None
     lineWidth: float | None = None
     lineAngle: float | None = None

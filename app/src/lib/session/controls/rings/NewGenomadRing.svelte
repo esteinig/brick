@@ -86,15 +86,15 @@
         geNomad rings visualize prediction scores for horizontal gene transfer (plasmid signature) or integrated phage (viral signature) regions in contiguous segments of non-overlapping windows along a reference sequence. 
     </p>
     <p class="opacity-20 mb-2 text-xs w-full">
-        Scores between 0 and 1 are computed for each window, and contiguous windows above the length threshold with an average score above the score threshold, and can be added as a label or annotations rings. Window scores
-        can also be added as a probability (line ring) with optional smoothing. 
+        Scores between 0 and 1 are computed for each window (--relaxed). Contiguous windows above the length threshold with an average score above the score threshold can be added as a labels or segment annotations. Window scores
+        can also be added as a line ring with optional smoothing (see ring specific edit menu). 
     </p>
     <p class="opacity-20 mb-2 text-xs w-full">
         Labels are added to the midpoint of the contiguous segment identified, usually a combination of labels and annotation segments can be helpful to show this.
-        Final scores are averaged over the identified contiguous segment if it meets the length threshold.
+        Segment scores are averaged over the identified contiguous segment if the segment is above the minimum segment length threshold.
     </p>
     <p class="opacity-20 mb-4 text-xs w-full">
-        Minimum window score may need to be relaxed to allow for longer contiguous segments if interrupted by low confidence predictions. Changing window parameters will recompute the predictions.
+        Minimum window score may need to be relaxed to allow for longer contiguous segments. Note that the line ring will show a zero score if below the window score threshold. Changing window parameters will recompute the predictions.
     </p>
     
     {#if $ringReferenceStore}
@@ -135,8 +135,7 @@
                     <p class="opacity-40">Minimum average segment score</p>
                     <input id="genomadProbability" class="input text-xs {segmentScoreInputValidationClass}" type="text" bind:value={ringConfig.min_segment_score} disabled={segmentOptionDisabled} />
                 </label>
-            </div>
-            
+            </div>            
             <div class="flex items-center mt-6">
                 <button class="btn variant-outline-surface" type="submit" disabled={!$ringReferenceStore || $requestInProgress}>  
                     <div class="flex items-center align-center">

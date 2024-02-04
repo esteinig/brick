@@ -64,13 +64,41 @@ function changeRingColor(id: string, color: string) {
 }
 
 
+// Function to change line ring smoothing
+function changeLineRingSmoothing(id: string, lineSmoothing: boolean) {
+    rings.update(currentRings => {
+        return currentRings.map(ring => {
+            if (ring.id === id) {
+                ring.lineSmoothing = lineSmoothing
+            }
+            return ring;
+        });
+    });
+}
+
+
+// Function to change line ring height
+function changeLineRingHeight(id: string, lineHeight: number) {
+    rings.update(currentRings => {
+        return currentRings.map(ring => {
+            if (ring.id === id) {
+                ring.lineHeight = lineHeight
+                ring.height = lineHeight
+            }
+            return ring;
+        });
+    });
+}
+
+
+
 // Function to change text of a label segment
-function changeLabelText(ring_id: string, text: string, segment_index: number) {
+function changeLabelText(ring_id: string, text: string, label_id: string | undefined)  {
     rings.update(currentRings => {
         return currentRings.map(ring => {
             if (ring.id === ring_id) {
-                ring.data.map((segment, i) => {
-                    if (i === segment_index) {
+                ring.data.map((segment) => {
+                    if (segment.labelIdentifier === label_id) {
                         segment.text = text
                     }
                 }) 
@@ -83,12 +111,12 @@ function changeLabelText(ring_id: string, text: string, segment_index: number) {
 
 
 // Function to change line length
-function changeLabelLineLength(ring_id: string, lineLength: number, segment_index: number) {
+function changeLabelLineLength(ring_id: string, lineLength: number, label_id: string | undefined) {
     rings.update(currentRings => {
         return currentRings.map(ring => {
             if (ring.id === ring_id) {
-                ring.data.map((segment, i) => {
-                    if (i === segment_index) {
+                ring.data.map((segment) => {
+                    if (segment.labelIdentifier === label_id) {
                         segment.lineLength = lineLength
                     }
                 }) 
@@ -98,12 +126,12 @@ function changeLabelLineLength(ring_id: string, lineLength: number, segment_inde
     });
 }
 
-function removeLabel(ring_id: string, segment_index: number) {
+function removeLabel(ring_id: string, label_id: string | undefined) {
     rings.update(currentRings => {
         return currentRings.map(ring => {
             if (ring.id === ring_id) {
                 // Filter out the segment at segment_index
-                const newData = ring.data.filter((_, index) => index !== segment_index);
+                const newData = ring.data.filter((segment) => segment.labelIdentifier !== label_id);
                 // Update ring data with the filtered segments
                 return { ...ring, data: newData };
             }
@@ -114,12 +142,12 @@ function removeLabel(ring_id: string, segment_index: number) {
 
 
 // Function to change line width
-function changeLabelLineWidth(ring_id: string, lineWidth: number, segment_index: number) {
+function changeLabelLineWidth(ring_id: string, lineWidth: number, label_id: string | undefined) {
     rings.update(currentRings => {
         return currentRings.map(ring => {
             if (ring.id === ring_id) {
-                ring.data.map((segment, i) => {
-                    if (i === segment_index) {
+                ring.data.map((segment) => {
+                    if (segment.labelIdentifier === label_id) {
                         segment.lineWidth = lineWidth
                     }
                 }) 
@@ -132,12 +160,12 @@ function changeLabelLineWidth(ring_id: string, lineWidth: number, segment_index:
 
 
 // Function to change line length
-function changeLabelTextSize(ring_id: string, textSize: number, segment_index: number) {
+function changeLabelTextSize(ring_id: string, textSize: number, label_id: string | undefined)  {
     rings.update(currentRings => {
         return currentRings.map(ring => {
             if (ring.id === ring_id) {
-                ring.data.map((segment, i) => {
-                    if (i === segment_index) {
+                ring.data.map((segment) => {
+                    if (segment.labelIdentifier === label_id) {
                         segment.textSize = textSize
                     }
                 }) 
@@ -149,12 +177,12 @@ function changeLabelTextSize(ring_id: string, textSize: number, segment_index: n
 
 
 // Function to change line length
-function changeLabelPosition(ring_id: string, position: number, segment_index: number) {
+function changeLabelPosition(ring_id: string, position: number, label_id: string | undefined)  {
     rings.update(currentRings => {
         return currentRings.map(ring => {
             if (ring.id === ring_id) {
-                ring.data.map((segment, i) => {
-                    if (i === segment_index) {
+                ring.data.map((segment) => {
+                    if (segment.labelIdentifier === label_id) {
                         // Because this is specific to labels, we can
                         // simply set the start and end values of the
                         // segment to the actual position
@@ -170,12 +198,12 @@ function changeLabelPosition(ring_id: string, position: number, segment_index: n
 
 
 // Function to change line length
-function changeLabelTextColor(ring_id: string, color: string, segment_index: number) {
+function changeLabelTextColor(ring_id: string, color: string, label_id: string | undefined)  {
     rings.update(currentRings => {
         return currentRings.map(ring => {
             if (ring.id === ring_id) {
-                ring.data.map((segment, i) => {
-                    if (i === segment_index) {
+                ring.data.map((segment) => {
+                    if (segment.labelIdentifier === label_id) {
                        segment.textColor = color
                     }
                 }) 
@@ -187,12 +215,12 @@ function changeLabelTextColor(ring_id: string, color: string, segment_index: num
 
 
 // Function to change line length
-function changeLabelLineColor(ring_id: string, color: string, segment_index: number) {
+function changeLabelLineColor(ring_id: string, color: string, label_id: string | undefined)  {
     rings.update(currentRings => {
         return currentRings.map(ring => {
             if (ring.id === ring_id) {
-                ring.data.map((segment, i) => {
-                    if (i === segment_index) {
+                ring.data.map((segment) => {
+                    if (segment.labelIdentifier === label_id) {
                        segment.lineColor = color
                     }
                 }) 
@@ -204,12 +232,12 @@ function changeLabelLineColor(ring_id: string, color: string, segment_index: num
 
 
 // Function to change line length
-function changeLabelLineAngle(ring_id: string, lineAngle: number, segment_index: number) {
+function changeLabelLineAngle(ring_id: string, lineAngle: number, label_id: string | undefined)  {
     rings.update(currentRings => {
         return currentRings.map(ring => {
             if (ring.id === ring_id) {
-                ring.data.map((segment, i) => {
-                    if (i === segment_index) {
+                ring.data.map((segment) => {
+                    if (segment.labelIdentifier === label_id) {
                         segment.lineAngle = lineAngle
                     }
                 }) 
@@ -331,7 +359,31 @@ function getRingById(ringId: string): Ring | null {
 }
 
 // Export the store and functions
-export { rings, addRing, removeRing, removeLabel, clearRings, toggleRingVisibility, moveRingInside, moveRingOutside, changeRingTitle, isRingTypePresent, createFilteredRingsStore, changeRingColor, changeLabelText, getRingById, changeLabelLineLength, changeLabelTextSize, changeLabelPosition, changeLabelLineAngle, changeLabelTextColor, changeLabelLineWidth, changeLabelLineColor};
+export { 
+    rings, 
+    addRing, 
+    removeRing, 
+    removeLabel, 
+    clearRings, 
+    toggleRingVisibility, 
+    moveRingInside, 
+    moveRingOutside, 
+    changeRingTitle, 
+    isRingTypePresent, 
+    createFilteredRingsStore, 
+    changeRingColor, 
+    changeLabelText, 
+    getRingById, 
+    changeLabelLineLength, 
+    changeLabelTextSize, 
+    changeLabelPosition, 
+    changeLabelLineAngle, 
+    changeLabelTextColor, 
+    changeLabelLineWidth, 
+    changeLabelLineColor,
+    changeLineRingHeight,
+    changeLineRingSmoothing
+};
 
 // Helper to compute index for insertion and add/merge the new ring
 function addNewRing(rings: Ring[], newRing: Ring): Ring[] {
