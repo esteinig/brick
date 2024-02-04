@@ -464,6 +464,7 @@ export type RingConfig = {
     outerHeight: number
     gap: number
     labelGap: number
+    lineWidth: number
     lineSmoothing: boolean
 }
 

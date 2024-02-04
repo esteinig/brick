@@ -187,6 +187,10 @@
                         <p class="opacity-40">Label ring gap</p>
                         <input type="range" bind:value={$plotConfigStore.rings.labelGap} min="0" max="100" />
                     </label>
+                    <label class="label text-xs">
+                        <p class="opacity-40">Line ring width</p>
+                        <input type="range" bind:value={$plotConfigStore.rings.lineWidth} min="0" max="10" step="0.2"/>
+                    </label>
                 </div>
             </div>
         {:else if selectedConfig === "labels"}

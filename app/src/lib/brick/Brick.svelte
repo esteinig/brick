@@ -401,7 +401,7 @@
           {:else if ring.type === RingType.GENOMAD}
             <path 
                 d={generateLinePath(ring.data, ring.index, $rings.some(ring => ring.type === RingType.LABEL) && ring.index == $rings.length-2  ?  $plotConfigStore.rings.outerHeight : !$rings.some(ring => ring.type === RingType.LABEL) && ring.index == $rings.length-1 ? $plotConfigStore.rings.outerHeight : $plotConfigStore.rings.height, ring.lineSmoothing ?? $plotConfigStore.rings.lineSmoothing)}
-                style="fill: none; stroke: {ring.color}; stroke-width: 1"
+                style="fill: none; stroke: {ring.color}; stroke-width: {$plotConfigStore.rings.lineWidth}"
             />
           {:else}
             {#each ring.data as ringSegment, idx}

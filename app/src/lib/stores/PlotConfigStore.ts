@@ -46,6 +46,7 @@ const DEFAULT_PLOTCONFIG: PlotConfig = {
         outerHeight: 20,
         gap: 5,
         labelGap: 5,
+        lineWidth: 1,
         lineSmoothing: false
     },
     labels: {
