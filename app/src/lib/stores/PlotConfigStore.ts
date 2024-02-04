@@ -43,9 +43,9 @@ const DEFAULT_PLOTCONFIG: PlotConfig = {
     rings: { 
         radius: 200, 
         height: 20, 
+        outerHeight: 20,
         gap: 5,
         labelGap: 5,
-        outerHeight: 20,
         lineSmoothing: false
     },
     labels: {

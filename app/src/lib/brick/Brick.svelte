@@ -6,7 +6,7 @@
 	import { RingType, Ring, type RingSegment } from '$lib/types';
 	import { plotConfigStore } from '$lib/stores/PlotConfigStore';
 	import { fade, type FadeParams } from 'svelte/transition';
-  import { createFilteredRingsStore } from '$lib/stores/RingStore';
+  import { createFilteredRingsStore, isRingTypePresent } from '$lib/stores/RingStore';
   import { ringReferenceStore } from '$lib/stores/RingReferenceStore';
   import { createEventDispatcher } from 'svelte';
 	import { removeTooltip, setTooltip } from '$lib/stores/TooltipStore';
@@ -220,7 +220,7 @@
   // Labels
   function getOuterRingHeight(rings: Ring[], gap: number): number {
     return rings.map((ring, i) => {
-      if (i == rings.length-1) return ring.height+$plotConfigStore.rings.labelGap;
+      if (i == rings.length-1 && rings.some(ring => ring.type === RingType.LABEL)) return ring.height+$plotConfigStore.rings.labelGap;
       return ring.height+$plotConfigStore.rings.gap
     }).reduce((a, b) => a+b)+$plotConfigStore.rings.radius-$plotConfigStore.rings.gap
   }
@@ -342,6 +342,7 @@
 
   let referencePosition: number | undefined = undefined;
 
+
 </script>
 
 <div id="{id}" bind:this={container} class="w-full h-full {border ? borderClass : ''}">
@@ -398,16 +399,15 @@
                 </text>
               {/each}
           {:else if ring.type === RingType.GENOMAD}
-            {console.log}
             <path 
-                d={generateLinePath(ring.data, ring.index, ring.index == $rings.length-2 ?  $plotConfigStore.rings.outerHeight : $plotConfigStore.rings.height, ring.lineSmoothing ?? $plotConfigStore.rings.lineSmoothing)}
+                d={generateLinePath(ring.data, ring.index, $rings.some(ring => ring.type === RingType.LABEL) && ring.index == $rings.length-2  ?  $plotConfigStore.rings.outerHeight : !$rings.some(ring => ring.type === RingType.LABEL) && ring.index == $rings.length-1 ? $plotConfigStore.rings.outerHeight : $plotConfigStore.rings.height, ring.lineSmoothing ?? $plotConfigStore.rings.lineSmoothing)}
                 style="fill: none; stroke: {ring.color}; stroke-width: 1"
             />
           {:else}
             {#each ring.data as ringSegment, idx}
               <path 
                 class="brickRingSegment" 
-                d={arcGenerator(ringSegment, ring.index, ring.index == $rings.length-2 ?  $plotConfigStore.rings.outerHeight : $plotConfigStore.rings.height, $plotConfigStore.rings.radius, $plotConfigStore.rings.gap)} 
+                d={arcGenerator(ringSegment, ring.index, $rings.some(ring => ring.type === RingType.LABEL) && ring.index == $rings.length-2  ?  $plotConfigStore.rings.outerHeight : !$rings.some(ring => ring.type === RingType.LABEL) && ring.index == $rings.length-1 ? $plotConfigStore.rings.outerHeight : $plotConfigStore.rings.height, $plotConfigStore.rings.radius, $plotConfigStore.rings.gap)} 
                 style="fill: {ring.color}; opacity: 1; cursor: pointer" 
                 visibility={ring.visible ? 'visible': 'hidden'} 
                 on:mouseover={() => handleMouseover(ringSegment)} 
