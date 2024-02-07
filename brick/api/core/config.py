@@ -124,9 +124,6 @@ def get_settings():
 # settings for any execution of tasks in the CLI
 settings = get_settings()
 
-print(settings, flush=True)
-
-
 # Default session for session endpoint
 DEFAULT_SESSIONS: Dict[str, dict] = {}
 

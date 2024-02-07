@@ -16,6 +16,13 @@ export enum RingType {
     GENOMAD = "genomad"
 }
 
+
+export enum GenomadDisplay {
+    VIRUS = "virus",
+    PLASMID = "plasmid",
+    BOTH = "both"
+}
+
 export type SegmentMeta = {
     plasmid: number
     chromosome: number
@@ -55,12 +62,13 @@ export class Ring {
     height: number;
     type: RingType;
     title: string;
-    data: RingSegment[]
+    data: RingSegment[];
 
     // Special fields for subclasses
     size?: number;
     lineSmoothing?: boolean;
     lineHeight?: number;
+    genomadDisplay?: GenomadDisplay
 
     constructor(
         reference: RingReference,

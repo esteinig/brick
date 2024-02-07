@@ -3,7 +3,7 @@
   import * as d3 from 'd3';
 
   import { getDefaultScaleFactor } from './helpers';
-	import { RingType, Ring, type RingSegment } from '$lib/types';
+	import { RingType, Ring, type RingSegment, GenomadDisplay } from '$lib/types';
 	import { plotConfigStore } from '$lib/stores/PlotConfigStore';
 	import { fade, type FadeParams } from 'svelte/transition';
   import { createFilteredRingsStore, isRingTypePresent } from '$lib/stores/RingStore';
@@ -310,23 +310,33 @@
   }
 
 
-  function calculateGenomadPointRadius(d: RingSegment, index: number, height: number): number {
+  function calculateGenomadPointRadius(d: RingSegment, index: number, height: number, genomadDisplay: GenomadDisplay): number {
 
     // Not sure why this works but ok
     const innerRadius = $plotConfigStore.rings.radius + (index*$plotConfigStore.rings.gap) + getRingHeight($rings, 0, index)
     const outerRadius = innerRadius + height;
     
-    const score = d.plasmid ?? d.virus ?? 0;  // TODO
+
+    let score: number = 0;
+
+    if (genomadDisplay === GenomadDisplay.PLASMID) {
+      score = d.plasmid ?? 0;
+    } else if (genomadDisplay == GenomadDisplay.VIRUS) {
+      score = d.virus ?? 0;
+    } else if (genomadDisplay === GenomadDisplay.BOTH) {
+      score = d.plasmid ?? 0;
+      score = d.virus && d.virus > score ? d.virus : score; // If a segment has both classifications show the larger score
+    }
 
     // Interpolate the radius based on the score
     return innerRadius + (outerRadius - innerRadius) * score;
   }
 
-  function generateLinePath(ringSegments: RingSegment[], index: number, height: number, smoothing: boolean): string {
+  function generateLinePath(ringSegments: RingSegment[], index: number, height: number, smoothing: boolean, genomadDisplay: GenomadDisplay  = GenomadDisplay.BOTH): string {
     
     let lineGenerator = d3.lineRadial()
         .angle((d: RingSegment) => calculateGenomadMidpoint(d)) // types enforced by RingType 
-        .radius((d: RingSegment) => calculateGenomadPointRadius(d, index, height))
+        .radius((d: RingSegment) => calculateGenomadPointRadius(d, index, height, genomadDisplay))
 
     if (smoothing){
       lineGenerator = lineGenerator.curve(d3.curveNatural)
@@ -400,14 +410,27 @@
               {/each}
           {:else if ring.type === RingType.GENOMAD}
             <path 
-                d={generateLinePath(ring.data, ring.index, $rings.some(ring => ring.type === RingType.LABEL) && ring.index == $rings.length-2  ?  $plotConfigStore.rings.outerHeight : !$rings.some(ring => ring.type === RingType.LABEL) && ring.index == $rings.length-1 ? $plotConfigStore.rings.outerHeight : $plotConfigStore.rings.height, ring.lineSmoothing ?? $plotConfigStore.rings.lineSmoothing)}
+                class="brickRingLine"
+                d={generateLinePath(
+                  ring.data, 
+                  ring.index, 
+                  $rings.some(ring => ring.type === RingType.LABEL) && ring.index == $rings.length-2  ?  $plotConfigStore.rings.outerHeight : !$rings.some(ring => ring.type === RingType.LABEL) && ring.index == $rings.length-1 ? $plotConfigStore.rings.outerHeight : $plotConfigStore.rings.height,
+                  ring.lineSmoothing ?? $plotConfigStore.rings.lineSmoothing,
+                  ring.genomadDisplay ?? GenomadDisplay.BOTH
+                )}
+                visibility={ring.visible ? 'visible': 'hidden'} 
                 style="fill: none; stroke: {ring.color}; stroke-width: {$plotConfigStore.rings.lineWidth}"
             />
           {:else}
             {#each ring.data as ringSegment, idx}
               <path 
                 class="brickRingSegment" 
-                d={arcGenerator(ringSegment, ring.index, $rings.some(ring => ring.type === RingType.LABEL) && ring.index == $rings.length-2  ?  $plotConfigStore.rings.outerHeight : !$rings.some(ring => ring.type === RingType.LABEL) && ring.index == $rings.length-1 ? $plotConfigStore.rings.outerHeight : $plotConfigStore.rings.height, $plotConfigStore.rings.radius, $plotConfigStore.rings.gap)} 
+                d={arcGenerator(
+                  ringSegment, 
+                  ring.index, 
+                  $rings.some(ring => ring.type === RingType.LABEL) && ring.index == $rings.length-2  ?  $plotConfigStore.rings.outerHeight : !$rings.some(ring => ring.type === RingType.LABEL) && ring.index == $rings.length-1 ? $plotConfigStore.rings.outerHeight : $plotConfigStore.rings.height,
+                  $plotConfigStore.rings.radius, $plotConfigStore.rings.gap
+                )} 
                 style="fill: {ring.color}; opacity: 1; cursor: pointer" 
                 visibility={ring.visible ? 'visible': 'hidden'} 
                 on:mouseover={() => handleMouseover(ringSegment)} 

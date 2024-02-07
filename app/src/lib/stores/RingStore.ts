@@ -1,5 +1,5 @@
 import { writable, derived } from 'svelte/store';
-import { RingType, type Ring } from '$lib/types';
+import { GenomadDisplay, RingType, type Ring } from '$lib/types';
 
 // Define the type for the store
 type RingStore = Ring[];
@@ -44,7 +44,9 @@ function toggleRingVisibility(id: string) {
     rings.update(currentRings => {
         return currentRings.map(ring => {
             if (ring.id === id) {
+                console.log(ring.visible)
                 ring.visible = !ring.visible;
+                console.log(ring.visible)
             }
             return ring;
         });
@@ -70,6 +72,25 @@ function changeLineRingSmoothing(id: string, lineSmoothing: boolean) {
         return currentRings.map(ring => {
             if (ring.id === id) {
                 ring.lineSmoothing = lineSmoothing
+            }
+            return ring;
+        });
+    });
+}
+
+
+// Function to change line ring display of geNomad prediction class
+function changeLineRingGenomadDisplay(id: string, displayClass: number) {
+    rings.update(currentRings => {
+        return currentRings.map(ring => {
+            if (ring.id === id) {
+                if (displayClass == 0) {
+                    ring.genomadDisplay = GenomadDisplay.PLASMID
+                } else if (displayClass == 1) {
+                    ring.genomadDisplay = GenomadDisplay.VIRUS
+                } else {
+                    ring.genomadDisplay = GenomadDisplay.BOTH
+                }
             }
             return ring;
         });
@@ -382,7 +403,8 @@ export {
     changeLabelLineWidth, 
     changeLabelLineColor,
     changeLineRingHeight,
-    changeLineRingSmoothing
+    changeLineRingSmoothing,
+    changeLineRingGenomadDisplay
 };
 
 // Helper to compute index for insertion and add/merge the new ring

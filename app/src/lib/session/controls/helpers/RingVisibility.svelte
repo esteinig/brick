@@ -34,7 +34,7 @@
 
     function toggleVisibility() {
         visible = !visible;
-        dispatch('toggleVisisbility', { visibility: visible });
+        dispatch('toggleVisibility', { visibility: visible });
 
         if (updateDatabase) formElement.requestSubmit();
     }
