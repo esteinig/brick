@@ -10,53 +10,57 @@ export const createSessionId = () => { return uuidv4() };
 export const shortenSessionId = (sessionId: string): string => { return sessionId.substring(0,8) };
 
 
-// Celery results checking
-
 export async function checkCeleryResults(
-    url: string, timeout: number | string = 30000, pollingInterval: number | string = 1000
+  url: string, timeout: number | string = 600000, pollingInterval: number | string = 100, backoffTimeout: number = 15000
 ): Promise<TaskStatusResponse> {
-    
-    // We may be passing dynamic environmental variables to this function, convert to number
-    // or fall back to default - make sure this works and does not silently fall back to 
-    // default when building for production.
+  
+  if (typeof timeout === 'string'){
+      timeout = parseEnvInt(timeout, 600000, 'PRIVATE_CELERY_TASK_CHECK_TIMEOUT');
+  }
 
-    if (typeof timeout === 'string'){
-      timeout = parseEnvInt(timeout, 30000, 'PRIVATE_CELERY_TASK_CHECK_TIMEOUT')
-    }
+  let pollingIntervalNumber: number;
+  if (typeof pollingInterval === 'string'){
+      pollingIntervalNumber = parseEnvInt(pollingInterval, 1000, 'PRIVATE_CELERY_TASK_CHECK_INTERVAL');
+  }
 
-    if (typeof pollingInterval === 'string'){
-      pollingInterval = parseEnvInt(pollingInterval, 30000, 'PRIVATE_CELERY_TASK_CHECK_TIMEOUT')
-    }
-    
-    const startTime = new Date().getTime();
+  const startTime = new Date().getTime();
+  let attempts = 0;
 
-    const timeoutPromise = new Promise<TaskStatusResponse>((_, reject) => 
-      setTimeout(() => reject(new Error('Operation timed out')), timeout)
-    );
+  const timeoutPromise = new Promise<TaskStatusResponse>((_, reject) => 
+      setTimeout(() => reject(new Error('Task result requests timed out')), timeout)
+  );
 
-    const statusCheck = async (): Promise<TaskStatusResponse> => {
+  const statusCheck = async (): Promise<TaskStatusResponse> => {
       while (true) {
-        const currentTime = new Date().getTime();
-        if (currentTime - startTime > timeout) {
-          throw new Error('File processings timed out');
-        }
+          const currentTime = new Date().getTime();
+          if (currentTime - startTime > timeout) {
+              throw new Error('Task result requests timed out');
+          }
 
-        const response = await fetch(url);
-        const data: TaskStatusResponse = await response.json();
-        
-        if (!response.ok) {
-          throw new Error(`${data.detail ? data.detail : `${response.status}`}`);
-        }
+          const response = await fetch(url);
+          const data: TaskStatusResponse = await response.json();
+          
+          if (!response.ok) {
+              throw new Error(`${data.detail ? data.detail : `${response.status}`}`);
+          }
 
-        if (data.status === TaskStatus.SUCCESS) {
-          return data;
-        }
-        await new Promise(resolve => setTimeout(resolve, pollingInterval));
+          if (data.status === TaskStatus.SUCCESS) {
+              return data;
+          }
+
+          await new Promise(resolve => setTimeout(resolve, calculateBackoff(attempts)));
+          attempts++;
       }
-    };
+  };
 
-    return await Promise.race([statusCheck(), timeoutPromise]);
+  function calculateBackoff(attempts: number): number {
+      const maxInterval = Math.min(backoffTimeout, (pollingIntervalNumber * (2 ** attempts)) + Math.floor(Math.random() * 1000));
+      return maxInterval;
+  }
+
+  return await Promise.race([statusCheck(), timeoutPromise]);
 }
+
 
 // Error handling from unknown type error response in try/catch statements
 
@@ -178,4 +182,9 @@ export function handleEndpointErrorResponse(detail: string | PydanticValidationE
     }
 
 
+}
+
+export function capitalize(str: string): string {
+  if (str.length === 0) return str;
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 }

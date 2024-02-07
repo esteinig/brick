@@ -10,13 +10,6 @@ RUN mamba env create -f conda.yml
 # Activate the new environment
 SHELL ["conda", "run", "-n", "brick", "/bin/bash", "-c"]
 
-# Copy the requirements file
-COPY requirements.txt ./
-
-# Install dependencies from requirements.txt
-RUN mamba install --file requirements.txt --yes \
-    && mamba clean --all --yes
-
 # Use another stage for the runner
 FROM condaforge/mambaforge:latest as runner
 
@@ -29,7 +22,7 @@ ARG USERNAME=brick-app
 RUN groupadd -g ${GID} ${USERNAME} && useradd --no-log-init -u ${UID} -r -g ${USERNAME} ${USERNAME}
 USER ${USERNAME}
 
-WORKDIR /app
+WORKDIR /data
 
 # Copy the conda environment from the builder stage
 COPY --chown=${USERNAME}:${USERNAME} --from=builder /opt/conda /opt/conda
@@ -37,13 +30,7 @@ COPY --chown=${USERNAME}:${USERNAME} --from=builder /opt/conda /opt/conda
 # Set the environment variables to use the conda environment
 ENV PATH=/opt/conda/envs/brick/bin:$PATH
 
-# Copy only the necessary files for Brick
-COPY --chown=${USERNAME}:${USERNAME} pyproject.toml ./
-COPY --chown=${USERNAME}:${USERNAME} brick/ ./brick/
+# Download geNomad database to /data/genomad_db
+RUN genomad download-database .
 
-# Install the brick package with the user dependencies from the builder stage
-RUN pip install --no-dependencies --no-cache .
-
-# Use other application code if necessary
-COPY --chown=${USERNAME}:${USERNAME} tests ./tests/
-COPY --chown=${USERNAME}:${USERNAME} docker/data/default.json ./
+# Profiling => 18G RAM without --splits, 6GB with --split 4(geNomad v1.7)

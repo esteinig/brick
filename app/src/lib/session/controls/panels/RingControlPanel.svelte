@@ -1,9 +1,9 @@
 <script lang="ts">
-    import { RingType, type Sequence, RingDirection, Ring, FileFormat, type ActionRequestData, type ActionRequestDataUpdate } from "$lib/types";
+    import { RingType, type Sequence, Ring, type ActionRequestData, type ActionRequestDataUpdate } from "$lib/types";
 	import { FileType, type SessionFile } from "$lib/types";
     import { sessionFiles } from "$lib/stores/SessionFileStore";
     import { ringReferenceStore } from "$lib/stores/RingReferenceStore";
-    import { changeRingTitle, moveRingInside, moveRingOutside, removeRing, isRingTypePresent, toggleRingVisibility, changeRingColor, rings} from "$lib/stores/RingStore";
+    import { changeRingTitle, moveRingInside, moveRingOutside, removeRing, toggleRingVisibility, changeRingColor, getRingById, changeLabelText, changeLabelLineLength, changeLabelTextSize, changeLabelPosition, changeLabelTextColor, changeLabelLineWidth, changeLabelLineColor, changeLabelLineAngle, removeLabel} from "$lib/stores/RingStore";
 
 	import NewReferenceRing from "$lib/session/controls/rings/NewReferenceRing.svelte";
 	import NewBlastRing from "$lib/session/controls/rings/NewBlastRing.svelte";
@@ -11,25 +11,25 @@
 
     import { tooltip } from "$lib/stores/TooltipStore";
 	import NewLabelRing from "../rings/NewLabelRing.svelte";
-	import RingTitle from "../helpers/RingTitle.svelte";
-	import PalettePopup from "$lib/session/palette/PalettePopup.svelte";
 
     import { createFilteredRingsStore } from '$lib/stores/RingStore';
     import { requestInProgress } from '$lib/stores/RequestInProgressStore';
-	import ColorPicker from "$lib/session/palette/ColorPicker.svelte";
-	import RingVisibility from "$lib/session/controls/helpers/RingVisibility.svelte";
-	import DeleteRing from "../helpers/DeleteRing.svelte";
-	import RingIndex from "../helpers/RingIndex.svelte";
-
 	import { createEventDispatcher } from "svelte";
+	import NewGenomadRing from "../rings/NewGenomadRing.svelte";
+	import { ListBox, ListBoxItem } from "@skeletonlabs/skeleton";
+	import RingLabelEdit from "../helpers/RingLabelEdit.svelte";
+	import RingSettings from "../helpers/RingSettings.svelte";
+	import RingGenomadEdit from "../helpers/RingGenomadEdit.svelte";
+    
+    export let showNewRingMenu: boolean = false;
+    export let showEditRingMenu: boolean = false;
+
 
     const dispatch = createEventDispatcher();
 
     $: ringData = createFilteredRingsStore($ringReferenceStore) // reactive so it updates on changes to reference sequence
 
     let newRing: RingType;
-    let showNewRingMenu: boolean = false;
-
     let selectedReference: SessionFile | null;
     let selectedSequence: Sequence | null;
     
@@ -65,7 +65,6 @@
     // ring is changed
     $: indexGroup = $ringData.map(ring => ring.id);
 
-
     async function handleCreateRingRequest(data: ActionRequestData) {
         dispatch("createRingAction", data)
     }
@@ -74,9 +73,22 @@
         dispatch("updateRingAction", data)
     }
     
-    async function handleDeleteRingRequest(data: ActionRequestDataUpdate) {
-        dispatch("deleteRingAction", data)
+    async function handleUpdateLabelRequest(data: ActionRequestDataUpdate) {
+        dispatch("updateLabelAction", data)
     }
+
+    const editableRingTypes: RingType[] = [
+        RingType.LABEL, RingType.GENOMAD
+    ]
+
+    let selectedRingId: string = "";
+
+    let selectedRing: Ring | null = null;
+    let editButtonDisabled: boolean = true;
+
+    $: selectedRing = getRingById(selectedRingId);
+    $: editButtonDisabled = selectedRing ? !editableRingTypes.includes(selectedRing.type) : true;
+
 
 </script>
 
@@ -127,12 +139,12 @@
             <p class="opacity-60 mb-2">Basic rings</p>
             <div class="p-2">
                 <div class="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-4 gap-4 my-3">
-                    <button class="btn {newRing === RingType.REFERENCE ? 'variant-ghost-primary' : 'variant-ringed-primary'}" disabled={!selectedReference || $requestInProgress ? true : false} on:click={() => newRing = RingType.REFERENCE}>
+                    <button class="btn {newRing === RingType.REFERENCE ? 'variant-ghost-primary' : 'variant-ringed-primary'}" disabled={!selectedReference} on:click={() => newRing = RingType.REFERENCE}>
                         <div class="flex items-center align-center truncate">
                             <span>Reference</span>
                         </div>
                     </button>
-                    <button class="btn {newRing === RingType.ANNOTATION ? 'variant-ghost-primary' : 'variant-ringed-primary'}" disabled={!selectedReference || $requestInProgress ? true : false}  on:click={() => newRing = RingType.ANNOTATION}>
+                    <button class="btn {newRing === RingType.ANNOTATION ? 'variant-ghost-primary' : 'variant-ringed-primary'}" disabled={!selectedReference}  on:click={() => newRing = RingType.ANNOTATION}>
                         <div class="flex items-center align-center truncate">
                             <span>Annotations</span>
                         </div>
@@ -142,7 +154,7 @@
                             <span>BLAST</span>
                         </div>
                     </button>
-                    <button class="btn {newRing === RingType.LABEL ? 'variant-ghost-secondary' : 'variant-ringed-secondary'}" disabled={!selectedReference || $requestInProgress ? true : false}  on:click={() => newRing = RingType.LABEL}>
+                    <button class="btn {newRing === RingType.LABEL ? 'variant-ghost-secondary' : 'variant-ringed-secondary'}" disabled={!selectedReference}  on:click={() => newRing = RingType.LABEL}>
                         <div class="flex items-center align-center truncate">
                             <span>Labels</span>
                         </div>
@@ -157,7 +169,7 @@
                             <span>abritAMR</span>
                         </div>
                     </button>
-                    <button class="btn variant-outline-surface" disabled={selectedReference ? true : true} on:click={() => newRing = RingType.REFERENCE}>
+                    <button class="btn {newRing === RingType.GENOMAD ? 'variant-ghost-primary' : 'variant-ringed-primary'}" disabled={!selectedReference || $requestInProgress ? true : false} on:click={() => newRing = RingType.GENOMAD}>
                         <div class="flex items-center align-center truncate">
                             <span>geNomad</span>
                         </div>
@@ -180,43 +192,62 @@
                 <NewAnnotationRing on:submitAction={(event) => handleCreateRingRequest(event.detail)}></NewAnnotationRing>
             {:else if newRing == RingType.LABEL}
                 <NewLabelRing on:submitAction={(event) => handleCreateRingRequest(event.detail)}></NewLabelRing>
+            {:else if newRing == RingType.GENOMAD}
+                <NewGenomadRing on:submitAction={(event) => handleCreateRingRequest(event.detail)}></NewGenomadRing>
             {/if}
         </div>
+    
+    {:else if showEditRingMenu}
+        
+        {#if selectedRing && selectedRing.type === RingType.LABEL}
+            {#each selectedRing.data.sort((a, b) => a.start - b.start) as labelSegment, idx}
+                {#if labelSegment.labelIdentifier}
+                    <RingLabelEdit 
+                        bind:segment={labelSegment} 
+                        ringIdentifier={selectedRing.id}
+                        labelIdentifier={labelSegment.labelIdentifier}
+                        labelEditOpacity={idx === 0 ? 100 : 40}
+                        on:submitAction={(event) => handleUpdateLabelRequest(event.detail)}
+                        on:delete={(_) => { removeLabel(selectedRingId, labelSegment.labelIdentifier); selectedRing = getRingById(selectedRingId)}}
+                        on:changePosition={(event) => changeLabelPosition(selectedRingId, event.detail.position, labelSegment.labelIdentifier)}
+                        on:changeText={(event) => changeLabelText(selectedRingId, event.detail.text, labelSegment.labelIdentifier)}
+                        on:changeTextSize={(event) => changeLabelTextSize(selectedRingId, event.detail.textSize, labelSegment.labelIdentifier)}
+                        on:changeTextColor={(event) => changeLabelTextColor(selectedRingId, event.detail.textColor, labelSegment.labelIdentifier)}
+                        on:changeLineAngle={(event) => changeLabelLineAngle(selectedRingId, event.detail.lineAngle, labelSegment.labelIdentifier)}
+                        on:changeLineLength={(event) => changeLabelLineLength(selectedRingId, event.detail.lineLength, labelSegment.labelIdentifier)}
+                        on:changeLineWidth={(event) => changeLabelLineWidth(selectedRingId, event.detail.lineWidth, labelSegment.labelIdentifier)}
+                        on:changeLineColor={(event) => changeLabelLineColor(selectedRingId, event.detail.lineColor, labelSegment.labelIdentifier)}
+                    />
+                {/if}
+            {/each}
+        {:else if selectedRing && selectedRing.type === RingType.GENOMAD}
+            <RingGenomadEdit bind:ring={selectedRing}></RingGenomadEdit>
+        {/if}
+
 
     {:else}
 
         {#if $ringData.length}
             <div>
                 <p class="opacity-60 mb-2">Rings</p>
+                <ListBox>
                     {#each $ringData as ring}
-                        <div class="grid grid-cols-8 gap-x-2 items-center align-center p-2 rounded-token hover:variant-soft hover:cursor-pointer">
-                            <div class="flex items-center gap-x-2 col-span-7">
-                                <span class="text-black ml-2">
-                                    <ColorPicker id={ring.id} color={ring.color} on:submitAction={(event) => handleUpdateRingRequest(event.detail) } on:selectColor={(event) => changeRingColor(ring.id, event.detail.color)}></ColorPicker>
-                                </span>
-                                <div class="mt-0.5">
-                                    <PalettePopup id={ring.id} color={ring.color} on:submitAction={(event) => handleUpdateRingRequest(event.detail) } on:selectColor={(event) => changeRingColor(ring.id, event.detail.color)}></PalettePopup>
-                                </div>
-                                <RingVisibility id={ring.id} visible={ring.visible} on:submitAction={(event) => handleUpdateRingRequest(event.detail) } on:toggleVisibility={(_) => toggleRingVisibility(ring.id)}></RingVisibility>
-                                <RingTitle id={ring.id} title={ring.title} titleColor={ring.color} on:submitAction={(event) => handleUpdateRingRequest(event.detail) } on:update={(event) => changeRingTitle(ring.id, event.detail.title)} />
-                            </div>
-                            <div class="flex justify-end gap-x-2 col-span-1">
-                                {#if ring.type !== RingType.LABEL}
-                                    {#if ring.index !== 0}
-                                        <RingIndex id={ring.id} direction={RingDirection.IN} currentIndex={ring.index} on:submitAction={(event) => handleUpdateRingRequest(event.detail) } on:update={(_) => moveRingInside(ring.id)} indexGroup={indexGroup}></RingIndex>
-                                    {:else}
-                                        <RingIndex placeholder id={ring.id} direction={RingDirection.IN} currentIndex={ring.index} indexGroup={indexGroup}></RingIndex>
-                                    {/if}
-                                    {#if !((isRingTypePresent(RingType.LABEL) && ring.index === $ringData.length-2) || ring.index === $ringData.length-1)}
-                                        <RingIndex id={ring.id} direction={RingDirection.OUT} currentIndex={ring.index} on:submitAction={(event) => handleUpdateRingRequest(event.detail) } on:update={(_) => moveRingOutside(ring.id, $ringData.length-1)} indexGroup={indexGroup}></RingIndex>
-                                    {:else}
-                                        <RingIndex placeholder id={ring.id} direction={RingDirection.OUT} currentIndex={ring.index} indexGroup={indexGroup}></RingIndex>
-                                    {/if}
-                                {/if}
-                                <DeleteRing id={ring.id} indexGroup={indexGroup} on:submitAction={(event) => handleDeleteRingRequest(event.detail)} on:delete={() => removeRing(ring.id, indexGroup)}></DeleteRing>
-                            </div>
-                        </div>
+                        <ListBoxItem bind:group={selectedRingId} name="rings" value="{ring.id}" active="variant-soft">
+                            <RingSettings 
+                                ring={ring}
+                                ringData={$ringData}
+                                indexGroup={indexGroup}
+                                on:submitAction={(event) => handleUpdateRingRequest(event.detail.requestData)} 
+                                on:selectColor={(event) => changeRingColor(ring.id, event.detail.color)}
+                                on:toggleVisibility={(_) => toggleRingVisibility(ring.id)}
+                                on:updateTitle={(event) => changeRingTitle(ring.id, event.detail.title)}
+                                on:moveRingInside={(_) => moveRingInside(ring.id)}
+                                on:moveRingOutside={(_) => moveRingOutside(ring.id, $ringData.length-1)}
+                                on:delete={() => removeRing(ring.id, indexGroup)}
+                            />
+                        </ListBoxItem>
                     {/each}
+                </ListBox>
             </div>
         {:else}
             <p class="opacity-80 pl-4 text-sm"></p>
@@ -224,9 +255,9 @@
     {/if}
     
     <div class="mt-12 flex justify-start items-center">
-        {#if showNewRingMenu}
+        {#if showNewRingMenu || showEditRingMenu}
             <div class="text-sm opacity-90">
-                <button class="btn p-1" on:click={() => showNewRingMenu = false}>
+                <button class="btn p-1" on:click={() => {showNewRingMenu = false; showEditRingMenu = false}}>
                     <div class="flex items-center align-center">
                         <div class="w-7 h-7">
                             <svg data-slot="icon" aria-hidden="true" fill="none" stroke-width="1.5" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -241,12 +272,22 @@
             <div class="text-sm opacity-90">
                 <button class="btn p-1" on:click={() => showNewRingMenu = true}>
                     <div class="flex items-center align-center">
-                        <div class="w-7 h-7">
+                        <div class="w-7 h-7 text-primary-500">
                             <svg data-slot="icon" aria-hidden="true" fill="none" stroke-width="1.5" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke-linecap="round" stroke-linejoin="round"></path>
                             </svg>
                         </div>
                         <span class="ml-2 text-base">New ring</span>
+                    </div>
+                </button>
+                <button class="btn p-1 ml-4" on:click={() => showEditRingMenu = true} disabled={editButtonDisabled}>
+                    <div class="flex items-center align-center">
+                        <div class="w-7 h-7 text-secondary-500">
+                            <svg data-slot="icon" aria-hidden="true" fill="none" stroke-width="1.5" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" stroke-linecap="round" stroke-linejoin="round"></path>
+                            </svg>
+                        </div>
+                        <span class="ml-2 text-base">Edit ring</span>
                     </div>
                 </button>
             </div>

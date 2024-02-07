@@ -28,7 +28,8 @@
         TaskResultType.REFERENCE_RING,
         TaskResultType.BLAST_RING,
         TaskResultType.LABEL_RING,
-        TaskResultType.ANNOTATION_RING
+        TaskResultType.ANNOTATION_RING,
+        TaskResultType.GENOMAD_RING,
     ]
 
     function handleRingActionResult(taskResultType: TaskResultType, ringResponse: TaskStatusResponse) {
@@ -41,6 +42,8 @@
         } else if (taskResultType === TaskResultType.ANNOTATION_RING) {
             addRing(ringResponse.result as AnnotationRing)
         } else if (taskResultType === TaskResultType.LABEL_RING) {
+            addRing(ringResponse.result as LabelRing)
+        } else if (taskResultType === TaskResultType.GENOMAD_RING) {
             addRing(ringResponse.result as LabelRing)
         }
 
@@ -107,7 +110,7 @@
     }
 
     function handleActionUpdateResult(result: ActionResult, updateVerbose: boolean, successMessage: string) {
-
+        
         if (result.type === "success"){
             if (updateVerbose) triggerToast(successMessage, ToastType.SUCCESS, toastStore);         
         } else if (result.type === 'failure') {
@@ -244,12 +247,12 @@
         }
         
     }
-
+    
     /**
-     * Handler for ring deletion
+     * Handler for ring (style) updates
      * @param data
      */
-     async function handleDeleteRingAction(data: ActionRequestDataUpdate) {
+     async function handleUpdateLabelAction(data: ActionRequestDataUpdate) {
         
         if (data.updateDatabase) {
             const response = await fetch(data.action, {
@@ -267,10 +270,11 @@
             await applyAction(result);
 
             if (data.updateVerbose) completeRequestState();
-            handleActionUpdateResult(result, data.updateVerbose, "Ring deleted successfully");
+            handleActionUpdateResult(result, data.updateVerbose, "Label updated sucessfully");
         }
+        
     }
-
+    
     /**
      * Handler for file deletion
      * @param data
@@ -297,6 +301,9 @@
         }
     }
 
+    let showEditRingMenu: boolean = false;
+    let showNewRingMenu: boolean = false;
+
 </script>
 
 <div class="h-full w-full p-2">
@@ -305,7 +312,7 @@
         <Tab bind:group={$tabIndexStore} name="tab1" value={0}>
             <span>Data<span>
         </Tab>
-        <Tab bind:group={$tabIndexStore} name="tab2" value={1}>
+        <Tab bind:group={$tabIndexStore} name="tab2" value={1} on:click={() => { showEditRingMenu = false; showNewRingMenu = false }}>
             <span>Rings</span>
         </Tab>
         <Tab bind:group={$tabIndexStore} name="tab3" value={2}>
@@ -326,17 +333,19 @@
                 <DataControlPanel 
                     on:fileUploadAction={(event) => handleUploadFileAction(event.detail.data, event.detail.id)}
                     on:fileDeleteAction={(event) => handleDeleteFileAction(event.detail.data)}
-                ></DataControlPanel>
+                />
             {:else if $tabIndexStore === 1}
                 <RingControlPanel 
+                    bind:showNewRingMenu={showNewRingMenu}
+                    bind:showEditRingMenu={showEditRingMenu}
                     on:createRingAction={(event) => handleCreateRingAction(event.detail)} 
                     on:updateRingAction={(event) => handleUpdateRingAction(event.detail)}
-                    on:deleteRingAction={(event) => handleDeleteRingAction(event.detail)}
-                ></RingControlPanel>
+                    on:updateLabelAction={(event) => handleUpdateLabelAction(event.detail)}
+                />
             {:else if $tabIndexStore === 2}
-                <PlotControlPanel></PlotControlPanel>
+                <PlotControlPanel />
             {:else if $tabIndexStore === 3}
-                <PaletteControlPanel></PaletteControlPanel>
+                <PaletteControlPanel />
             {:else if $tabIndexStore === 4}
                 <AboutPanel />
             {/if}

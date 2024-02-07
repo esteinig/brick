@@ -5,7 +5,6 @@ LATEST=$1
 VERSION=$2
 
 
-
 # Check that all commits
 # comply with specifications
 cog check

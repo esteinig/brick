@@ -18,9 +18,11 @@ except Exception as e:
     logging.error(f"Failed to initiate PyMongo database client: {str(e)}")
     exit(1)
 
+
 async def get_session_collection_motor():
     db = async_client[settings.MONGODB_DATABASE]
     return db[settings.MONGODB_SESSION_COLLECTION]
+
 
 def get_session_collection_pymongo():
     db = client[settings.MONGODB_DATABASE]

@@ -1,7 +1,7 @@
 <script lang="ts">
     import { createEventDispatcher } from 'svelte';
 	import { page } from "$app/stores";
-	import type { RingUpdateSchema } from "$lib/types";
+	import type { ActionRequestDataUpdate, RingUpdateSchema } from "$lib/types";
 	import { startRequestState } from "$lib/stores/RequestInProgressStore";
     
     const dispatch = createEventDispatcher();
@@ -34,7 +34,7 @@
 
     function toggleVisibility() {
         visible = !visible;
-        dispatch('toggleVisisbility', { visibility: visible });
+        dispatch('toggleVisibility', { visibility: visible });
 
         if (updateDatabase) formElement.requestSubmit();
     }
@@ -57,7 +57,7 @@
         sessionRingUpdateSchema.id = "";
         sessionRingUpdateSchema.visible = null;
 
-        dispatch('submitAction', { action: event.currentTarget.action, body: data, updateVerbose: updateVerbose, updateDatabase: updateDatabase });
+        dispatch('submitAction', { action: event.currentTarget.action, body: data, updateVerbose: updateVerbose, updateDatabase: updateDatabase } as ActionRequestDataUpdate);
 
 	}
 

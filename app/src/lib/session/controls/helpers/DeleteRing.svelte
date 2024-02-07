@@ -2,7 +2,7 @@
     import { createEventDispatcher } from 'svelte';
 	import { page } from "$app/stores";
 	import { startRequestState } from "$lib/stores/RequestInProgressStore";
-	import type { RingUpdateSchema } from '$lib/types';
+	import type { ActionRequestDataUpdate, RingUpdateSchema } from '$lib/types';
     
     type RingId = string;
 
@@ -52,7 +52,7 @@
         sessionRingUpdateSchema.index_group = null;
         sessionRingUpdateSchema.id = "";
 
-        dispatch('submitAction', { action: event.currentTarget.action, body: data, updateVerbose: updateVerbose, updateDatabase: updateDatabase });
+        dispatch('submitAction', { action: event.currentTarget.action, body: data, updateVerbose: updateVerbose, updateDatabase: updateDatabase } as ActionRequestDataUpdate);
 
 	}
 

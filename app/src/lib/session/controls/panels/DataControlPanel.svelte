@@ -29,7 +29,7 @@
             single: false,
             format: FileFormat.FASTA,
             type: FileType.GENOME,
-            info: 'Custom annotations file with ring segments, tab-delimited with header (start  end  text  color)'
+            info: 'Custom annotations file with ring segments, tab-delimited with column headers (start  end  text)'
         },
         {
             id: 'genbankDropzone',
@@ -49,7 +49,7 @@
             single: false,
             format: FileFormat.TSV,
             type: FileType.ANNOTATION_CUSTOM,
-            info: "Custom labels file with ring segments, tab-delimited with header (start  end  text  color)"
+            info: "Custom labels file with ring segments, tab-delimited with column headers (start  end  text)"
         },
         {
             id: 'sessionDropzone',
