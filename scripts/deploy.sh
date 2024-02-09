@@ -9,12 +9,8 @@ if [ "$1" = "prod" ]; then
     # Pull down the production stack
     docker compose -f docker-compose.web.yml --profile prod --profile server --project-name prod down
     
-    # Make sure we are on `main` and pull latest stable changes
-    # this is the latest release as this script is triggered
-    # by the `cicd.yml` action workflow
-
-    git checkout main 
-    git pull origin main
+    # Deploy with commit SHA passed into the script through action
+    git checkout $3
 
     # Rebuild to include latest changes and up the stack again
     docker compose -f docker-compose.web.yml --profile prod --profile server --project-name prod up --build -d
@@ -27,9 +23,8 @@ elif [ "$1" = "dev" ]; then
     # Pull down the development stack 
     docker compose -f docker-compose.web.yml --profile dev --profile server-dev --project-name dev down
     
-    # Make sure we are on `dev` and pull latest changes
-    git checkout dev 
-    git pull origin dev
+    # Deploy with commit SHA passed into the script through action
+    git checkout $3
 
     # Rebuild to include latest changes and up the stack again
     docker compose -f docker-compose.web.yml --profile dev --profile server-dev --project-name dev up --build -d
