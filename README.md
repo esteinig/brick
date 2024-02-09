@@ -20,15 +20,15 @@ Table of contents:
 
 ## Web service (convenient)
 
-At the moment, the most convenient way to get started is by using our hosted web application ([brick.ink](https://brick.ink)). Please not that the server is located in Australia - for a snappier experience you can [deploy the application](#local-application-easy) on your local machine.
+At the moment, the most convenient way to get started is by using our hosted web application ([brick.ink](https://brick.ink)). Please note that the server is located in Australia - for a snappier experience you can [deploy the application stack](#local-application-easy) on your local machine.
 
-Session visualizations and all session data, including uploaded files and working data expire after seven days and are deleted from database and storage. We are planning to give users control over how long files and session data persist. All data is stored anonymously and sessions are identifiable only by their unique identifier in the URL.
+Session visualizations and all session data, including uploaded files and working data expire after seven days and are deleted from database and storage. All data are stored anonymously and sessions can only be accessed using the unique identifier in the URL.
 
-If you see any egregious bugs or styling issues, please [let us know]()! Testing is currently limited to Linux and Firefox. 
+If you notice egregious bugs or styling issues, please [let us know]()! Testing is currently limited to `Linux` and `Firefox`. 
 
 ### Files
 
- In the current iteration of the web application there are some restrictions in place:
+In the current iteration of the web application there are some restrictions in place:
 
 * File upload size is restricted to 20 MB, please let me know if this is not sufficient
 * Files and working data have a total session limit of 200 MB
@@ -134,9 +134,9 @@ Any and all questions, suggestions for improvement, bug reports, pull requests a
 
 Development workflows and notes are mainly are reminder to myself and anyone who would like to contribute - if you have any questions please feel free to open an issue or contact me through the usual channels.
 
-Development and pull requests can be made on the [`dev`](https://github.com/esteinig/brick/tree/dev) branch. You can use the `dev` profile for hot reloads of changes to the application interface. Note that the `dev` profile in `docker-compose.web.yml` actually deploys the production service, but on a different domain, to be implemented (`dev.brick.ink`).
+Development and pull requests can be made on the [`dev`](https://github.com/esteinig/brick/tree/dev) branch. You can use the `dev` profile for hot reloads of changes to the application interface. Note that the `dev` profile in `docker-compose.web.yml` actually deploys the production service, but on a different domain, to be implemented (`dev.brick.ink`). For hot-reload of the Sveltekit interface the application should be installed first (`npm install`) so that you can point your IDE at the development clone and changes made to the `app` and `node_modules` folder are mirrored into the development container.
 
-Note that the `--profile dev` stack serves the application on port `5174` **not on**  `5173` (`--profile prod`) for concurrent production build testing.
+Note that the `--profile dev` stack serves the application on port `5174` **not on** `5173` (`--profile prod`) for concurrent production build testing.
 
 It may help to run a fresh development stack with a project identifier to keep volumes and containers separate for the current branch. Project specific stack containers and volumes (all data) can be removed with the `-v` flag. Changes to the `Python` package currently have to use the `--build` flag to rebuild the package inside the `docker/Dockerfile.server` container. 
 
@@ -151,7 +151,6 @@ docker compose --profile dev --project-name new-feature up -d
 docker compose --profile dev --project-name new-feature down -v
 ```
 
-
 Unit tests are defined in `tests` can be run with the `tests` service:
 
 ```bash
@@ -159,15 +158,15 @@ Unit tests are defined in `tests` can be run with the `tests` service:
 docker compose build tests && docker compose run --rm tests
 ```
 
-Release branches (`release/**`) can be used to auto bump version and generate the changelog for example byt using `git checkout -b release/$(cog bump --dry-run --auto) && cog bump --auto`. I am not sure if `cocogitto` is stable yet, it may be worthwhile checking version bumps before creating the branch with `cog bump --dry-run --auto`. 
+Release branches (`release/**`) can be used to auto bump version and generate the changelog for example by using `git checkout -b release/$(cog bump --dry-run --auto) && cog bump --auto`. I am not sure if `cocogitto` is stable yet, it may be worthwhile checking version bumps before creating the branch with `cog bump --dry-run --auto`. A new PR is created with the updated `CHANGELOG.md` and version bumps from `cocogitto`, which can then be merged into main (`release.yml`).
 
-Releases are deployed to the production server on merge into `main` using the `cicd-prod.yml` action workflow. Tests are run with the `test.yml` action workflow on push any test branch (`test/**`). One can create a release branch and before merging into `main` simply checkout and push a new test branch of the release to trigger the unit testing action for example `git checkout -b test/0.3.0 && git push origin test/0.3.0`.
+Releases are deployed to the production server on creation of a new release (`cicd-prod.yml`). Tests are run with the `test.yml` action workflow on push any test branch (`test/**`). One can create a release branch and before merging into `main` simply checkout and push a new test branch of the release to trigger the unit testing action for example `git checkout -b test/0.3.0 && git push origin test/0.3.0`.
 
 </details>
 
 ## Dependencies
 
-`BRICK` would not be possible without the amazing work of bioinformaticians and researchers who make their software available open-source. 
+`BRICK` would not be possible without the relentless work of bioinformaticians and researchers developing open-soource software for the community. 
 If you use their tools in the visualization, please cite the following publications:
 
 > [Altschul et al. (1990)](https://pubmed.ncbi.nlm.nih.gov/2231712/) - Basic local alignment search tool - Journal of Molecular Biology
@@ -180,7 +179,7 @@ If you would like to acknowledge the authors of the original visualization, plea
 
 > [Alikhan et al. (2011)](https://bmcgenomics.biomedcentral.com/articles/10.1186/1471-2164-12-402) - BLAST Ring Image Generator (BRIG): simple prokaryote genome comparisons - BMC Genomics
 
-Similarly, the stack would not be possible without the following amazing tools:
+Similarly, the stack would not be possible without the following wonderful tools:
 
 * [Svelte/Sveltekit](https://kit.svelte.dev/)
 * [Skeleton UI](https://www.skeleton.dev/)
@@ -191,8 +190,9 @@ Similarly, the stack would not be possible without the following amazing tools:
 
 ## Etymology
 
-`BRICK` is not very brick-like... and **BR**IG-like **I**nteractive **C**ircular **K**nowledgebase is a bit of a stretch 👀
+`BRICK` is not very brick-like... and **BR**IG-like **I**nteractive **C**ircular **K**nowledgebase is a bit of a stretch 👀 
 
 ## Contributors
 
-* Eike Steinig - @esteinig
+* Eike Steinig - [@esteinig](https://github.com/esteinig)
+* Wytamma Wirth - [@Wytamma](https://github.com/Wytamma)
