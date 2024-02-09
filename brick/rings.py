@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from pydantic import BaseModel, Field, validator, ValidationError
+from pydantic import BaseModel, Field, validator
 from statistics import mean
 from strenum import StrEnum
 from pathlib import Path
-from typing import List
+from typing import List, Generator, Tuple
 from Bio import SeqIO
 
 import pandas
@@ -279,7 +279,7 @@ def parse_blastn_output(
 
 
 # Generator function
-def parse_aggregated_genomad_output(file: Path) -> GenomadEntry:
+def parse_aggregated_genomad_output(file: Path) -> Generator[GenomadEntry]:
     """
     Parses the aggregated_classification output from a sliced genome file
     """
@@ -306,7 +306,7 @@ def extract_genomad_contiguous_segments(
     min_segment_length: int,  # should be a multiple of slice length
     prediction_classes: List[GenomadPredictionClass],
     segment_type: RingSegmentType,
-) -> List[RingSegment] | List[LabelSegment]:
+) -> Generator[RingSegment] | Generator[LabelSegment]:
     """Extracts segments of high probabilty for each prediction class with a minimum total length for label or annotation rings"""
 
     segments = []
@@ -385,7 +385,7 @@ def extract_genomad_contiguous_segments(
 
 def get_start_end_from_seq_name(
     seq_name: str, name_split: str = "__", range_split: str = ".."
-) -> tuple(int, int, str):
+) -> Tuple[int, int, str]:
 
     try:
         seq_id: str = seq_name.split(name_split)[0]
