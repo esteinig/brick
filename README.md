@@ -1,14 +1,10 @@
-# BRICK
+# BRICK <a href='https://github.com/esteinig'><img src='docs/brick.png' align="right" height="270" /></a>
 
-[`BRIG`](https://github.com/happykhan/BRIG)-like interactive data visualization for bacterial whole genome annotation, comparison and exploration
+[`BRIG`](https://github.com/happykhan/BRIG)-like interactive data visualization for prokaryotic genome annotation and comparison
 
 ## Overview
 
-`BRICK` is under active development. Please note there is currently no guarantee for data persistence in the web application or backwards compatabiltity until major version release. 
-
-Table of contents:
-
-- How to run `BRICK`
+- [How to run `BRICK`](#overview)
   - [Web application](#web-service-convenient) 
   - [Local application (Docker)](#local-application-easy)
   - [Self-hosted application (Docker)](#server-application-advanced)
@@ -16,7 +12,6 @@ Table of contents:
 - [Dependencies and citations](#dependencies)
 - [Etymology](#etymology)
 - [Contributors](#contributors)
-
 
 ## Web service (convenient)
 
@@ -41,7 +36,7 @@ Don't hesitate to come back to the session - while a session has not expired you
 * Download the session data and re-hydrate your session in the data upload panel
 * Share your (editable) session with colleagues by sending them the session URL
 
-Please note there is currently no guarantee for backwards compatability for re-hydration until major version release.
+`BRICK` is under active development. Please note there is currently no guarantee for data persistence in the web application or backwards compatabiltity until major version release. 
 
 ## Local application (easy)
 
