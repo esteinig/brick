@@ -44,9 +44,7 @@ function toggleRingVisibility(id: string) {
     rings.update(currentRings => {
         return currentRings.map(ring => {
             if (ring.id === id) {
-                console.log(ring.visible)
                 ring.visible = !ring.visible;
-                console.log(ring.visible)
             }
             return ring;
         });
