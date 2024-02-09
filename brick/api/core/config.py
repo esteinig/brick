@@ -128,7 +128,7 @@ settings = get_settings()
 DEFAULT_SESSIONS: Dict[str, dict] = {}
 
 
-def read_default_session(path: Path) -> dict or None:
+def read_default_session(path: Path) -> Dict | None:
     session_data = None
     if path.exists() and path.is_file():
         with path.open() as default_session:
