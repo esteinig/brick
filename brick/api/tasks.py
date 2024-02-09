@@ -1,18 +1,15 @@
-import pandas
 import json
-import shutil
-import subprocess
-import tempfile
-import contextlib
 import uuid
-
-from typing import List
+import shutil
+import pandas
+import tempfile
+import subprocess
+import contextlib
 
 from Bio import SeqIO
-from typing import Tuple, Annotated, Optional
 from pathlib import Path
 from datetime import datetime
-from celery.exceptions import TimeLimitExceeded, SoftTimeLimitExceeded
+from typing import List, Tuple, Annotated, Optional
 
 from .core.config import settings
 from .core.celery import celery_app
@@ -35,7 +32,7 @@ from .schemas import (
     GenomadRingSchema,
 )
 from ..rings import BlastRing, AnnotationRing, LabelRing, ReferenceRing, GenomadRing
-from ..rings import Ring, RingSegment, RingType, RingReference
+from ..rings import Ring, RingSegment, RingType, RingReference, LabelSegment
 
 from ..utils import slice_fasta_sequences
 
@@ -308,7 +305,18 @@ def process_label_ring(
             )
 
         if ring_schema.labels:
-            ring.add_custom_labels(labels=ring_schema.labels, sanitize=True)
+            ring.add_custom_labels(
+                labels=[
+                    LabelSegment(
+                        start=ring_segment.start,
+                        end=ring_segment.end,
+                        text=ring_segment.text,
+                        labelIdentifier=str(uuid.uuid4()),
+                    )
+                    for ring_segment in ring_schema.labels
+                ],
+                sanitize=True,
+            )
 
         result = check_or_update_label_ring(
             reference=ring_schema.reference, new_segments=ring.data
@@ -319,7 +327,7 @@ def process_label_ring(
                 session_id=ring_schema.reference.session_id, ring=ring
             )
         else:
-            ring = result
+            ring = result.model_copy()
 
         return {"success": True, "result": ring.model_dump()}
     except Exception as e:
@@ -773,7 +781,7 @@ def check_or_update_label_ring(
             "id": reference.session_id,
             "rings": {
                 "$elemMatch": {
-                    "type": "label",  # Replace with the actual value used for RingType.LABEL
+                    "type": RingType.LABEL,
                     "reference.reference_id": reference.reference_id,
                     "reference.sequence.id": reference.sequence.id,
                 }

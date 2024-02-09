@@ -13,7 +13,6 @@ services:
     build:
       context: .
       dockerfile: docker/Dockerfile.app
-    restart: unless-stopped
     expose:
       - "5173"
     security_opt:
@@ -42,7 +41,6 @@ services:
     build:
       context: .
       dockerfile: docker/Dockerfile.app.dev
-    restart: unless-stopped
     volumes:
       - ./app:/usr/src/app
       - /usr/src/app/node_modules
@@ -76,11 +74,11 @@ services:
     build: 
       context: .
       dockerfile: docker/Dockerfile.server
-    restart: unless-stopped
     command: uvicorn brick.api.main:app --host 0.0.0.0 --port 8080
     volumes:
       - api:/data
       - work:/tmp
+      - databases:/data
     env_file: docker/brick.env
     environment:
       CORS_ORIGINS: http://app:5173
@@ -94,6 +92,7 @@ services:
     depends_on:
       - redis
       - mongodb
+      - databases
     secrets:
       - brick_db_user
       - brick_db_pwd
@@ -106,11 +105,11 @@ services:
     build: 
       context: .
       dockerfile: docker/Dockerfile.server
-    restart: unless-stopped
     command: uvicorn brick.api.main:app --host 0.0.0.0 --port 8080
     volumes:
       - api_dev:/data
       - work:/tmp
+      - databases:/data
     env_file: docker/brick.env
     environment:
       CORS_ORIGINS: http://app-dev:5174
@@ -124,6 +123,7 @@ services:
     depends_on:
       - redis
       - mongodb
+      - databases
     secrets:
       - brick_db_user
       - brick_db_pwd
@@ -145,10 +145,10 @@ services:
     build: 
       context: .
       dockerfile: docker/Dockerfile.server
-    restart: unless-stopped
     command: celery -A brick.api.core.celery.celery_app worker --loglevel=INFO
     volumes:
       - work:/tmp
+      - databases:/data
     env_file: docker/brick.env
     environment:
       CORS_ORIGINS: http://app:5173
@@ -161,6 +161,7 @@ services:
       - api
       - redis
       - mongodb
+      - databases
     secrets:
       - brick_db_user
       - brick_db_pwd
@@ -173,10 +174,10 @@ services:
     build: 
       context: .
       dockerfile: docker/Dockerfile.server
-    restart: unless-stopped
     command: celery -A brick.api.core.celery.celery_app worker --loglevel=INFO
     volumes:
       - work:/tmp
+      - databases:/data
     env_file: docker/brick.env
     environment:
       CORS_ORIGINS: http://app-dev:5174
@@ -189,12 +190,20 @@ services:
       - api-dev
       - redis
       - mongodb
+      - databases
     secrets:
       - brick_db_user
       - brick_db_pwd     
     networks:
       - internal 
-
+    deploy:
+      resources:
+        limits:            # process is killed
+          cpus: 8          # either number of cores or fraction
+          memory: 42G
+        reservations:      # resources reserved for container
+          cpus: 8
+          memory: 20G      # determined by the largest database 
 
   # ========= 
   # DATABASES 
@@ -210,7 +219,6 @@ services:
       - dev
       - test
     image: redis:7.0.12-alpine
-    restart: unless-stopped
     expose:
       - "6379"
     volumes:
@@ -249,13 +257,35 @@ services:
     networks:
       - internal
 
+  # ================
+  # DATABASE STORAGE
+  # ================
+
+  # Specification of the image tag will cause the 
+  # image to not rebuild when using --build. This
+  # is intended as we want to update the storage
+  # volume with the database manually, rather than
+  # downloading on each --build
+
+  databases:
+    image: brick-database-storage:latest
+    profiles:
+      - prod
+      - dev
+    build: 
+      context: .
+      dockerfile: docker/Dockerfile.dbs
+    tty: true
+    volumes:
+      - databases:/data  # /data/genomad_db
+    networks:
+      - internal
 
   # ================================================
   # DELETES SESSIONS AND UPLOADED FILES PERIODICALLY
   # ================================================
 
   data-cleaner:
-    restart: unless-stopped
     profiles:
       - server
     build: 
@@ -280,7 +310,6 @@ services:
       - internal
   
   data-cleaner-dev:
-    restart: unless-stopped
     profiles:
       - server-dev
     build: 
@@ -343,6 +372,8 @@ volumes:
   mongo_db:
     driver: local
   mongo_db_cfg:
+    driver: local
+  databases:
     driver: local
 
 secrets:
