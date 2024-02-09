@@ -9,7 +9,7 @@ import contextlib
 from Bio import SeqIO
 from pathlib import Path
 from datetime import datetime
-from typing import List, Tuple, Annotated, Optional
+from typing import List, Tuple, Generator, Annotated, Optional
 
 from .core.config import settings
 from .core.celery import celery_app
@@ -843,6 +843,6 @@ def check_or_update_label_ring(
 
 
 @contextlib.contextmanager
-def create_tmp_directory(root_dir: str = None) -> Path:
+def create_tmp_directory(root_dir: str = None) -> Generator[Path]:
     with tempfile.TemporaryDirectory(dir=root_dir) as temp_dir:
         yield Path(temp_dir)
