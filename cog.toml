@@ -8,7 +8,6 @@ branch_whitelist = [
 skip_untracked = false
 pre_bump_hooks = [
     """#!/bin/sh
-    [ "$(git rev-parse --abbrev-ref HEAD)" = "release/{{version}}" ] && echo "On branch release/{{version}}" || exit 1
     ./scripts/pre_bump.sh {{latest}} {{version}}
     """
 ]
