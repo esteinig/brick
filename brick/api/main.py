@@ -29,8 +29,8 @@ def init_working_directory(settings: Settings):
 
     # Create working directory
     if not settings.WORK_DIRECTORY.exists():
-        logging.warn(f"Working directory does not exist: {settings.WORK_DIRECTORY}")
-        logging.warn(
+        logging.warning(f"Working directory does not exist: {settings.WORK_DIRECTORY}")
+        logging.warning(
             f"Attempting to create working directory path for server operations..."
         )
 
