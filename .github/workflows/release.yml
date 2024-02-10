@@ -35,6 +35,7 @@ jobs:
       run: |
         cog bump --auto
         git push origin "release/${{ steps.release.outputs.version }}"
+        git push origin "${{ steps.release.outputs.version }}"
 
     - name: Create PR
       uses: peter-evans/create-pull-request@v5
