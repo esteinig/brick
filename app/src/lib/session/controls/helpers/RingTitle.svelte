@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { RingUpdateSchema } from '$lib/types';
+	import type { ActionRequestDataUpdate, RingUpdateSchema } from '$lib/types';
     import { createEventDispatcher, tick } from 'svelte';
 	import { page } from "$app/stores";
 	import { startRequestState } from "$lib/stores/RequestInProgressStore";
@@ -34,14 +34,14 @@
     const dispatch = createEventDispatcher();
 
     function updateTitle() {
-        dispatch('update', { title: title });
+        dispatch('updateTitle', { title: title });
         editing = false; 
         if (updateDatabase) formElement.requestSubmit();
     }
 
     function updateTitleWithEnter(event: any) {
         if (event.key === 'Enter'){
-            dispatch('update', { title: title });
+            dispatch('updateTitle', { title: title });
             editing = false;
             if (updateDatabase) formElement.requestSubmit();
         }
@@ -75,7 +75,7 @@
         sessionRingUpdateSchema.color = null;
         sessionRingUpdateSchema.id = "";
 
-        dispatch('submitAction', { action: event.currentTarget.action, body: data, updateVerbose: updateVerbose, updateDatabase: updateDatabase });
+        dispatch('submitAction', { action: event.currentTarget.action, body: data, updateVerbose: updateVerbose, updateDatabase: updateDatabase } as ActionRequestDataUpdate);
 
 	}
 

@@ -12,15 +12,39 @@ export enum RingType {
     REFERENCE = "reference",
     BLAST = "blast",
     ANNOTATION = "annotation",
-    LABEL = "label"
+    LABEL = "label",
+    GENOMAD = "genomad"
 }
 
+
+export enum GenomadDisplay {
+    VIRUS = "virus",
+    PLASMID = "plasmid",
+    BOTH = "both"
+}
+
+export type SegmentMeta = {
+    plasmid: number
+    chromosome: number
+    virus: number
+}
 
 export type RingSegment = {
     start: number
     end: number
-    color: string
     text: string
+    labelIdentifier?: string
+    lineLength?: number
+    lineWidth?: number
+    lineOpacity?: number
+    lineColor?: string
+    textSize?: number
+    textColor?: string
+    textOpacity?: number
+    lineAngle?: number
+    plasmid?: number
+    chromosome?: number
+    virus?: number
 }
 
 export type RingReference = {
@@ -38,7 +62,13 @@ export class Ring {
     height: number;
     type: RingType;
     title: string;
-    data: RingSegment[]
+    data: RingSegment[];
+
+    // Special fields for subclasses
+    size?: number;
+    lineSmoothing?: boolean;
+    lineHeight?: number;
+    genomadDisplay?: GenomadDisplay
 
     constructor(
         reference: RingReference,
@@ -56,9 +86,7 @@ export class Ring {
         this.color = color;
         this.height = height;
         this.type = type;
-
         this.title = title;
-
         this.data = [];
     }
 }
@@ -77,11 +105,11 @@ export class ReferenceRing extends Ring {
         title: string = "Reference Ring"
     ) {
         super(reference, index, visible, type, color, height, title)
-        this.id = createUuid()
+        this.id = createUuid();
         this.size = size;
         this.data = [
-            {start: 0, end: size, color: color, text: title}
-        ]
+            {start: 0, end: size, text: title}
+        ];
     }
 
 }
@@ -97,7 +125,7 @@ export class AnnotationRing extends Ring {
         title: string = "Annotation Ring"
     ) {
         super(reference, index, visible, type, color, height, title)
-        this.id = createUuid()
+        this.id = createUuid();
     }
 }
 
@@ -112,11 +140,32 @@ export class BlastRing extends Ring {
         title: string = "Blast Ring"
     ) {
         super(reference, index, visible, type, color, height, title)
-        this.id = createUuid()
+        this.id = createUuid();
+    }
+}
+
+
+export class GenomadRing extends Ring {
+
+    constructor(
+        reference: RingReference,
+        index: number,
+        visible: boolean = true,
+        type: RingType = RingType.GENOMAD, 
+        color: string = "#d3d3d3", 
+        height: number = 20, 
+        title: string = "geNomad Ring",
+        lineSmoothing: boolean = false,
+    ) {
+        super(reference, index, visible, type, color, height, title)
+        this.id = createUuid();
+        this.lineSmoothing = lineSmoothing;
+        this.lineHeight = height;
     }
 }
 
 export class LabelRing extends Ring {
+
     constructor(
         reference: RingReference,
         index: number,
@@ -127,7 +176,7 @@ export class LabelRing extends Ring {
         title: string = "Label Ring"
     ) {
         super(reference, index, visible, type, color, height, title)
-        this.id = createUuid()
+        this.id = createUuid();
     }
 }
 
@@ -210,6 +259,13 @@ export enum BlastMethod {
     BLASTN = "blastn"
 }
 
+
+export enum GenomadPredictionClass {
+    CHROMOSOME = "chromosome",
+    PLASMID = "plasmid",
+    VIRUS = "virus"
+}
+
 // Ring reference can be null in this schema
 // but is required at endpoint, this is so
 // that the $ringReferenceStore can be null
@@ -227,6 +283,16 @@ export type BlastRingSchema = {
     min_identity: number
     min_alignment: number
     min_evalue: number
+} & RingSchema
+
+
+export type GenomadRingSchema = {
+    window_size: number
+    min_window_score: number
+    min_segment_score: number
+    min_segment_length: number
+    prediction_classes: GenomadPredictionClass[]
+    ring_type: RingType.LABEL | RingType.ANNOTATION | RingType.GENOMAD
 } & RingSchema
 
 export type AnnotationRingSchema = {
@@ -252,6 +318,17 @@ export type RingUpdateSchema = {
     index_group: string[] | null
 }
 
+export type LabelUpdateSchema = {
+    ring_id: string
+    label_id: string
+    lineLength: number | null
+    lineWidth: number | null 
+    lineAngle: number | null 
+    lineColor: string | null 
+    text: string | null
+    textSize: number | null 
+    textColor: string | null 
+}
 
 
 /*  =============
@@ -292,7 +369,8 @@ export enum TaskResultType {
     BLAST_RING = 'BLAST_RING',
     ANNOTATION_RING = 'ANNOTATION_RING',
     LABEL_RING = 'LABEL_RING',
-    REFERENCE_RING = 'REFERENCE_RING'
+    REFERENCE_RING = 'REFERENCE_RING',
+    GENOMAD_RING = 'GENOMAD_RING'
 }
 
 export type TaskStatusResponse = {
@@ -391,7 +469,11 @@ export type LabelConfig = {
 export type RingConfig = {
     radius: number
     height: number
+    outerHeight: number
     gap: number
+    labelGap: number
+    lineWidth: number
+    lineSmoothing: boolean
 }
 
 

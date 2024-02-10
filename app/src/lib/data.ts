@@ -4,6 +4,7 @@ import type { Session } from "$lib/types";
 
 /** DEFAULT DATA */ 
 
+export const DEFAULT_COLOR: string = "#d3d3d3"
 
 /** FALLBACK DATA */ 
 
@@ -29,7 +30,7 @@ let innerRingData: Array<ReferenceRing | AnnotationRing> = [
         reference: FALLBACK_REFERENCE,
         data: [
             {
-                "color": "#b4b87f",
+                "meta": null,
                 "end": 4012712,
                 "start": 0,
                 "text": ""
@@ -50,7 +51,7 @@ let blastRingData: Array<BlastRing> = [
         reference: FALLBACK_REFERENCE,
         data: [
             {
-                "color": "#6ea8ab",
+                "meta": null,
                 "end": 5012712,
                 "start": 0,
                 "text": ""
@@ -68,7 +69,7 @@ let blastRingData: Array<BlastRing> = [
         reference: FALLBACK_REFERENCE,
         data: [
             {
-                "color": "#8f5715",
+                "meta": null,
                 "end": 5012712,
                 "start": 0,
                 "text": ""
@@ -90,19 +91,19 @@ let outerRingData: Array<AnnotationRing | LabelRing> = [
         reference: FALLBACK_REFERENCE,
         data: [
             {
-                "color": "#8f5715",
+                "meta": null,
                 "end": 747778,
                 "start": 742382,
                 "text": "Phage-associated"
             },
             {
-                "color": "#8f5715",
+                "meta": null,
                 "end": 2247778,
                 "start": 2242382,
                 "text": "Penicillin resistance"
             },
             {
-                "color": "#8f5715",
+                "meta": null,
                 "end": 3747778,
                 "start": 3742382,
                 "text": "Mobile element integration"

@@ -1,14 +1,14 @@
-name: CI/CD Production Deployment
+# On creating a new release
+
+name: CI/CD Production
 
 on:
-  pull_request:
-    branches: [ main ]
-    types: [ closed ]
+  release:
+    types: [created]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    if: github.event.pull_request.merged == true && startsWith(github.head_ref, 'release/')
 
     steps:
     - name: "Add GitHub to the SSH known hosts file"
@@ -26,4 +26,4 @@ jobs:
         ssh-private-key: ${{ secrets.SSH_PRODUCTION_PRIVATE_KEY }}
 
     - name: Deploy to production server
-      run: ssh -o UserKnownHostsFile=/home/runner/.ssh/known_hosts ${{ secrets.SSH_PRODUCTION_SERVER }} 'bash ${{ secrets.SSH_PRODUCTION_PATH }}/scripts/deploy.sh prod ${{ secrets.SSH_PRODUCTION_PATH }}'
+      run: ssh -o UserKnownHostsFile=/home/runner/.ssh/known_hosts ${{ secrets.SSH_PRODUCTION_SERVER }} 'bash ${{ secrets.SSH_PRODUCTION_PATH }}/scripts/deploy.sh prod ${{ secrets.SSH_PRODUCTION_PATH }} ${{ github.sha }}'

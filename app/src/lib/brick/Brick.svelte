@@ -3,10 +3,10 @@
   import * as d3 from 'd3';
 
   import { getDefaultScaleFactor } from './helpers';
-	import { RingType, type Ring, type RingSegment } from '$lib/types';
+	import { RingType, Ring, type RingSegment, GenomadDisplay } from '$lib/types';
 	import { plotConfigStore } from '$lib/stores/PlotConfigStore';
 	import { fade, type FadeParams } from 'svelte/transition';
-  import { createFilteredRingsStore } from '$lib/stores/RingStore';
+  import { createFilteredRingsStore, isRingTypePresent } from '$lib/stores/RingStore';
   import { ringReferenceStore } from '$lib/stores/RingReferenceStore';
   import { createEventDispatcher } from 'svelte';
 	import { removeTooltip, setTooltip } from '$lib/stores/TooltipStore';
@@ -203,7 +203,7 @@
   // heights based on radius, ring height and gap size
   function arcGenerator(d: RingSegment, index: number, height: number, radius: number, gap: number): string {
     
-    const ringHeight = getRingHeight($rings, 0, index);
+    const ringHeight = getRingHeight($rings, 0, index)
 
     return d3.arc()
       .innerRadius(radius+(index*gap)+ringHeight)
@@ -217,32 +217,45 @@
     return rings.slice(start_index, end_index+1).map(ring => ring.height).reduce((a, b) => a+b)
   }
 
+  // Labels
   function getOuterRingHeight(rings: Ring[], gap: number): number {
-    return rings.map(ring => ring.height+gap).reduce((a, b) => a+b)+$plotConfigStore.rings.radius-gap-(gap/1.5)
+    return rings.map((ring, i) => {
+      if (i == rings.length-1 && rings.some(ring => ring.type === RingType.LABEL)) return ring.height+$plotConfigStore.rings.labelGap;
+      return ring.height+$plotConfigStore.rings.gap
+    }).reduce((a, b) => a+b)+$plotConfigStore.rings.radius-$plotConfigStore.rings.gap
   }
 
   // Function to calculate the midpoint of an arc segment
   function calculateMidpoint(d: RingSegment): number {
-      return (degreeScale((d.start + d.end) / 2)-annotationSegmentRotation) * (Math.PI / 180);
+      const position = d.start === d.end ? d.start : (d.start + d.end) / 2
+      return (degreeScale(position)-annotationSegmentRotation) * (Math.PI / 180);
   }
 
   // Function to calculate the coordinates of the point on the outer edge of the arc
   function calculateOuterArcPointX1(d: RingSegment, gap: number): number {
-      return Math.cos(calculateMidpoint(d)) * getOuterRingHeight($rings, gap)
+      const radius = getOuterRingHeight($rings, gap); 
+      return Math.cos(calculateMidpoint(d)) * radius
   }
 
   // Function to calculate the coordinates of the point on the outer edge of the arc
   function calculateOuterArcPointY1(d: RingSegment, gap: number): number {
-      return Math.sin(calculateMidpoint(d)) * getOuterRingHeight($rings, gap);
+      const radius = getOuterRingHeight($rings, gap); 
+      return Math.sin(calculateMidpoint(d)) * radius
   }
 
   // Function to calculate the coordinates of the point on the outer edge of the arc
   function calculateOuterArcPointX2(d: RingSegment, lineLength: number, gap: number): number {
-      return calculateOuterArcPointX1(d, gap) + lineLength * Math.cos(calculateMidpoint(d))
+      const adjustedLineLength = d.lineLength ?? lineLength;
+      const lineAngle = d.lineAngle ?? 0;
+      const angleRadians = (lineAngle ?? 0) * (Math.PI / 180);
+      return calculateOuterArcPointX1(d, gap) + adjustedLineLength * Math.cos(calculateMidpoint(d)+angleRadians) 
   }
   // Function to calculate the coordinates of the point on the outer edge of the arc
   function calculateOuterArcPointY2(d: RingSegment, lineLength: number, gap: number): number {
-      return calculateOuterArcPointY1(d, gap) + lineLength * Math.sin(calculateMidpoint(d))
+      const adjustedLineLength = d.lineLength ?? lineLength;
+      const lineAngle = d.lineAngle ?? 0;
+      const angleRadians = (lineAngle ?? 0) * (Math.PI / 180);
+      return calculateOuterArcPointY1(d, gap) + adjustedLineLength * Math.sin(calculateMidpoint(d)+angleRadians)
   }
 
   function addAlphaToHexColor(hex: string, opacity: number) {
@@ -276,7 +289,8 @@
 
   function calculateTspanX(ringAnnotation: RingSegment, lineLength: number, gap: number, textGap: number) {
     const angle = degreeScale(ringAnnotation.start);
-    const x = calculateOuterArcPointX2(ringAnnotation, lineLength, gap);
+    const x =  calculateOuterArcPointX2(ringAnnotation, lineLength, gap);
+
     if ((angle > labelZoneAngleLimitBottomRight && angle < labelZoneAngleLimitBottomLeft) || (angle > labelZoneAngleLimitTopLeft || angle < labelZoneAngleLimitTopRight)) {
       return x; 
     }
@@ -295,7 +309,49 @@
     return baseY;
   }
 
+
+  function calculateGenomadPointRadius(d: RingSegment, index: number, height: number, genomadDisplay: GenomadDisplay): number {
+
+    // Not sure why this works but ok
+    const innerRadius = $plotConfigStore.rings.radius + (index*$plotConfigStore.rings.gap) + getRingHeight($rings, 0, index)
+    const outerRadius = innerRadius + height;
+    
+
+    let score: number = 0;
+
+    if (genomadDisplay === GenomadDisplay.PLASMID) {
+      score = d.plasmid ?? 0;
+    } else if (genomadDisplay == GenomadDisplay.VIRUS) {
+      score = d.virus ?? 0;
+    } else if (genomadDisplay === GenomadDisplay.BOTH) {
+      score = d.plasmid ?? 0;
+      score = d.virus && d.virus > score ? d.virus : score; // If a segment has both classifications show the larger score
+    }
+
+    // Interpolate the radius based on the score
+    return innerRadius + (outerRadius - innerRadius) * score;
+  }
+
+  function generateLinePath(ringSegments: RingSegment[], index: number, height: number, smoothing: boolean, genomadDisplay: GenomadDisplay  = GenomadDisplay.BOTH): string {
+    
+    let lineGenerator = d3.lineRadial()
+        .angle((d: RingSegment) => calculateGenomadMidpoint(d)) // types enforced by RingType 
+        .radius((d: RingSegment) => calculateGenomadPointRadius(d, index, height, genomadDisplay))
+
+    if (smoothing){
+      lineGenerator = lineGenerator.curve(d3.curveNatural)
+    }
+
+    return lineGenerator(ringSegments);
+  }
+
+  function calculateGenomadMidpoint(d: RingSegment): number {
+      const midpointAngle = degreeScale((d.start + d.end) / 2);
+      return midpointAngle * (Math.PI / 180); // Convert to radians
+  }
+
   let referencePosition: number | undefined = undefined;
+
 
 </script>
 
@@ -324,39 +380,57 @@
           {#each $rings as ring}
             {#if ring.type === RingType.LABEL}
               {#each ring.data as ringAnnotation}
-              <line 
-                x1={calculateOuterArcPointX1(ringAnnotation, $plotConfigStore.rings.gap)} 
-                y1={calculateOuterArcPointY1(ringAnnotation, $plotConfigStore.rings.gap)} 
-                x2={calculateOuterArcPointX2(ringAnnotation, $plotConfigStore.labels.lineLength, $plotConfigStore.rings.gap)} 
-                y2={calculateOuterArcPointY2(ringAnnotation, $plotConfigStore.labels.lineLength, $plotConfigStore.rings.gap)}
-                style="stroke: {$plotConfigStore.labels.lineColor}; stroke-width: {$plotConfigStore.labels.lineWidth/100}rem; opacity: {$plotConfigStore.labels.lineOpacity/100};"
-                class="brickAnnotationLine"
-                visibility={ring.visible ? 'visible': 'hidden'}
-              />
-            {/each}
-            {#each ring.data as ringAnnotation}
-              <text 
-                x={calculateOuterArcPointX2(ringAnnotation, $plotConfigStore.labels.lineLength, $plotConfigStore.rings.gap)} 
-                y={calculateOuterArcPointY2(ringAnnotation, $plotConfigStore.labels.lineLength, $plotConfigStore.rings.gap)}
-                style="fill: {$plotConfigStore.labels.textColor}; opacity: {$plotConfigStore.labels.textOpacity/100}; font-size: {$plotConfigStore.labels.textSize}%"
-                text-anchor={getTextAnchor(degreeScale(ringAnnotation.start))}
-                dominant-baseline={getDominantBaseline(degreeScale(ringAnnotation.start))}
-                class="brickAnnotationText"
-                visibility={ring.visible ? 'visible': 'hidden'}
-              >
-              <tspan
-              x={calculateTspanX(ringAnnotation, $plotConfigStore.labels.lineLength, $plotConfigStore.rings.gap, $plotConfigStore.labels.textGap)} 
-              y={calculateTspanY(ringAnnotation, $plotConfigStore.labels.lineLength, $plotConfigStore.rings.gap, $plotConfigStore.labels.textGap)}
-              >
-                {ringAnnotation.text}
-              </tspan>
-              </text>
-            {/each}
+                <line 
+                  x1={calculateOuterArcPointX1(ringAnnotation, $plotConfigStore.rings.gap)} 
+                  y1={calculateOuterArcPointY1(ringAnnotation, $plotConfigStore.rings.gap)} 
+                  x2={calculateOuterArcPointX2(ringAnnotation, $plotConfigStore.labels.lineLength, $plotConfigStore.rings.gap)} 
+                  y2={calculateOuterArcPointY2(ringAnnotation, $plotConfigStore.labels.lineLength, $plotConfigStore.rings.gap)}
+                  style="stroke: {ringAnnotation.lineColor ?? $plotConfigStore.labels.lineColor}; stroke-width: {ringAnnotation.lineWidth ? ringAnnotation.lineWidth/100 : $plotConfigStore.labels.lineWidth/100}rem; opacity: {ringAnnotation.lineOpacity ? ringAnnotation.lineOpacity/100 : $plotConfigStore.labels.lineOpacity/100};"
+                  class="brickAnnotationLine"
+                  visibility={ring.visible ? 'visible': 'hidden'}
+                />
+              {/each}
+              {#each ring.data as ringAnnotation}
+                <text 
+                  x={calculateOuterArcPointX2(ringAnnotation, $plotConfigStore.labels.lineLength, $plotConfigStore.rings.gap)} 
+                  y={calculateOuterArcPointY2(ringAnnotation, $plotConfigStore.labels.lineLength, $plotConfigStore.rings.gap)}
+                  style="fill: {ringAnnotation.textColor ?? $plotConfigStore.labels.textColor}; opacity: {ringAnnotation.textOpacity ? ringAnnotation.textOpacity/100 : $plotConfigStore.labels.textOpacity/100}; font-size: {ringAnnotation.textSize ?? $plotConfigStore.labels.textSize}%"
+                  text-anchor={getTextAnchor(degreeScale(ringAnnotation.start))}
+                  dominant-baseline={getDominantBaseline(degreeScale(ringAnnotation.start))}
+                  class="brickAnnotationText"
+                  visibility={ring.visible ? 'visible': 'hidden'}
+                >
+                  <tspan
+                  x={calculateTspanX(ringAnnotation, $plotConfigStore.labels.lineLength, $plotConfigStore.rings.gap, $plotConfigStore.labels.textGap)} 
+                  y={calculateTspanY(ringAnnotation, $plotConfigStore.labels.lineLength, $plotConfigStore.rings.gap, $plotConfigStore.labels.textGap)}
+                  >
+                    {ringAnnotation.text}
+                  </tspan>
+                </text>
+              {/each}
+          {:else if ring.type === RingType.GENOMAD}
+            <path 
+                class="brickRingLine"
+                d={generateLinePath(
+                  ring.data, 
+                  ring.index, 
+                  $rings.some(ring => ring.type === RingType.LABEL) && ring.index == $rings.length-2  ?  $plotConfigStore.rings.outerHeight : !$rings.some(ring => ring.type === RingType.LABEL) && ring.index == $rings.length-1 ? $plotConfigStore.rings.outerHeight : $plotConfigStore.rings.height,
+                  ring.lineSmoothing ?? $plotConfigStore.rings.lineSmoothing,
+                  ring.genomadDisplay ?? GenomadDisplay.BOTH
+                )}
+                visibility={ring.visible ? 'visible': 'hidden'} 
+                style="fill: none; stroke: {ring.color}; stroke-width: {$plotConfigStore.rings.lineWidth}"
+            />
           {:else}
             {#each ring.data as ringSegment, idx}
               <path 
                 class="brickRingSegment" 
-                d={arcGenerator(ringSegment, ring.index, $plotConfigStore.rings.height, $plotConfigStore.rings.radius, $plotConfigStore.rings.gap)} 
+                d={arcGenerator(
+                  ringSegment, 
+                  ring.index, 
+                  $rings.some(ring => ring.type === RingType.LABEL) && ring.index == $rings.length-2  ?  $plotConfigStore.rings.outerHeight : !$rings.some(ring => ring.type === RingType.LABEL) && ring.index == $rings.length-1 ? $plotConfigStore.rings.outerHeight : $plotConfigStore.rings.height,
+                  $plotConfigStore.rings.radius, $plotConfigStore.rings.gap
+                )} 
                 style="fill: {ring.color}; opacity: 1; cursor: pointer" 
                 visibility={ring.visible ? 'visible': 'hidden'} 
                 on:mouseover={() => handleMouseover(ringSegment)} 
