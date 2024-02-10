@@ -279,7 +279,7 @@ def parse_blastn_output(
 
 
 # Generator function
-def parse_aggregated_genomad_output(file: Path) -> Generator[GenomadEntry]:
+def parse_aggregated_genomad_output(file: Path) -> Generator[GenomadEntry, None, None]:
     """
     Parses the aggregated_classification output from a sliced genome file
     """
@@ -306,7 +306,7 @@ def extract_genomad_contiguous_segments(
     min_segment_length: int,  # should be a multiple of slice length
     prediction_classes: List[GenomadPredictionClass],
     segment_type: RingSegmentType,
-) -> Generator[RingSegment] | Generator[LabelSegment]:
+) -> Generator[RingSegment, None, None] | Generator[LabelSegment, None, None]:
     """Extracts segments of high probabilty for each prediction class with a minimum total length for label or annotation rings"""
 
     segments = []

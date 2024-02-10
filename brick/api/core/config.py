@@ -82,8 +82,10 @@ class Settings(BaseSettings):
     @field_validator("GENOMAD_DATABASE", mode="after")
     def check_genomad_database(cls, v: Path):
         if v and not v.exists():
-            logging.warn(f"geNomad database directory not found! ({v})")
-            logging.warn(
+            logging.warning(
+                f"geNomad database directory not found! ({v})"
+            )  # tests run on action runner must avoid pulling database
+            logging.warning(
                 f"Attempts to execute `genomad` will fail in the `process_genomad_ring` worker!"
             )
         return v

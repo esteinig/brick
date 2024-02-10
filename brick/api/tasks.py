@@ -843,6 +843,6 @@ def check_or_update_label_ring(
 
 
 @contextlib.contextmanager
-def create_tmp_directory(root_dir: str = None) -> Generator[Path]:
+def create_tmp_directory(root_dir: str = None) -> Generator[Path, None, None]:
     with tempfile.TemporaryDirectory(dir=root_dir) as temp_dir:
         yield Path(temp_dir)
