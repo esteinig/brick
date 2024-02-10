@@ -47,6 +47,7 @@ venv.bak/
 # Deployment
 /docker/certs/*
 /.secrets/
+/brick.env
 /docker-compose.web.yml
 /docker-compose.localhost.yml
 /docker-compose.traefik.web.yml
