@@ -25,34 +25,28 @@ jobs:
       with:
         check-latest-tag-only: true
     
-
-    - name: Get release version
+    - name: Generate release version
+      id: release
       run: |
         VERSION=$(cog bump --dry-run --auto)
-        echo "version=$VERSION" >> $GITHUB_OUTPUT
-
-    - name: Bump version
-      run: |
-        cog bump --auto
+        echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
     - name: Create a new branch for the pull request
       run: |
         NEW_BRANCH="bot/release-${{ steps.release.outputs.version }}"
         git checkout -b $NEW_BRANCH
 
-    - name: Commit and push changes
+    - name: Auto bump version and commit
       run: |
-        git status
-        git add .
-        git commit -m "chore(release): update changelog and version for ${{ steps.release.outputs.version }}"
+        cog bump --auto
         git push origin "bot/release-${{ steps.release.outputs.version }}"
-       
+
     - name: Create Pull Request
       uses: peter-evans/create-pull-request@v5
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         commit-message: 'Merge release ${{ steps.release.outputs.version }}'
         title: '[RELEASE] Merge release ${{ steps.release.outputs.version }} into main'
-        body: 'This is an automated pull request to merge changes from the release ${{ steps.release.outputs.version }} into the main branch.'
+        body: 'This is an automated pull request to merge changes from the release/${{ steps.release.outputs.version }} into main'
         branch: "bot/release-${{ steps.release.outputs.version }}"
         base: main
