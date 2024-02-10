@@ -24,33 +24,23 @@ jobs:
       uses: oknozor/cocogitto-action@v3
       with:
         check-latest-tag-only: true
-
-    - name: Auto-bump semantic version for release
-      id: release
-      uses: oknozor/cocogitto-action@v3
-      with:
-        release: true
     
     - name: Create a new branch for the pull request
       run: |
-        NEW_BRANCH="pr-release-${{ steps.release.outputs.version }}"
+        NEW_BRANCH="bot/release-${{ steps.release.outputs.version }}"
         git checkout -b $NEW_BRANCH
-    
-    - name: Check for changes
-      run: |
-        git status
-        git add CHANGELOG.md
-        git status
 
-    - name: Commit changes
+    - name: Auto bump version and commit changes
       run: |
-        git diff --quiet || git commit -m "chore(release): update changelog and version for ${{ steps.release.outputs.version }}"
-    
+        cog bump --auto
+        git status
+        git add .
+        git commit -m "chore(release): update changelog and version for ${{ steps.release.outputs.version }}"
+
     - name: Push changes
       run: |
-        git push origin "pr-release-${{ steps.release.outputs.version }}"
+        git push origin "bot/release-${{ steps.release.outputs.version }}"
        
-
     - name: Create Pull Request
       uses: peter-evans/create-pull-request@v5
       with:
@@ -58,5 +48,5 @@ jobs:
         commit-message: 'Merge release ${{ steps.release.outputs.version }}'
         title: '[RELEASE] Merge release ${{ steps.release.outputs.version }} into main'
         body: 'This is an automated pull request to merge changes from the release ${{ steps.release.outputs.version }} into the main branch.'
-        branch: "pr-release-${{ steps.release.outputs.version }}"
+        branch: "bot/release-${{ steps.release.outputs.version }}"
         base: main
