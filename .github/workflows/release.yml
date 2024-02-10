@@ -36,12 +36,20 @@ jobs:
         NEW_BRANCH="pr-release-${{ steps.release.outputs.version }}"
         git checkout -b $NEW_BRANCH
     
-    - name: Add and commit changes to branch
+    - name: Check for changes
       run: |
-        git add .
         git status
-        git commit -m "chore(release): update changelog and version for ${{ steps.release.outputs.version }}"
+        git add CHANGELOG.md
+        git status
+
+    - name: Commit changes
+      run: |
+        git diff --quiet || git commit -m "chore(release): update changelog and version for ${{ steps.release.outputs.version }}"
+    
+    - name: Push changes
+      run: |
         git push origin "pr-release-${{ steps.release.outputs.version }}"
+       
 
     - name: Create Pull Request
       uses: peter-evans/create-pull-request@v5
