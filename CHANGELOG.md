@@ -2,6 +2,16 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## 0.4.0 - 2024-02-10
+#### Bug Fixes
+- **(api)** subprocess str types - (5fb84dd) - esteinig
+- **(app)** annotation primary return ring type - (ed5c1ad) - esteinig
+- **(stack)** mamba env in runner stage - (32f7ccd) - esteinig
+#### Features
+- **(app)** edit label styles and annotations - (2a59fd4) - esteinig
+
+- - -
+
 ## 0.3.0 - 2024-01-26
 #### Bug Fixes
 - **(action)** revert ssh-agent action version - (327b9eb) - esteinig
