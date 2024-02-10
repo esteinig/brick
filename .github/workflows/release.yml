@@ -34,5 +34,5 @@ jobs:
     - name: Auto bump version and commit
       run: |
         cog bump --auto
-        git push origin "release/$VERSION"
+        git push origin "release/${{ steps.release.outputs.version }}"
         git push origin "${{ steps.release.outputs.version }}"
