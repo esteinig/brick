@@ -4,7 +4,7 @@ import logging
 from datetime import datetime, timedelta
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
-from typing import Generator
+from typing import AsyncGenerator
 
 from .schemas import Session
 
@@ -59,7 +59,7 @@ class ApiClient:
 
 async def fetch_sessions_generator(
     api_client: ApiClient, logger: logging.Logger | None = None
-) -> Generator[Session]:
+) -> AsyncGenerator[Session]:
     if logger:
         logger.info(f"Requesting session identifiers from API")
 
