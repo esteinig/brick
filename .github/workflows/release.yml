@@ -26,7 +26,12 @@ jobs:
         check-latest-tag-only: true
     
 
-    - name: Auto bump version
+    - name: Get release version
+      run: |
+        VERSION=$(cog bump --dry-run --auto)
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+    - name: Bump version
       run: |
         cog bump --auto
 
