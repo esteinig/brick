@@ -25,20 +25,21 @@ jobs:
       with:
         check-latest-tag-only: true
     
+
+    - name: Auto bump version
+      run: |
+        cog bump --auto
+
     - name: Create a new branch for the pull request
       run: |
         NEW_BRANCH="bot/release-${{ steps.release.outputs.version }}"
         git checkout -b $NEW_BRANCH
 
-    - name: Auto bump version and commit changes
+    - name: Commit and push changes
       run: |
-        cog bump --auto
         git status
         git add .
         git commit -m "chore(release): update changelog and version for ${{ steps.release.outputs.version }}"
-
-    - name: Push changes
-      run: |
         git push origin "bot/release-${{ steps.release.outputs.version }}"
        
     - name: Create Pull Request
