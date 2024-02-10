@@ -11,7 +11,7 @@ on:
       - 'release/*' 
 
 jobs:
-  deploy:
+  release:
     runs-on: ubuntu-latest
 
     steps:
@@ -35,7 +35,13 @@ jobs:
       run: |
         NEW_BRANCH="pr-release-${{ steps.release.outputs.version }}"
         git checkout -b $NEW_BRANCH
-        git push origin $NEW_BRANCH
+    
+    - name: Add and commit changes to branch
+      run: |
+        git add .
+        git status
+        git commit -m "chore(release): update changelog and version for ${{ steps.release.outputs.version }}"
+        git push origin "pr-release-${{ steps.release.outputs.version }}"
 
     - name: Create Pull Request
       uses: peter-evans/create-pull-request@v5
