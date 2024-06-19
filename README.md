@@ -1,10 +1,8 @@
-# BRICK <a href='https://github.com/esteinig'><img src='docs/brick.png' align="right" height="270" /></a>
+# BRICK <a href='https://github.com/esteinig'><img src='docs/brick.png' align="right" height="400" /></a>
 
-[`BRIG`](https://github.com/happykhan/BRIG)-like interactive data visualization for prokaryotic genome annotation, comparison and exploration
+[`BRIG`](https://github.com/happykhan/BRIG)-like interactive data visualization for prokaryotic genome annotation, comparison and exploration of large-scale genomic regions
 
-## Overview
-
-- [How to run `BRICK`](#overview)
+- [How to run `BRICK`](#web-service-convenient)
   - [Web application](#web-service-convenient) 
   - [Local application (Docker)](#local-application-easy)
   - [Self-hosted application (Docker)](#server-application-advanced)
