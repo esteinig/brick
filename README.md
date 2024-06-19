@@ -1,4 +1,4 @@
-# BRICK <a href='https://github.com/esteinig'><img src='docs/brick.png' align="right" height="400" /></a>
+# BRICK <a href='https://github.com/esteinig'><img src='docs/brick.png' align="right" height="320" /></a>
 
 [`BRIG`](https://github.com/happykhan/BRIG)-like interactive data visualization for prokaryotic genome annotation, comparison and exploration of large-scale genomic regions
 
