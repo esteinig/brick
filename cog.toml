@@ -1,8 +1,7 @@
 ignore_merge_commits = true
 branch_whitelist = [
     "main",
-    "release/**",
-    "bot/**"
+    "release/**"
 ]
 
 skip_untracked = false
