@@ -59,7 +59,7 @@ class ApiClient:
 
 async def fetch_sessions_generator(
     api_client: ApiClient, logger: logging.Logger | None = None
-) -> AsyncGenerator[Session, None, None]:
+) -> AsyncGenerator[Session, None]:
     if logger:
         logger.info(f"Requesting session identifiers from API")
 

@@ -167,6 +167,14 @@ services:
       - brick_db_pwd
     networks:
       - internal
+    deploy:
+      resources:
+        limits:            # process is killed
+          cpus: '8'          # either number of cores or fraction
+          memory: 42G
+        reservations:      # resources reserved for container
+          cpus: '8'
+          memory: 20G      # determined by the largest database 
 
   worker-dev:
     profiles:
@@ -199,10 +207,10 @@ services:
     deploy:
       resources:
         limits:            # process is killed
-          cpus: 8          # either number of cores or fraction
+          cpus: '8'          # either number of cores or fraction
           memory: 42G
         reservations:      # resources reserved for container
-          cpus: 8
+          cpus: '8'
           memory: 20G      # determined by the largest database 
 
   # ========= 
