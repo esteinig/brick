@@ -18,7 +18,7 @@ services:
       - "5173"
     security_opt:
       - no-new-privileges:true
-    env_file: brick.env
+    env_file: docker/brick.env
     environment:
       NODE_ENV: production
       ORIGIN: https://brick.ink
@@ -54,7 +54,7 @@ services:
       - "5174"
     security_opt:
       - no-new-privileges:true
-    env_file: brick.env
+    env_file: docker/brick.env
     environment:
       NODE_ENV: production  
       ORIGIN: https://dev.brick.ink
@@ -89,9 +89,9 @@ services:
     command: uvicorn brick.api.main:app --host 0.0.0.0 --port 8080
     volumes:
       - api:/data
-      - work:/tmp-
+      - work:/tmp
       - databases:/data
-    env_file: brick.env
+    env_file: docker/brick.env
     environment:
       CORS_ORIGINS: http://app:5173
       MONGODB_DATABASE: brick
@@ -123,7 +123,7 @@ services:
       - api_dev:/data
       - work:/tmp
       - databases:/data
-    env_file: brick.env
+    env_file: docker/brick.env
     environment:
       CORS_ORIGINS: http://app-dev:5174
       MONGODB_DATABASE: dev
@@ -167,7 +167,7 @@ services:
     volumes:
       - work:/tmp
       - databases:/data
-    env_file: brick.env
+    env_file: docker/brick.env
     environment:
       CORS_ORIGINS: http://app:5173
       MONGODB_DATABASE: brick
@@ -205,7 +205,7 @@ services:
     volumes:
       - work:/tmp
       - databases:/data
-    env_file: brick.env
+    env_file: docker/brick.env
     environment:
       CORS_ORIGINS: http://app-dev:5174
       MONGODB_DATABASE: dev
@@ -326,7 +326,7 @@ services:
       - work:/tmp
       # Set the container timezone by sharing the read-only localtime
       - /etc/localtime:/etc/localtime:ro 
-    env_file: brick.env
+    env_file: docker/brick.env
     environment:
       BRICK_API_BASE_URL: http://api:8080
     security_opt:
@@ -351,7 +351,7 @@ services:
       - work:/tmp
       # Set the container timezone by sharing the read-only localtime
       - /etc/localtime:/etc/localtime:ro 
-    env_file: brick.env
+    env_file: docker/brick.env
     environment:
       BRICK_API_BASE_URL: http://api-dev:8080
     security_opt:
