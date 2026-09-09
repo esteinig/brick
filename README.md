@@ -3,21 +3,12 @@
 [`BRIG`](https://github.com/happykhan/BRIG)-like interactive data visualization for prokaryotic genome annotation, comparison and exploration of large-scale genomic regions
 
 - [How to run `BRICK`](#web-service-convenient)
-  - [Web application](#web-service-convenient) 
   - [Local application (Docker)](#local-application-easy)
   - [Self-hosted application (Docker)](#server-application-advanced)
 - [Development setup and workflow](#development)
 - [Dependencies and citations](#dependencies)
 - [Etymology](#etymology)
 - [Contributors](#contributors)
-
-## Web service (convenient)
-
-At the moment, the most convenient way to get started is by using our hosted web application ([brick.ink](https://brick.ink)). Please note that the server is located in Australia - for a snappier experience you can [deploy the application stack](#local-application-easy) on your local machine.
-
-Session visualizations and all session data, including uploaded files and working data expire after seven days and are deleted from database and storage. All data are stored anonymously and sessions can only be accessed using the unique identifier in the URL.
-
-If you notice egregious bugs or styling issues, please [let us know]()! Testing is currently limited to `Linux` and `Firefox`. 
 
 ### Files
 
